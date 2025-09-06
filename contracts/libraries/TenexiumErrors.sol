@@ -65,4 +65,7 @@ library TenexiumErrors {
     error PercentageTooHigh(uint256 rateScaled);
     error IntervalTooShort(uint256 blocks);
     error BuybackConditionsNotMet();
+
+    // Permission controls
+    error FunctionNotPermitted(uint256 permissionIndex);
 }

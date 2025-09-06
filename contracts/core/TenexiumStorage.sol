@@ -99,6 +99,12 @@ contract TenexiumStorage {
     // Emergency controls
     bool public liquidityCircuitBreaker; // Liquidity circuit breaker flag
 
+    // Permission controls for sensitive functions
+    // 0: Open position (User)
+    // 1: Close position (User)
+    // 2: Add collateral (User)
+    bool[3] public functionPermissions; // Function permissions
+
     // Global protocol state
     uint256 public totalCollateral; // Total collateral in protocol
     uint256 public totalBorrowed; // Total borrowed amount in protocol
@@ -264,6 +270,12 @@ contract TenexiumStorage {
             );
         }
         lastLpActionBlock[msg.sender] = block.number;
+        _;
+    }
+
+    modifier hasPermission(uint8 permissionIndex) {
+        if (permissionIndex >= functionPermissions.length) revert TenexiumErrors.InvalidValue();
+        if (!functionPermissions[permissionIndex]) revert TenexiumErrors.FunctionNotPermitted(permissionIndex);
         _;
     }
 }

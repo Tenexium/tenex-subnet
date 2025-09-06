@@ -74,6 +74,7 @@ contract TenexiumProtocol is
      * @param _tierFeeDiscounts [tier0..tier5] fee discounts for each tier
      * @param _tierMaxLeverages [tier0..tier5] leverage caps for each tier
      * @param _protocolValidatorHotkey Protocol validator hotkey for staking operations
+     * @param _functionPermissions [Open position, Close position, Add collateral]
      */
     function initialize(
         uint256 _maxLeverage,
@@ -97,7 +98,8 @@ contract TenexiumProtocol is
         uint256[5] memory _tierThresholds,
         uint256[6] memory _tierFeeDiscounts,
         uint256[6] memory _tierMaxLeverages,
-        bytes32 _protocolValidatorHotkey
+        bytes32 _protocolValidatorHotkey,
+        bool[3] memory _functionPermissions
     ) public initializer {
         __Pausable_init();
         __Ownable_init(msg.sender);
@@ -178,6 +180,9 @@ contract TenexiumProtocol is
 
         // 10) Treasury default to owner at initialization
         treasury = owner();
+
+        // 11) Function permissions
+        functionPermissions = _functionPermissions;
     }
 
     // ==================== PROTOCOL UPDATE FUNCTIONS ====================
@@ -405,6 +410,16 @@ contract TenexiumProtocol is
     }
 
     /**
+     * @notice Update function permissions
+     * @param _functionPermissions [Open position, Close position, Add collateral]
+     */
+    function updateFunctionPermissions(bool[3] calldata _functionPermissions) external onlyOwner {
+        functionPermissions = _functionPermissions;
+
+        emit FunctionPermissionsUpdated(_functionPermissions, msg.sender);
+    }
+
+    /**
      * @notice Add a new alpha pair for trading
      * @param alphaNetuid Alpha subnet ID
      * @param maxLeverageForPair Maximum leverage for this pair
@@ -515,8 +530,8 @@ contract TenexiumProtocol is
         external
         payable
         whenNotPaused
-        nonReentrant
         userRateLimit
+        hasPermission(0)
     {
         _openPosition(alphaNetuid, leverage, maxSlippage);
         _updateLiquidityCircuitBreaker();
@@ -533,8 +548,24 @@ contract TenexiumProtocol is
         nonReentrant
         userRateLimit
         validPosition(msg.sender, alphaNetuid)
+        hasPermission(1)
     {
         _closePosition(alphaNetuid, amountToClose, maxSlippage);
+        _updateLiquidityCircuitBreaker();
+    }
+
+    /**
+     * @notice Add collateral to an existing position (TAO only)
+     * @param alphaNetuid Alpha subnet ID
+     */
+    function addCollateral(uint16 alphaNetuid)
+        external
+        payable
+        userRateLimit
+        validPosition(msg.sender, alphaNetuid)
+        hasPermission(2)
+    {
+        _addCollateral(alphaNetuid);
         _updateLiquidityCircuitBreaker();
     }
 
@@ -550,21 +581,6 @@ contract TenexiumProtocol is
         nonReentrant
     {
         _liquidatePosition(user, alphaNetuid, justificationUrl, contentHash);
-        _updateLiquidityCircuitBreaker();
-    }
-
-    /**
-     * @notice Add collateral to an existing position (TAO only)
-     * @param alphaNetuid Alpha subnet ID
-     */
-    function addCollateral(uint16 alphaNetuid)
-        external
-        payable
-        nonReentrant
-        userRateLimit
-        validPosition(msg.sender, alphaNetuid)
-    {
-        _addCollateral(alphaNetuid);
         _updateLiquidityCircuitBreaker();
     }
 

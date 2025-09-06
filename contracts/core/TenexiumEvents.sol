@@ -106,4 +106,6 @@ contract TenexiumEvents {
     );
 
     event TokensClaimed(address indexed beneficiary, bytes32 indexed ss58Address, uint256 amount);
+
+    event FunctionPermissionsUpdated(bool[3] indexed functionPermissions, address indexed admin);
 }
