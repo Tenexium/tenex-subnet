@@ -780,6 +780,9 @@ contract TenexiumProtocol is
      * @param _maxLiquidityProvidersPerHotkey The maximum number of liquidity providers per hotkey
      */
     function setMaxLiquidityProvidersPerHotkey(uint256 _maxLiquidityProvidersPerHotkey) public onlyOwner {
+        if (_maxLiquidityProvidersPerHotkey == 0 || _maxLiquidityProvidersPerHotkey > 10) {
+            revert TenexiumErrors.InvalidValue();
+        }
         maxLiquidityProvidersPerHotkey = _maxLiquidityProvidersPerHotkey;
     }
 
