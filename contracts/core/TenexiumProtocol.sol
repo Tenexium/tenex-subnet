@@ -452,6 +452,41 @@ contract TenexiumProtocol is
         emit AlphaPairAdded(alphaNetuid, maxLeverageForPair);
     }
 
+    /**
+     * @notice Remove an existing alpha pair
+     * @param alphaNetuid Alpha subnet ID
+     * @dev Requires no collateral or borrows outstanding in the pair
+     */
+    function removeAlphaPair(uint16 alphaNetuid) external onlyOwner {
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
+        if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
+        if (pair.totalCollateral != 0 || pair.totalBorrowed != 0) revert TenexiumErrors.InvalidValue();
+
+        // Deactivate and clear parameters
+        pair.isActive = false;
+        pair.maxLeverage = 0;
+        pair.utilizationRate = 0;
+        pair.borrowingRate = 0;
+
+        emit AlphaPairRemoved(alphaNetuid);
+    }
+
+    /**
+     * @notice Update alpha pair parameters
+     * @param alphaNetuid Alpha subnet ID
+     * @param newMaxLeverage New maximum leverage for this pair
+     */
+    function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage) external onlyOwner {
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
+        if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
+        if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh(newMaxLeverage);
+
+        uint256 oldMax = pair.maxLeverage;
+        pair.maxLeverage = newMaxLeverage;
+
+        emit AlphaPairParametersUpdated(alphaNetuid, oldMax, newMaxLeverage);
+    }
+
     // ==================== EMERGENCY FUNCTIONS ====================
 
     /**
