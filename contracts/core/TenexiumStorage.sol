@@ -134,6 +134,12 @@ contract TenexiumStorage {
     uint256 public totalLiquidatorFees; // Total liquidator fees collected
     uint256 public totalLiquidatorScore; // Total liquidator score
 
+    // Liquidation statistics
+    uint256 public totalLiquidations; // Total number of liquidations executed
+    uint256 public totalLiquidationValue; // Total TAO value liquidated
+    mapping(address => uint256) public liquidatorLiquidations; // Number of liquidations by liquidator
+    mapping(address => uint256) public liquidatorLiquidationValue; // Total TAO value liquidated by liquidator (wei)
+
     // Accumulator-based fee accounting
     uint256 public accLpFeesPerShare; // Accumulated LP fees per share
     uint256 public accLiquidatorFeesPerScore; // Accumulated liquidator fees per score
