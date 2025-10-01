@@ -1,0 +1,32 @@
+{
+  "storage": [
+    {
+      "astId": 12991,
+      "contract": "contracts/modules/SubnetManager.sol:SubnetManager",
+      "label": "versionKey",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_uint64"
+    },
+    {
+      "astId": 13006,
+      "contract": "contracts/modules/SubnetManager.sol:SubnetManager",
+      "label": "TenexiumContract",
+      "offset": 8,
+      "slot": "0",
+      "type": "t_contract(ITenexium)12980"
+    }
+  ],
+  "types": {
+    "t_contract(ITenexium)12980": {
+      "encoding": "inplace",
+      "label": "contract ITenexium",
+      "numberOfBytes": "20"
+    },
+    "t_uint64": {
+      "encoding": "inplace",
+      "label": "uint64",
+      "numberOfBytes": "8"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
 import utils from "./utils";
+import { decodeAddress } from "@polkadot/util-crypto";
 
 // Interface for the neuron data structure
 interface NeuronData {
@@ -16,6 +17,7 @@ interface NeuronData {
 }
 
 interface DepositAddressWithAmount {
+    hotkey: string;
     depositAddress: string;
     amount: string;
 }
@@ -45,7 +47,7 @@ function getDepositAddresses(neurons: NeuronData[]): DepositAddressWithAmount[] 
     neurons.forEach(neuron => {
         neuron.deposits.forEach(deposit => {
             if (!depositAddressesWithAmount.some(address => address.depositAddress === deposit.deposit_address)) {
-                depositAddressesWithAmount.push({ depositAddress: deposit.deposit_address, amount: deposit.amount_deposited.toString() });
+                depositAddressesWithAmount.push({ hotkey: neuron.hotkey, depositAddress: deposit.deposit_address, amount: deposit.amount_deposited.toString() });
             }
         });
     });
@@ -63,6 +65,13 @@ async function main() {
     const { provider, signer, contract } = await utils.getTenexiumProtocolContract(networkName, prKey);
     const TenexiumProtocolContractAddress = contract.target;
 
+    console.log("🔍 Testing TenexiumProtocol Contract Check on " + networkName);
+    console.log("=" .repeat(60));
+    console.log("TenexiumProtocolContractAddress:", TenexiumProtocolContractAddress);
+    console.log("RPC URL:", utils.getRpcUrl(networkName));
+    console.log("Signer:", signer.address);
+    console.log("Contract Balance:", ethers.formatEther(await provider.getBalance(TenexiumProtocolContractAddress)), "TAO");
+
     const apiUrl = process.env.BACKEND_API_URL + "/api/v1/neurons/";
     
     try {
@@ -74,16 +83,14 @@ async function main() {
         
         console.log("\n📋 Deposit Addresses with Amount:");
         console.log("=" .repeat(50));
-        let totalAmount = BigInt(0);
-        let totalAmount1 = BigInt(0);
-        depositAddressesWithAmount.forEach(async (address, index) => {
-            totalAmount += ethers.parseEther(address.amount);
+        depositAddressesWithAmount.forEach( async (address, index) => {
             const lpInfo = await contract.liquidityProviders(address.depositAddress);
-            totalAmount1 += lpInfo[0];
             console.log(`${index + 1}. ${address.depositAddress}: ${address.amount} ${ethers.formatEther(lpInfo[0])}`, ethers.parseEther(address.amount)===lpInfo[0] ? "✅" : "❌");
+            const lp_adress_from_hotkey = await contract.groupLiquidityProviders(decodeAddress(address.hotkey), 0);
+            console.log(`${index + 1}. LP Address from Hotkey(${address.hotkey}): ${lp_adress_from_hotkey}`, address.depositAddress===lp_adress_from_hotkey ? "✅" : "❌");
+            const is_unique_liquidity_provider = await contract.uniqueLiquidityProviders(address.depositAddress);
+            console.log(`${index + 1}. Is Unique Liquidity Provider: ${is_unique_liquidity_provider}`, is_unique_liquidity_provider===true ? "✅" : "❌");
         });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log(`\n💰 Total Amount: ${ethers.formatEther(totalAmount)}, ${ethers.formatEther(totalAmount1)}`, totalAmount.toString()===totalAmount1.toString() ? "✅" : "❌");
         console.log(`\n💰 Found ${depositAddressesWithAmount.length} unique deposit addresses`);
         
     } catch (error) {

@@ -1,0 +1,1028 @@
+{
+  "storage": [
+    {
+      "astId": 7437,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "maxLeverage",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7439,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidationThreshold",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7441,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "minLiquidityThreshold",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7443,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "maxUtilizationRate",
+      "offset": 0,
+      "slot": "3",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7445,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidityBufferRatio",
+      "offset": 0,
+      "slot": "4",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7447,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "userActionCooldownBlocks",
+      "offset": 0,
+      "slot": "5",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7449,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "lpActionCooldownBlocks",
+      "offset": 0,
+      "slot": "6",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7451,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "buybackRate",
+      "offset": 0,
+      "slot": "7",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7453,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "buybackIntervalBlocks",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7455,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "buybackExecutionThreshold",
+      "offset": 0,
+      "slot": "9",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7457,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "vestingDurationBlocks",
+      "offset": 0,
+      "slot": "10",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7459,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "cliffDurationBlocks",
+      "offset": 0,
+      "slot": "11",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7461,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tradingFeeRate",
+      "offset": 0,
+      "slot": "12",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7463,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "borrowingFeeRate",
+      "offset": 0,
+      "slot": "13",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7465,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidationFeeRate",
+      "offset": 0,
+      "slot": "14",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7467,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tradingFeeLpShare",
+      "offset": 0,
+      "slot": "15",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7469,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tradingFeeLiquidatorShare",
+      "offset": 0,
+      "slot": "16",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7471,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tradingFeeProtocolShare",
+      "offset": 0,
+      "slot": "17",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7473,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "borrowingFeeLpShare",
+      "offset": 0,
+      "slot": "18",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7475,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "borrowingFeeLiquidatorShare",
+      "offset": 0,
+      "slot": "19",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7477,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "borrowingFeeProtocolShare",
+      "offset": 0,
+      "slot": "20",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7479,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidationFeeLpShare",
+      "offset": 0,
+      "slot": "21",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7481,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidationFeeLiquidatorShare",
+      "offset": 0,
+      "slot": "22",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7483,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidationFeeProtocolShare",
+      "offset": 0,
+      "slot": "23",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7485,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier1Threshold",
+      "offset": 0,
+      "slot": "24",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7487,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier2Threshold",
+      "offset": 0,
+      "slot": "25",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7489,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier3Threshold",
+      "offset": 0,
+      "slot": "26",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7491,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier4Threshold",
+      "offset": 0,
+      "slot": "27",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7493,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier5Threshold",
+      "offset": 0,
+      "slot": "28",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7495,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier0FeeDiscount",
+      "offset": 0,
+      "slot": "29",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7497,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier1FeeDiscount",
+      "offset": 0,
+      "slot": "30",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7499,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier2FeeDiscount",
+      "offset": 0,
+      "slot": "31",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7501,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier3FeeDiscount",
+      "offset": 0,
+      "slot": "32",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7503,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier4FeeDiscount",
+      "offset": 0,
+      "slot": "33",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7505,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier5FeeDiscount",
+      "offset": 0,
+      "slot": "34",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7507,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier0MaxLeverage",
+      "offset": 0,
+      "slot": "35",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7509,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier1MaxLeverage",
+      "offset": 0,
+      "slot": "36",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7511,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier2MaxLeverage",
+      "offset": 0,
+      "slot": "37",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7513,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier3MaxLeverage",
+      "offset": 0,
+      "slot": "38",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7515,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier4MaxLeverage",
+      "offset": 0,
+      "slot": "39",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7517,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "tier5MaxLeverage",
+      "offset": 0,
+      "slot": "40",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7519,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "protocolValidatorHotkey",
+      "offset": 0,
+      "slot": "41",
+      "type": "t_bytes32"
+    },
+    {
+      "astId": 7521,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "protocolSs58Address",
+      "offset": 0,
+      "slot": "42",
+      "type": "t_bytes32"
+    },
+    {
+      "astId": 7523,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "treasury",
+      "offset": 0,
+      "slot": "43",
+      "type": "t_address"
+    },
+    {
+      "astId": 7525,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidityCircuitBreaker",
+      "offset": 20,
+      "slot": "43",
+      "type": "t_bool"
+    },
+    {
+      "astId": 7529,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "functionPermissions",
+      "offset": 0,
+      "slot": "44",
+      "type": "t_array(t_bool)3_storage"
+    },
+    {
+      "astId": 7531,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalCollateral",
+      "offset": 0,
+      "slot": "45",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7533,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalBorrowed",
+      "offset": 0,
+      "slot": "46",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7535,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalVolume",
+      "offset": 0,
+      "slot": "47",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7537,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalTrades",
+      "offset": 0,
+      "slot": "48",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7539,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "protocolFees",
+      "offset": 0,
+      "slot": "49",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7541,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "buybackPool",
+      "offset": 0,
+      "slot": "50",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7543,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "lastBuybackBlock",
+      "offset": 0,
+      "slot": "51",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7545,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalTaoUsedForBuybacks",
+      "offset": 0,
+      "slot": "52",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7547,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalAlphaBought",
+      "offset": 0,
+      "slot": "53",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7549,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "accumulatedFees",
+      "offset": 0,
+      "slot": "54",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7551,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalFeesCollected",
+      "offset": 0,
+      "slot": "55",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7553,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalFeesDistributed",
+      "offset": 0,
+      "slot": "56",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7555,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "lastFeeDistributionBlock",
+      "offset": 0,
+      "slot": "57",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7557,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "currentEpoch",
+      "offset": 0,
+      "slot": "58",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7559,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalLpFees",
+      "offset": 0,
+      "slot": "59",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7561,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalLpStakes",
+      "offset": 0,
+      "slot": "60",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7563,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalLiquidatorFees",
+      "offset": 0,
+      "slot": "61",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7565,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "totalLiquidatorScore",
+      "offset": 0,
+      "slot": "62",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7567,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "accLpFeesPerShare",
+      "offset": 0,
+      "slot": "63",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7569,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "accLiquidatorFeesPerScore",
+      "offset": 0,
+      "slot": "64",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 7573,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "lastUserActionBlock",
+      "offset": 0,
+      "slot": "65",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7577,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "lastLpActionBlock",
+      "offset": 0,
+      "slot": "66",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7584,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "positions",
+      "offset": 0,
+      "slot": "67",
+      "type": "t_mapping(t_address,t_mapping(t_uint16,t_struct(Position)7664_storage))"
+    },
+    {
+      "astId": 7588,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "userCollateral",
+      "offset": 0,
+      "slot": "68",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7592,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "userTotalBorrowed",
+      "offset": 0,
+      "slot": "69",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7596,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "userTotalVolume",
+      "offset": 0,
+      "slot": "70",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7601,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidityProviders",
+      "offset": 0,
+      "slot": "71",
+      "type": "t_mapping(t_address,t_struct(LiquidityProvider)7692_storage)"
+    },
+    {
+      "astId": 7605,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "lpFeeRewards",
+      "offset": 0,
+      "slot": "72",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7609,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidatorFeeRewards",
+      "offset": 0,
+      "slot": "73",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7613,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidatorScores",
+      "offset": 0,
+      "slot": "74",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7617,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidatorRewardDebt",
+      "offset": 0,
+      "slot": "75",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 7623,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "vestingSchedules",
+      "offset": 0,
+      "slot": "76",
+      "type": "t_mapping(t_address,t_array(t_struct(VestingSchedule)7705_storage)dyn_storage)"
+    },
+    {
+      "astId": 7628,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "alphaPairs",
+      "offset": 0,
+      "slot": "77",
+      "type": "t_mapping(t_uint16,t_struct(AlphaPair)7679_storage)"
+    },
+    {
+      "astId": 7632,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "uniqueLiquidityProviders",
+      "offset": 0,
+      "slot": "78",
+      "type": "t_mapping(t_address,t_bool)"
+    },
+    {
+      "astId": 7638,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "liquidityProviderSet",
+      "offset": 0,
+      "slot": "79",
+      "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))"
+    },
+    {
+      "astId": 7643,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "groupLiquidityProviders",
+      "offset": 0,
+      "slot": "80",
+      "type": "t_mapping(t_bytes32,t_array(t_address)dyn_storage)"
+    },
+    {
+      "astId": 7645,
+      "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+      "label": "maxLiquidityProvidersPerHotkey",
+      "offset": 0,
+      "slot": "81",
+      "type": "t_uint256"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_address)dyn_storage": {
+      "base": "t_address",
+      "encoding": "dynamic_array",
+      "label": "address[]",
+      "numberOfBytes": "32"
+    },
+    "t_array(t_bool)3_storage": {
+      "base": "t_bool",
+      "encoding": "inplace",
+      "label": "bool[3]",
+      "numberOfBytes": "32"
+    },
+    "t_array(t_struct(VestingSchedule)7705_storage)dyn_storage": {
+      "base": "t_struct(VestingSchedule)7705_storage",
+      "encoding": "dynamic_array",
+      "label": "struct TenexiumStorage.VestingSchedule[]",
+      "numberOfBytes": "32"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_bytes32": {
+      "encoding": "inplace",
+      "label": "bytes32",
+      "numberOfBytes": "32"
+    },
+    "t_mapping(t_address,t_array(t_struct(VestingSchedule)7705_storage)dyn_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct TenexiumStorage.VestingSchedule[])",
+      "numberOfBytes": "32",
+      "value": "t_array(t_struct(VestingSchedule)7705_storage)dyn_storage"
+    },
+    "t_mapping(t_address,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_address,t_mapping(t_uint16,t_struct(Position)7664_storage))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(uint16 => struct TenexiumStorage.Position))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint16,t_struct(Position)7664_storage)"
+    },
+    "t_mapping(t_address,t_struct(LiquidityProvider)7692_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct TenexiumStorage.LiquidityProvider)",
+      "numberOfBytes": "32",
+      "value": "t_struct(LiquidityProvider)7692_storage"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_bytes32,t_array(t_address)dyn_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => address[])",
+      "numberOfBytes": "32",
+      "value": "t_array(t_address)dyn_storage"
+    },
+    "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => mapping(address => bool))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_address,t_bool)"
+    },
+    "t_mapping(t_uint16,t_struct(AlphaPair)7679_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint16",
+      "label": "mapping(uint16 => struct TenexiumStorage.AlphaPair)",
+      "numberOfBytes": "32",
+      "value": "t_struct(AlphaPair)7679_storage"
+    },
+    "t_mapping(t_uint16,t_struct(Position)7664_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint16",
+      "label": "mapping(uint16 => struct TenexiumStorage.Position)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Position)7664_storage"
+    },
+    "t_struct(AlphaPair)7679_storage": {
+      "encoding": "inplace",
+      "label": "struct TenexiumStorage.AlphaPair",
+      "members": [
+        {
+          "astId": 7666,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "netuid",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 7668,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "totalCollateral",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7670,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "totalBorrowed",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7672,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "utilizationRate",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7674,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "borrowingRate",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7676,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "maxLeverage",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7678,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "isActive",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_bool"
+        }
+      ],
+      "numberOfBytes": "224"
+    },
+    "t_struct(LiquidityProvider)7692_storage": {
+      "encoding": "inplace",
+      "label": "struct TenexiumStorage.LiquidityProvider",
+      "members": [
+        {
+          "astId": 7681,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "stake",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7683,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "rewards",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7685,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "lastRewardBlock",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7687,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "shares",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7689,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "rewardDebt",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7691,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "isActive",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_bool"
+        }
+      ],
+      "numberOfBytes": "192"
+    },
+    "t_struct(Position)7664_storage": {
+      "encoding": "inplace",
+      "label": "struct TenexiumStorage.Position",
+      "members": [
+        {
+          "astId": 7647,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "collateral",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7649,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "borrowed",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7651,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "alphaAmount",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7653,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "leverage",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7655,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "entryPrice",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7657,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "lastUpdateBlock",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7659,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "accruedFees",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7661,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "isActive",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_bool"
+        },
+        {
+          "astId": 7663,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "validatorHotkey",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_bytes32"
+        }
+      ],
+      "numberOfBytes": "288"
+    },
+    "t_struct(VestingSchedule)7705_storage": {
+      "encoding": "inplace",
+      "label": "struct TenexiumStorage.VestingSchedule",
+      "members": [
+        {
+          "astId": 7694,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "totalAmount",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7696,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "claimedAmount",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7698,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "startBlock",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7700,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "cliffBlock",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7702,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "endBlock",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 7704,
+          "contract": "contracts/core/TenexiumProtocol.sol:TenexiumProtocol",
+          "label": "revoked",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_bool"
+        }
+      ],
+      "numberOfBytes": "192"
+    },
+    "t_uint16": {
+      "encoding": "inplace",
+      "label": "uint16",
+      "numberOfBytes": "2"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}

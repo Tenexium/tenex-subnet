@@ -1,11 +1,12 @@
 import "hardhat-storage-layout"
+import "hardhat-storage-layout-changes";
 import "./tasks/deploy-final";
 
 import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
 import "dotenv/config";
 
-import {HardhatUserConfig} from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
 
 const config: HardhatUserConfig = {
   networks: {
@@ -29,7 +30,7 @@ const config: HardhatUserConfig = {
     //   },
     // },
     taostats: {
-      url: "https://evm.taostats.io/api/eth-rpc",  
+      url: "https://evm.taostats.io/api/eth-rpc",
     }
   },
   etherscan: {
@@ -77,6 +78,13 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 60000,
+  },
+  paths: {
+    storageLayouts: ".storage-layouts",
+  },
+  storageLayoutChanges: {
+    contracts: ["TenexiumStorage", "TenexiumProtocol", "PositionManager", "LiquidityManager", "FeeManager", "BuybackManager", "LiquidationManager", "SubnetManager", "PrecompileAdapter"],
+    fullPath: false,
   },
 };
 
