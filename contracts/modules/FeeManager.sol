@@ -163,8 +163,9 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
      * @return discountedFee Fee after applying tier discount
      */
     function _calculateDiscountedFee(address user, uint256 originalFee) internal view returns (uint256 discountedFee) {
+        bytes32 user_ss58Pubkey = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(user);
         uint256 balance =
-            STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, bytes32(uint256(uint160(user))), TENEX_NETUID);
+            STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, user_ss58Pubkey, TENEX_NETUID);
         uint256 discount;
         if (balance >= tier5Threshold) discount = tier5FeeDiscount;
         else if (balance >= tier4Threshold) discount = tier4FeeDiscount;
