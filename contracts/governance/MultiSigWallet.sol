@@ -150,7 +150,7 @@ contract MultiSigWallet is ReentrancyGuard {
         Transaction storage txn = transactions[transactionId];
         require(txn.confirmations >= required, "MSW: low conf");
         txn.executed = true;
-        (bool success, ) = txn.destination.call{value: txn.value}(txn.data);
+        (bool success,) = txn.destination.call{value: txn.value}(txn.data);
         if (success) {
             emit Execution(transactionId);
         } else {
@@ -164,18 +164,21 @@ contract MultiSigWallet is ReentrancyGuard {
         returns (uint256 transactionId)
     {
         transactionId = transactionCount;
-        transactions[transactionId] = Transaction({
-            destination: destination,
-            value: value,
-            data: data,
-            executed: false,
-            confirmations: 0
-        });
+        transactions[transactionId] =
+            Transaction({destination: destination, value: value, data: data, executed: false, confirmations: 0});
         transactionCount += 1;
     }
 
     // Views
-    function getOwners() external view returns (address[] memory) { return owners; }
-    function getTransaction(uint256 transactionId) external view returns (Transaction memory) { return transactions[transactionId]; }
-    function isConfirmed(uint256 transactionId, address owner) external view returns (bool) { return confirmations[transactionId][owner]; }
+    function getOwners() external view returns (address[] memory) {
+        return owners;
+    }
+
+    function getTransaction(uint256 transactionId) external view returns (Transaction memory) {
+        return transactions[transactionId];
+    }
+
+    function isConfirmed(uint256 transactionId, address owner) external view returns (bool) {
+        return confirmations[transactionId][owner];
+    }
 }
