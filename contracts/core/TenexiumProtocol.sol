@@ -424,7 +424,6 @@ contract TenexiumProtocol is
         emit FunctionPermissionsUpdated(_functionPermissions, msg.sender);
     }
 
-
     /**
      * @notice Update address conversion contract
      * @param newAddressConversionContract New address conversion contract
