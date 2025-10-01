@@ -184,6 +184,13 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
+    // ==================== LIQUIDATION STATISTICS ====================
+
+    uint256 public totalLiquidations; // Total number of liquidations executed
+    uint256 public totalLiquidationValue; // Total TAO value liquidated
+    mapping(address => uint256) public liquidatorLiquidations; // Number of liquidations by liquidator
+    mapping(address => uint256) public liquidatorLiquidationValue; // Total TAO value liquidated by liquidator
+
     // ==================== ADDRESS CONVERSION ====================
     IAddressConversion public ADDRESS_CONVERSION_CONTRACT;
 

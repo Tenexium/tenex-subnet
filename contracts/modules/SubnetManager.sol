@@ -39,6 +39,11 @@ contract SubnetManager is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUp
 
     // Errors
     error SetWeightsFailed();
+    error VersionKeyZero();
+    error TenexiumAddrZero();
+    error AmountZero();
+    error InsufficientBalance();
+    error WithdrawFailed();
 
     function initialize(address _TenexiumContractAddress, uint64 _versionKey) public initializer {
         __Ownable_init(msg.sender);
@@ -108,15 +113,20 @@ contract SubnetManager is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUp
     }
 
     function setVersionKey(uint64 _versionKey) public onlyOwner {
+        if (_versionKey == 0) revert VersionKeyZero();
         versionKey = _versionKey;
     }
 
     function setTenexiumContract(address _TenexiumContractAddress) public onlyOwner {
+        if (_TenexiumContractAddress == address(0)) revert TenexiumAddrZero();
         TenexiumContract = ITenexium(_TenexiumContractAddress);
     }
 
     function withdrawFunds(uint256 amount) external onlyOwner {
-        payable(owner()).transfer(amount);
+        if (amount == 0) revert AmountZero();
+        if (address(this).balance < amount) revert InsufficientBalance();
+        (bool success,) = payable(owner()).call{value: amount}("");
+        if (!success) revert WithdrawFailed();
     }
 
     receive() external payable {}

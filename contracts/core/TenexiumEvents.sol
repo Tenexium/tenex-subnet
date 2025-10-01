@@ -44,6 +44,10 @@ contract TenexiumEvents {
 
     event AlphaPairAdded(uint16 indexed netuid, uint256 maxLeverage);
 
+    event AlphaPairRemoved(uint16 indexed netuid);
+
+    event AlphaPairParametersUpdated(uint16 indexed netuid, uint256 oldMaxLeverage, uint256 newMaxLeverage);
+
     // ==================== LIQUIDITY PROVIDER EVENTS ====================
 
     event LiquidityAdded(address indexed provider, uint256 amount, uint256 shares, uint256 totalStakes);

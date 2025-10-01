@@ -97,6 +97,12 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         // Calculate liquidator bonus (share of liquidation fee)
         uint256 liquidatorFeeShareTotal = liquidationFeeAmount.safeMul(liquidationFeeLiquidatorShare) / PRECISION;
 
+        // Update liquidation statistics
+        totalLiquidations = totalLiquidations + 1;
+        totalLiquidationValue = totalLiquidationValue.safeAdd(simulatedTaoValue);
+        liquidatorLiquidations[msg.sender] = liquidatorLiquidations[msg.sender] + 1;
+        liquidatorLiquidationValue[msg.sender] = liquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
+
         emit PositionLiquidated(
             user,
             msg.sender,
@@ -169,22 +175,20 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
     /**
      * @notice Get liquidation statistics for an address
      * @param liquidator Liquidator address
-     * @return totalLiquidations Number of liquidations performed
-     * @return totalValue Total value liquidated
+     * @return totalLiquidationsOut Number of liquidations performed
+     * @return totalValueOut Total value liquidated
      * @return rewardsEarned Total rewards earned
      * @return currentScore Current liquidation score
      */
     function getLiquidatorStats(address liquidator)
         external
         view
-        returns (uint256 totalLiquidations, uint256 totalValue, uint256 rewardsEarned, uint256 currentScore)
+        returns (uint256 totalLiquidationsOut, uint256 totalValueOut, uint256 rewardsEarned, uint256 currentScore)
     {
         currentScore = liquidatorScores[liquidator];
         rewardsEarned = liquidatorFeeRewards[liquidator];
-
-        // Simplified calculations
-        totalLiquidations = currentScore;
-        totalValue = currentScore * 1e18;
+        totalLiquidationsOut = liquidatorLiquidations[liquidator];
+        totalValueOut = liquidatorLiquidationValue[liquidator];
     }
 
     // ==================== INTERNAL HELPER FUNCTIONS ====================
