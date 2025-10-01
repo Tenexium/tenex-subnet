@@ -158,22 +158,4 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
 
         return schedule.totalAmount.safeMul(vestingBlocks) / totalBlocks;
     }
-
-    // ==================== VIEW FUNCTIONS ====================
-
-    /**
-     * @notice Get buyback statistics
-     * @return totalTaoUsed Total TAO used for buybacks
-     * @return totalAlphaBought_ Total Alpha bought
-     * @return nextBuybackTime Block number for next eligible buyback
-     * @return canExecuteNow Whether buyback can execute now
-     */
-    function getBuybackStats()
-        external
-        view
-        returns (uint256 totalTaoUsed, uint256 totalAlphaBought_, uint256 nextBuybackTime, bool canExecuteNow)
-    {
-        return
-            (totalTaoUsedForBuybacks, totalAlphaBought, lastBuybackBlock + buybackIntervalBlocks, _canExecuteBuyback());
-    }
 }
