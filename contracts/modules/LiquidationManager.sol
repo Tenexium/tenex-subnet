@@ -176,7 +176,7 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
      * @notice Get liquidation statistics for an address
      * @param liquidator Liquidator address
      * @return totalLiquidationsOut Number of liquidations performed
-     * @return totalValueOut Total value liquidated (wei)
+     * @return totalValueOut Total value liquidated
      * @return rewardsEarned Total rewards earned
      * @return currentScore Current liquidation score
      */
