@@ -425,6 +425,15 @@ contract TenexiumProtocol is
     }
 
     /**
+     * @notice Update address conversion contract
+     * @param newAddressConversionContract New address conversion contract
+     */
+    function updateAddressConversionContract(address newAddressConversionContract) external onlyOwner {
+        if (newAddressConversionContract == address(0)) revert TenexiumErrors.InvalidValue();
+        ADDRESS_CONVERSION_CONTRACT = IAddressConversion(newAddressConversionContract);
+    }
+
+    /**
      * @notice Add a new alpha pair for trading
      * @param alphaNetuid Alpha subnet ID
      * @param maxLeverageForPair Maximum leverage for this pair

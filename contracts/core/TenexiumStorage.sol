@@ -5,6 +5,7 @@ import "../interfaces/IAlpha.sol";
 import "../interfaces/IStaking.sol";
 import "../interfaces/IMetagraph.sol";
 import "../interfaces/INeuron.sol";
+import "../interfaces/IAddressConversion.sol";
 import "../libraries/TenexiumErrors.sol";
 
 /**
@@ -182,6 +183,9 @@ contract TenexiumStorage {
     mapping(bytes32 => address[]) public groupLiquidityProviders;
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
+
+    // ==================== ADDRESS CONVERSION ====================
+    IAddressConversion public ADDRESS_CONVERSION_CONTRACT;
 
     // ==================== STRUCTS ====================
 
