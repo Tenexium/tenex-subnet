@@ -170,27 +170,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         return simulatedTaoValue.safeMul(PRECISION) / totalDebt;
     }
 
-    // ==================== VIEW FUNCTIONS ====================
-
-    /**
-     * @notice Get liquidation statistics for an address
-     * @param liquidator Liquidator address
-     * @return totalLiquidationsOut Number of liquidations performed
-     * @return totalValueOut Total value liquidated
-     * @return rewardsEarned Total rewards earned
-     * @return currentScore Current liquidation score
-     */
-    function getLiquidatorStats(address liquidator)
-        external
-        view
-        returns (uint256 totalLiquidationsOut, uint256 totalValueOut, uint256 rewardsEarned, uint256 currentScore)
-    {
-        currentScore = liquidatorScores[liquidator];
-        rewardsEarned = liquidatorFeeRewards[liquidator];
-        totalLiquidationsOut = liquidatorLiquidations[liquidator];
-        totalValueOut = liquidatorLiquidationValue[liquidator];
-    }
-
     // ==================== INTERNAL HELPER FUNCTIONS ====================
 
     /**
