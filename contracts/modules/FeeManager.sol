@@ -29,9 +29,9 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         uint256 lpFeeAmount = feeAmount.safeMul(tradingFeeLpShare) / PRECISION;
         uint256 liquidatorFeeAmount = feeAmount.safeMul(tradingFeeLiquidatorShare) / PRECISION;
 
-        // Accumulate per-share for LPs
-        if (lpFeeAmount > 0 && totalLpStakes > 0) {
-            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpStakes;
+        // Accumulate per-share for LPs using total shares supply
+        if (lpFeeAmount > 0 && totalLpShares > 0) {
+            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpShares;
             totalLpFees += lpFeeAmount;
         }
 
@@ -59,8 +59,8 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         uint256 lpFeeAmount = feeAmount.safeMul(borrowingFeeLpShare) / PRECISION;
         uint256 liquidatorFeeAmount = feeAmount.safeMul(borrowingFeeLiquidatorShare) / PRECISION;
 
-        if (lpFeeAmount > 0 && totalLpStakes > 0) {
-            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpStakes;
+        if (lpFeeAmount > 0 && totalLpShares > 0) {
+            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpShares;
             totalLpFees += lpFeeAmount;
         }
         if (liquidatorFeeAmount > 0 && totalLiquidatorScore > 0) {

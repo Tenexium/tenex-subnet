@@ -184,6 +184,10 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
+    // ==================== LP SHARE TRACKING ====================
+    // Total LP shares
+    uint256 public totalLpShares;
+
     // ==================== LIQUIDATION STATISTICS ====================
 
     uint256 public totalLiquidations; // Total number of liquidations executed
