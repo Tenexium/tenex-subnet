@@ -54,7 +54,8 @@ contract TenexiumEvents {
 
     event PositionOpened(
         address indexed user,
-        uint16 indexed alphaNetuid,
+        uint256 indexed positionId,
+        uint16 alphaNetuid,
         uint256 collateral,
         uint256 borrowed,
         uint256 alphaAmount,
@@ -64,7 +65,8 @@ contract TenexiumEvents {
 
     event PositionClosed(
         address indexed user,
-        uint16 indexed alphaNetuid,
+        uint256 indexed positionId,
+        uint16 alphaNetuid,
         uint256 collateralReturned,
         uint256 borrowedRepaid,
         uint256 alphaAmount,
@@ -72,14 +74,15 @@ contract TenexiumEvents {
         uint256 fees
     );
 
-    event CollateralAdded(address indexed user, uint16 indexed alphaNetuid, uint256 amount);
+    event CollateralAdded(address indexed user, uint256 indexed positionId, uint16 alphaNetuid, uint256 amount);
 
     // ==================== RISK MANAGEMENT & LIQUIDATION EVENTS ====================
 
     event PositionLiquidated(
         address indexed user,
         address indexed liquidator,
-        uint16 indexed alphaNetuid,
+        uint256 indexed positionId,
+        uint16 alphaNetuid,
         uint256 positionValue,
         uint256 liquidationFee,
         uint256 liquidatorBonus,

@@ -28,7 +28,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
     function _openPosition(uint16 alphaNetuid, uint256 leverage, uint256 maxSlippage) internal {
         if (maxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
         if (msg.value < 1e17) revert TenexiumErrors.MinDeposit();
-        if (positions[msg.sender][alphaNetuid].isActive) revert TenexiumErrors.PositionExists();
 
         // Check tier-based leverage limit
         uint256 userMaxLeverage = _getUserMaxLeverage(msg.sender);
@@ -77,8 +76,11 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Price is returned in RAO/alpha; convert to wei/alpha for internal consistency
         uint256 entryPrice = ALPHA_PRECOMPILE.getAlphaPrice(alphaNetuid).priceRaoToWei();
 
-        // Create position
-        Position storage position = positions[msg.sender][alphaNetuid];
+        // Create new position with a unique per-user positionId
+        uint256 positionId = nextPositionId[msg.sender];
+        nextPositionId[msg.sender] = positionId + 1;
+        Position storage position = positions[msg.sender][positionId];
+        position.alphaNetuid = alphaNetuid;
         position.collateral = collateralAmount;
         position.borrowed = borrowedAmount;
         position.alphaAmount = actualAlphaReceived;
@@ -107,22 +109,30 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         userTotalVolume[msg.sender] += totalTaoToStakeGross;
 
         emit PositionOpened(
-            msg.sender, alphaNetuid, collateralAmount, borrowedAmount, actualAlphaReceived, leverage, entryPrice
+            msg.sender,
+            positionId,
+            alphaNetuid,
+            collateralAmount,
+            borrowedAmount,
+            actualAlphaReceived,
+            leverage,
+            entryPrice
         );
     }
 
     /**
      * @notice Close a position and return collateral (TAO-only withdrawals)
-     * @param alphaNetuid Alpha subnet ID
+     * @param positionId User's position identifier
      * @param amountToClose Amount of alpha to close (0 for full close)
      * @param maxSlippage Maximum acceptable slippage (in basis points)
      */
-    function _closePosition(uint16 alphaNetuid, uint256 amountToClose, uint256 maxSlippage) internal {
+    function _closePosition(uint256 positionId, uint256 amountToClose, uint256 maxSlippage) internal {
         if (maxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
-        Position storage position = positions[msg.sender][alphaNetuid];
+        Position storage position = positions[msg.sender][positionId];
+        uint16 alphaNetuid = position.alphaNetuid;
 
         // Calculate accrued borrowing fees
-        uint256 accruedFees = _calculatePositionFees(msg.sender, alphaNetuid);
+        uint256 accruedFees = _calculatePositionFees(msg.sender, positionId);
         position.accruedFees += accruedFees;
 
         uint256 alphaToClose = amountToClose == 0 ? position.alphaAmount : amountToClose;
@@ -213,18 +223,26 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         int256 pnl = int256(actualTaoReceived) - int256(borrowedToRepay + feesToPay) - int256(collateralToReturn);
 
         emit PositionClosed(
-            msg.sender, alphaNetuid, collateralToReturn, borrowedToRepay, alphaToClose, pnl, tradingFeeAmount
+            msg.sender,
+            positionId,
+            alphaNetuid,
+            collateralToReturn,
+            borrowedToRepay,
+            alphaToClose,
+            pnl,
+            tradingFeeAmount
         );
     }
 
     /**
      * @notice Add collateral to an existing position (TAO only)
-     * @param alphaNetuid Alpha subnet ID
+     * @param positionId User's position identifier
      */
-    function _addCollateral(uint16 alphaNetuid) internal {
+    function _addCollateral(uint256 positionId) internal {
         if (msg.value == 0) revert TenexiumErrors.AmountZero();
 
-        Position storage position = positions[msg.sender][alphaNetuid];
+        Position storage position = positions[msg.sender][positionId];
+        uint16 alphaNetuid = position.alphaNetuid;
 
         // Add TAO to collateral
         position.collateral += msg.value;
@@ -237,7 +255,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalCollateral += msg.value;
 
-        emit CollateralAdded(msg.sender, alphaNetuid, msg.value);
+        emit CollateralAdded(msg.sender, positionId, alphaNetuid, msg.value);
     }
 
     // ==================== INTERNAL HELPER FUNCTIONS ====================
@@ -293,15 +311,15 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
     /**
      * @notice Calculate accrued fees for a position
      * @param user User address
-     * @param alphaNetuid Alpha subnet ID
+     * @param positionId User's position identifier
      * @return accruedFees Total accrued borrowing fees
      */
-    function _calculatePositionFees(address user, uint16 alphaNetuid) internal view returns (uint256 accruedFees) {
-        Position storage position = positions[user][alphaNetuid];
+    function _calculatePositionFees(address user, uint256 positionId) internal view returns (uint256 accruedFees) {
+        Position storage position = positions[user][positionId];
         if (!position.isActive) return 0;
 
         uint256 blocksElapsed = block.number - position.lastUpdateBlock;
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
+        AlphaPair storage pair = alphaPairs[position.alphaNetuid];
         uint256 utilization =
             pair.totalCollateral == 0 ? 0 : pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
         uint256 ratePer360 = RiskCalculator.dynamicBorrowRatePer360(utilization);
@@ -314,7 +332,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
      * @notice Update utilization rates for alpha pairs
      * @param alphaNetuid Alpha subnet ID
      */
-    function _updateUtilizationRate(uint16 alphaNetuid) internal validAlphaPair(alphaNetuid) {
+    function _updateUtilizationRate(uint16 alphaNetuid) internal virtual validAlphaPair(alphaNetuid) {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
 
         if (pair.totalCollateral == 0) {
