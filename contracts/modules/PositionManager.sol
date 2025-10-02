@@ -99,16 +99,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         pair.totalCollateral += collateralAmount;
         pair.totalBorrowed += borrowedAmount;
 
-        // Update utilization and borrowing rate for the pair and emit event
-        if (pair.totalCollateral == 0) {
-            pair.utilizationRate = 0;
-            pair.borrowingRate = 0;
-        } else {
-            uint256 utilization = pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
-            pair.utilizationRate = utilization;
-            pair.borrowingRate = RiskCalculator.dynamicBorrowRatePer360(utilization);
-        }
-        emit UtilizationRateUpdated(alphaNetuid, pair.utilizationRate, pair.borrowingRate);
+        _updateUtilizationRate(alphaNetuid);
 
         // Update metrics
         totalVolume += totalTaoToStakeGross;
@@ -192,16 +183,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         pair.totalBorrowed -= borrowedToRepay;
         pair.totalCollateral -= collateralToReturn;
 
-        // Update utilization and borrowing rate for the pair and emit event
-        if (pair.totalCollateral == 0) {
-            pair.utilizationRate = 0;
-            pair.borrowingRate = 0;
-        } else {
-            uint256 utilization2 = pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
-            pair.utilizationRate = utilization2;
-            pair.borrowingRate = RiskCalculator.dynamicBorrowRatePer360(utilization2);
-        }
-        emit UtilizationRateUpdated(alphaNetuid, pair.utilizationRate, pair.borrowingRate);
+        _updateUtilizationRate(alphaNetuid);
 
         // Distribute fees
         _distributeTradingFees(tradingFeeAmount);
@@ -326,5 +308,25 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 borrowingFeeAmount = position.borrowed.safeMul(ratePer360).safeMul(blocksElapsed) / (PRECISION * 360);
 
         return borrowingFeeAmount;
+    }
+
+    /**
+     * @notice Update utilization rates for alpha pairs
+     * @param alphaNetuid Alpha subnet ID
+     */
+    function _updateUtilizationRate(uint16 alphaNetuid) internal validAlphaPair(alphaNetuid) {
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
+
+        if (pair.totalCollateral == 0) {
+            pair.utilizationRate = 0;
+            pair.borrowingRate = 0;
+            return;
+        }
+
+        // Update utilization and borrowing rates
+        pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
+        pair.borrowingRate = RiskCalculator.dynamicBorrowRatePer360(pair.utilizationRate);
+
+        emit UtilizationRateUpdated(alphaNetuid, pair.utilizationRate, pair.borrowingRate);
     }
 }

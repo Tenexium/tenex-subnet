@@ -287,22 +287,20 @@ async function main() {
         console.log("-".repeat(40));
         
         // Get protocol stats
-        const protocolStats = await TenexiumProtocol.getProtocolStats();
         console.log("Protocol Stats:");
-        console.log("  - Total Collateral Amount:", ethers.formatEther(protocolStats.totalCollateralAmount), "TAO");
-        console.log("  - Total Borrowed Amount:", ethers.formatEther(protocolStats.totalBorrowedAmount), "TAO");
-        console.log("  - Total Volume Amount:", ethers.formatEther(protocolStats.totalVolumeAmount), "TAO");
-        console.log("  - Total Trades Count:", protocolStats.totalTradesCount.toString());
-        console.log("  - Protocol Fees Amount:", ethers.formatEther(protocolStats.protocolFeesAmount), "TAO");
-        console.log("  - Total LP Stakes Amount:", ethers.formatEther(protocolStats.totalLpStakesAmount), "TAO");
+        console.log("  - Total Collateral Amount:", ethers.formatEther(await TenexiumProtocol.totalCollateral()), "TAO");
+        console.log("  - Total Borrowed Amount:", ethers.formatEther(await TenexiumProtocol.totalBorrowed()), "TAO");
+        console.log("  - Total Volume Amount:", ethers.formatEther(await TenexiumProtocol.totalVolume()), "TAO");
+        console.log("  - Total Trades Count:", await TenexiumProtocol.totalTrades().toString());
+        console.log("  - Protocol Fees Amount:", ethers.formatEther(await TenexiumProtocol.protocolFees()), "TAO");
+        console.log("  - Total LP Stakes Amount:", ethers.formatEther(await TenexiumProtocol.totalLpStakes()), "TAO");
 
         // Get user stats for the signer
-        const userStats = await TenexiumProtocol.getUserStats(signer.address);
         console.log("User Stats for", signer.address, ":");
-        console.log("  - Total Collateral User:", ethers.formatEther(userStats.totalCollateralUser), "TAO");
-        console.log("  - Total Borrowed User:", ethers.formatEther(userStats.totalBorrowedUser), "TAO");
-        console.log("  - Total Volume User:", ethers.formatEther(userStats.totalVolumeUser), "TAO");
-        console.log("  - Is Liquidity Provider:", userStats.isLiquidityProvider);
+        console.log("  - Total Collateral User:", ethers.formatEther(await TenexiumProtocol.userCollateral(signer.address)), "TAO");
+        console.log("  - Total Borrowed User:", ethers.formatEther(await TenexiumProtocol.userTotalBorrowed(signer.address)), "TAO");
+        console.log("  - Total Volume User:", ethers.formatEther(await TenexiumProtocol.userTotalVolume(signer.address)), "TAO");
+        console.log("  - Is Liquidity Provider:", (await TenexiumProtocol.liquidityProviders(signer.address)).isActive);
 
         // Get user position (should be empty for new user)
         const userPosition = await TenexiumProtocol.positions(signer.address, tenexNetuid);

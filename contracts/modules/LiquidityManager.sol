@@ -101,28 +101,6 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         emit LiquidityRemoved(msg.sender, withdrawAmount, sharesToBurn, totalLpStakes);
     }
 
-    // ==================== UTILIZATION MANAGEMENT ====================
-
-    /**
-     * @notice Update utilization rates for alpha pairs
-     * @param alphaNetuid Alpha subnet ID
-     */
-    function updateUtilizationRate(uint16 alphaNetuid) external validAlphaPair(alphaNetuid) {
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
-
-        if (pair.totalCollateral == 0) {
-            pair.utilizationRate = 0;
-            pair.borrowingRate = 0;
-            return;
-        }
-
-        // Update utilization and borrowing rates
-        pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
-        pair.borrowingRate = RiskCalculator.dynamicBorrowRatePer360(pair.utilizationRate);
-
-        emit UtilizationRateUpdated(alphaNetuid, pair.utilizationRate, pair.borrowingRate);
-    }
-
     // ==================== LP SHARE CALCULATIONS ====================
 
     /**
@@ -137,23 +115,6 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
 
         // Calculate shares based on current exchange rate
         return depositAmount.safeMul(totalLpShares) / totalLpStakes;
-    }
-
-    /**
-     * @notice Calculate TAO value of LP shares
-     * @param lpAddress LP address
-     * @return taoValue Current TAO value of LP's shares
-     */
-    function calculateLpValue(address lpAddress) external view returns (uint256 taoValue) {
-        LiquidityProvider storage lp = liquidityProviders[lpAddress];
-        if (!lp.isActive || lp.shares == 0) return 0;
-
-        if (totalLpShares == 0) return 0;
-
-        // Calculate proportional value including earned rewards
-        uint256 baseValue = totalLpStakes.safeMul(lp.shares) / totalLpShares;
-
-        return baseValue;
     }
 
     // ==================== INTERNAL FUNCTIONS ====================
