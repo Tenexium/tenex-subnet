@@ -23,8 +23,8 @@ abstract contract PrecompileAdapter is TenexiumStorage {
         internal
         returns (uint256 alphaReceived)
     {
-        if (protocolSs58Address == bytes32(0)) revert TenexiumErrors.InvalidValue();
-        uint256 initialStake = STAKING_PRECOMPILE.getStake(validatorHotkey, protocolSs58Address, uint256(alphaNetuid));
+        bytes32 _protocolSs58Address = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this));
+        uint256 initialStake = STAKING_PRECOMPILE.getStake(validatorHotkey, _protocolSs58Address, uint256(alphaNetuid));
 
         uint256 amountRao = taoAmount.weiToRao();
         bytes memory data = abi.encodeWithSelector(
@@ -33,7 +33,7 @@ abstract contract PrecompileAdapter is TenexiumStorage {
         (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
         if (!success) revert TenexiumErrors.StakeFailed();
 
-        uint256 finalStake = STAKING_PRECOMPILE.getStake(validatorHotkey, protocolSs58Address, uint256(alphaNetuid));
+        uint256 finalStake = STAKING_PRECOMPILE.getStake(validatorHotkey, _protocolSs58Address, uint256(alphaNetuid));
 
         alphaReceived = finalStake - initialStake;
         return alphaReceived;
