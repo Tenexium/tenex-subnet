@@ -34,10 +34,6 @@ contract TenexiumEvents {
 
     event ProtocolValidatorHotkeyUpdated(bytes32 indexed oldHotkey, bytes32 indexed newHotkey, address indexed admin);
 
-    event ProtocolSs58AddressUpdated(
-        bytes32 indexed oldSs58Address, bytes32 indexed newSs58Address, address indexed admin
-    );
-
     event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury, address indexed admin);
 
     event UtilizationRateUpdated(uint16 indexed alphaNetuid, uint256 utilizationRate, uint256 borrowingRate);
