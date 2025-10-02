@@ -2,6 +2,7 @@ import "hardhat-storage-layout"
 import "hardhat-storage-layout-changes";
 import "./tasks/deploy-final";
 import "./tasks/timelock";
+import "./tasks/multisig";
 
 import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";

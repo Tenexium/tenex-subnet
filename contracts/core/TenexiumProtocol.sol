@@ -391,18 +391,6 @@ contract TenexiumProtocol is
     }
 
     /**
-     * @notice Update protocol SS58 address
-     * @param newSs58Address New SS58 address for the protocol
-     */
-    function updateProtocolSs58Address(bytes32 newSs58Address) external onlyOwner {
-        if (newSs58Address == bytes32(0)) revert TenexiumErrors.InvalidValue();
-        bytes32 old = protocolSs58Address;
-        protocolSs58Address = newSs58Address;
-
-        emit ProtocolSs58AddressUpdated(old, newSs58Address, msg.sender);
-    }
-
-    /**
      * @notice Update protocol treasury address
      * @param newTreasury New treasury address
      */
@@ -693,54 +681,9 @@ contract TenexiumProtocol is
         // Reset protocol fees
         protocolFees = 0;
 
-        // Transfer remaining fees to owner
-        (bool success,) = payable(owner()).call{value: withdrawAmount}("");
+        // Transfer remaining fees to treasury
+        (bool success,) = payable(treasury).call{value: withdrawAmount}("");
         if (!success) revert TenexiumErrors.TransferFailed();
-    }
-
-    // ==================== VIEW FUNCTIONS ====================
-
-    /**
-     * @notice Get comprehensive protocol statistics
-     */
-    function getProtocolStats()
-        external
-        view
-        returns (
-            uint256 totalCollateralAmount,
-            uint256 totalBorrowedAmount,
-            uint256 totalVolumeAmount,
-            uint256 totalTradesCount,
-            uint256 protocolFeesAmount,
-            uint256 totalLpStakesAmount
-        )
-    {
-        totalCollateralAmount = totalCollateral;
-        totalBorrowedAmount = totalBorrowed;
-        totalVolumeAmount = totalVolume;
-        totalTradesCount = totalTrades;
-        protocolFeesAmount = protocolFees;
-        totalLpStakesAmount = totalLpStakes;
-    }
-
-    /**
-     * @notice Get user's overall statistics
-     * @param user User address
-     */
-    function getUserStats(address user)
-        external
-        view
-        returns (
-            uint256 totalCollateralUser,
-            uint256 totalBorrowedUser,
-            uint256 totalVolumeUser,
-            bool isLiquidityProvider
-        )
-    {
-        totalCollateralUser = userCollateral[user];
-        totalBorrowedUser = userTotalBorrowed[user];
-        totalVolumeUser = userTotalVolume[user];
-        isLiquidityProvider = liquidityProviders[user].isActive;
     }
 
     // ==================== DELEGATE FUNCTIONS ====================

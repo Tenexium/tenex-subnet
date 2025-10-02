@@ -22,6 +22,88 @@ interface DepositAddressWithAmount {
     amount: string;
 }
 
+// Converts a number or numeric string (including scientific notation) into a
+// plain decimal string without exponent and clamps the fractional part to
+// at most `maxDecimals` digits.
+function toPlainDecimalString(value: number | string, maxDecimals: number): string {
+    const raw = typeof value === "number" ? value.toString() : value.trim();
+    if (raw === "" || raw === "NaN" || raw === "Infinity" || raw === "-Infinity") {
+        return "0";
+    }
+
+    const isNeg = raw.startsWith("-");
+    const s = isNeg ? raw.slice(1) : raw;
+
+    const expandExp = (str: string): string => {
+        if (!/[eE]/.test(str)) return str;
+        const [coeff, expStr] = str.split(/[eE]/);
+        const exp = parseInt(expStr, 10);
+        const [intPart, fracPart = ""] = coeff.split(".");
+        const digits = (intPart + fracPart).replace(/^0+(?=\d)/, "");
+        if (digits === "") return "0";
+        if (exp >= 0) {
+            const move = exp - fracPart.length;
+            if (move >= 0) {
+                return digits + "0".repeat(move);
+            } else {
+                const idx = digits.length + move;
+                return digits.slice(0, idx) + "." + digits.slice(idx);
+            }
+        } else {
+            const absExp = Math.abs(exp);
+            const zeros = absExp - intPart.replace(/^0+/, "").length;
+            if (zeros >= 0) {
+                return "0." + "0".repeat(zeros) + digits;
+            } else {
+                const idx = intPart.replace(/^0+/, "").length - absExp;
+                const left = digits.slice(0, idx);
+                const right = digits.slice(idx);
+                return (left === "" ? "0" : left) + "." + right;
+            }
+        }
+    };
+
+    // Expand exponent if any
+    let dec = expandExp(s);
+
+    // Normalize: ensure we have only digits and at most one dot
+    if (!/^\d*(?:\.\d*)?$/.test(dec)) {
+        // Fallback: strip invalid chars
+        dec = dec.replace(/[^\d.]/g, "");
+        const parts = dec.split(".");
+        if (parts.length > 2) {
+            dec = parts.shift()! + "." + parts.join("");
+        }
+    }
+
+    // Remove leading zeros (keep one if number < 1)
+    if (dec.includes(".")) {
+        const [i, f] = dec.split(".");
+        const intNorm = i.replace(/^0+(?=\d)/, "");
+        dec = (intNorm === "" ? "0" : intNorm) + "." + (f || "");
+    } else {
+        dec = dec.replace(/^0+(?=\d)/, "");
+        if (dec === "") dec = "0";
+    }
+
+    // Clamp fractional digits to maxDecimals
+    if (dec.includes(".")) {
+        let [i, f] = dec.split(".");
+        if (f.length > maxDecimals) {
+            f = f.slice(0, maxDecimals); // truncate to avoid rounding up
+        }
+        // Trim trailing zeros in fraction
+        f = f.replace(/0+$/, "");
+        dec = f.length > 0 ? `${i}.${f}` : i;
+    }
+
+    // Re-apply sign if necessary and avoid "-0"
+    if (isNeg && dec !== "0" && dec !== "0.0") {
+        dec = "-" + dec;
+    }
+    return dec;
+}
+
 async function fetchNeuronsData(apiUrl: string): Promise<NeuronData[]> {
     try {
         console.log(`🔍 Fetching neurons data from: ${apiUrl}`);
@@ -47,7 +129,9 @@ function getDepositAddresses(neurons: NeuronData[]): DepositAddressWithAmount[] 
     neurons.forEach(neuron => {
         neuron.deposits.forEach(deposit => {
             if (!depositAddressesWithAmount.some(address => address.depositAddress === deposit.deposit_address)) {
-                depositAddressesWithAmount.push({ hotkey: neuron.hotkey, depositAddress: deposit.deposit_address, amount: deposit.amount_deposited.toString() });
+                const decimal = toPlainDecimalString(deposit.amount_deposited as unknown as (number | string), 18);
+                const amount = ethers.parseUnits(decimal, 18);
+                depositAddressesWithAmount.push({ hotkey: neuron.hotkey, depositAddress: deposit.deposit_address, amount: amount.toString() });
             }
         });
     });
@@ -85,7 +169,7 @@ async function main() {
         console.log("=" .repeat(50));
         depositAddressesWithAmount.forEach( async (address, index) => {
             const lpInfo = await contract.liquidityProviders(address.depositAddress);
-            console.log(`${index + 1}. ${address.depositAddress}: ${address.amount} ${ethers.formatEther(lpInfo[0])}`, ethers.parseEther(address.amount)===lpInfo[0] ? "✅" : "❌");
+            console.log(`${index + 1}. ${address.depositAddress}: ${address.amount} ${lpInfo[0]}`, address.amount.toString()===lpInfo[0].toString() ? "✅" : "❌");
             const lp_adress_from_hotkey = await contract.groupLiquidityProviders(decodeAddress(address.hotkey), 0);
             console.log(`${index + 1}. LP Address from Hotkey(${address.hotkey}): ${lp_adress_from_hotkey}`, address.depositAddress===lp_adress_from_hotkey ? "✅" : "❌");
             const is_unique_liquidity_provider = await contract.uniqueLiquidityProviders(address.depositAddress);
