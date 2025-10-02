@@ -50,7 +50,7 @@ library TenexiumErrors {
     error LiquiFeeTransferFailed();
     error CollateralReturnFailed();
     error ArrayLengthMismatch();
-    error PositionNotFound(address user, uint16 netuid);
+    error PositionNotFound(address user, uint256 positionId);
 
     // Rewards
     error NoRewards();

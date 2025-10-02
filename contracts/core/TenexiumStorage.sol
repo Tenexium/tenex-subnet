@@ -144,8 +144,8 @@ contract TenexiumStorage {
     mapping(address => uint256) public lastUserActionBlock;
     mapping(address => uint256) public lastLpActionBlock;
 
-    // Positions
-    mapping(address => mapping(uint16 => Position)) public positions;
+    // Positions (keyed by user and positionId)
+    mapping(address => mapping(uint256 => Position)) public positions;
 
     // User aggregates
     mapping(address => uint256) public userCollateral;
@@ -184,6 +184,9 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
+    // Per-user position id counter (next id to assign)
+    mapping(address => uint256) public nextPositionId;
+
     // ==================== LP SHARE TRACKING ====================
     // Total LP shares
     uint256 public totalLpShares;
@@ -210,6 +213,7 @@ contract TenexiumStorage {
         uint256 accruedFees; // Accrued borrowing fees
         bool isActive; // Position status
         bytes32 validatorHotkey; // Hotkey used to stake alpha for this position
+        uint16 alphaNetuid; // Alpha subnet ID for this position
     }
 
     struct AlphaPair {
@@ -242,8 +246,8 @@ contract TenexiumStorage {
 
     // ==================== MODIFIERS ====================
 
-    modifier validPosition(address user, uint16 alphaNetuid) {
-        if (!positions[user][alphaNetuid].isActive) revert TenexiumErrors.PositionNotFound(user, alphaNetuid);
+    modifier validPosition(address user, uint256 positionId) {
+        if (!positions[user][positionId].isActive) revert TenexiumErrors.PositionNotFound(user, positionId);
         _;
     }
 

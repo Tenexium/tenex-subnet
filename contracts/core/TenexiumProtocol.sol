@@ -573,51 +573,49 @@ contract TenexiumProtocol is
 
     /**
      * @notice Close a position and return collateral (TAO-only withdrawals)
-     * @param alphaNetuid Alpha subnet ID
+     * @param positionId User's position identifier
      * @param amountToClose Amount of alpha to close (0 for full close)
      * @param maxSlippage Maximum acceptable slippage
      */
-    function closePosition(uint16 alphaNetuid, uint256 amountToClose, uint256 maxSlippage)
+    function closePosition(uint256 positionId, uint256 amountToClose, uint256 maxSlippage)
         external
         nonReentrant
         userRateLimit
-        validPosition(msg.sender, alphaNetuid)
-        validAlphaPair(alphaNetuid)
+        validPosition(msg.sender, positionId)
         hasPermission(1)
     {
-        _closePosition(alphaNetuid, amountToClose, maxSlippage);
+        _closePosition(positionId, amountToClose, maxSlippage);
         _updateLiquidityCircuitBreaker();
     }
 
     /**
      * @notice Add collateral to an existing position (TAO only)
-     * @param alphaNetuid Alpha subnet ID
+     * @param positionId User's position identifier
      */
-    function addCollateral(uint16 alphaNetuid)
+    function addCollateral(uint256 positionId)
         external
         payable
         nonReentrant
         userRateLimit
-        validPosition(msg.sender, alphaNetuid)
-        validAlphaPair(alphaNetuid)
+        validPosition(msg.sender, positionId)
         hasPermission(2)
     {
-        _addCollateral(alphaNetuid);
+        _addCollateral(positionId);
         _updateLiquidityCircuitBreaker();
     }
 
     /**
      * @notice Liquidate an undercollateralized position
      * @param user Address of the position owner
-     * @param alphaNetuid Alpha subnet ID
+     * @param positionId User's position identifier
      * @param justificationUrl Off-chain evidence URL
      * @param contentHash Hash of justification content
      */
-    function liquidatePosition(address user, uint16 alphaNetuid, string calldata justificationUrl, bytes32 contentHash)
+    function liquidatePosition(address user, uint256 positionId, string calldata justificationUrl, bytes32 contentHash)
         external
         nonReentrant
     {
-        _liquidatePosition(user, alphaNetuid, justificationUrl, contentHash);
+        _liquidatePosition(user, positionId, justificationUrl, contentHash);
         _updateLiquidityCircuitBreaker();
     }
 
