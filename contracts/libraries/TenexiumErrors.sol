@@ -18,7 +18,6 @@ library TenexiumErrors {
     error LpCooldownTooLarge(uint256 blocks);
 
     // Liquidity / LP
-    error NoLiquidityProvided();
     error NotLiquidityProvider();
     error NoFees();
     error LpMinDeposit();

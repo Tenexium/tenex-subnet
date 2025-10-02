@@ -24,11 +24,10 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         if (msg.value < 1e17) revert TenexiumErrors.LpMinDeposit();
 
         LiquidityProvider storage lp = liquidityProviders[msg.sender];
+
         // Settle pending rewards before changing shares
-        if (lp.isActive) {
-            // update reward accounting using accumulators in FeeManager
-            _updateLpFeeRewards(msg.sender);
-        }
+        // update reward accounting using accumulators in FeeManager
+        _updateLpFeeRewards(msg.sender);
 
         // Calculate shares based on current exchange rate
         uint256 shares = calculateLpShares(msg.value);
@@ -36,7 +35,6 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         if (!lp.isActive) {
             // New LP
             lp.isActive = true;
-            lp.lastRewardBlock = block.number;
         }
 
         lp.stake += msg.value;
@@ -46,6 +44,8 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
 
         // Update global state (LP liquidity only)
         totalLpStakes += msg.value;
+        // Track total LP share supply
+        totalLpShares += shares;
 
         emit LiquidityAdded(msg.sender, msg.value, shares, totalLpStakes);
     }
@@ -58,11 +58,7 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         LiquidityProvider storage lp = liquidityProviders[msg.sender];
         if (!lp.isActive) revert TenexiumErrors.NotLiquidityProvider();
 
-        uint256 withdrawAmount = amount;
-        if (amount == 0) {
-            // Full withdrawal
-            withdrawAmount = lp.stake;
-        }
+        uint256 withdrawAmount = amount == 0 ? lp.stake : amount;
 
         if (withdrawAmount == 0 || withdrawAmount > lp.stake) revert TenexiumErrors.InvalidWithdrawalAmount();
 
@@ -75,21 +71,28 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         // Update rewards before changing stake
         _updateLpFeeRewards(msg.sender);
 
-        // Calculate shares to burn
-        uint256 sharesToBurn = lp.shares.safeMul(withdrawAmount) / lp.stake;
+        // Calculate shares to burn based on current exchange rate
+        uint256 sharesToBurn = totalLpStakes > 0 ? withdrawAmount.safeMul(totalLpShares) / totalLpStakes : 0;
+        if (sharesToBurn > lp.shares) {
+            sharesToBurn = lp.shares;
+        }
 
         // Update LP state
         lp.stake -= withdrawAmount;
         lp.shares -= sharesToBurn;
-        // Reset reward debt to new share amount
-        lp.rewardDebt = (lp.shares * accLpFeesPerShare) / 1e12;
-
         if (lp.stake == 0) {
+            // Deactivate and clear residuals to avoid dust shares/rewardDebt
             lp.isActive = false;
+            lp.shares = 0;
+            lp.rewardDebt = 0;
+        } else {
+            // Reset reward debt to new share amount
+            lp.rewardDebt = (lp.shares * accLpFeesPerShare) / 1e12;
         }
 
         // Update global state (LP liquidity only)
         totalLpStakes -= withdrawAmount;
+        totalLpShares -= sharesToBurn;
 
         // Transfer TAO to LP
         (bool success,) = msg.sender.call{value: withdrawAmount}("");
@@ -128,21 +131,12 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
      * @return shares Number of LP shares to mint
      */
     function calculateLpShares(uint256 depositAmount) public view returns (uint256 shares) {
-        if (totalLpStakes == 0) {
+        if (totalLpShares == 0 || totalLpStakes == 0) {
             return depositAmount;
         }
 
         // Calculate shares based on current exchange rate
-        uint256 totalShares = getTotalLpShares();
-        return depositAmount.safeMul(totalShares) / totalLpStakes;
-    }
-
-    /**
-     * @notice Get total LP shares across all providers
-     * @return totalShares Total LP shares
-     */
-    function getTotalLpShares() public view returns (uint256 totalShares) {
-        return totalLpStakes;
+        return depositAmount.safeMul(totalLpShares) / totalLpStakes;
     }
 
     /**
@@ -154,11 +148,10 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         LiquidityProvider storage lp = liquidityProviders[lpAddress];
         if (!lp.isActive || lp.shares == 0) return 0;
 
-        uint256 totalShares = getTotalLpShares();
-        if (totalShares == 0) return 0;
+        if (totalLpShares == 0) return 0;
 
         // Calculate proportional value including earned rewards
-        uint256 baseValue = totalLpStakes.safeMul(lp.shares) / totalShares;
+        uint256 baseValue = totalLpStakes.safeMul(lp.shares) / totalLpShares;
 
         return baseValue;
     }
