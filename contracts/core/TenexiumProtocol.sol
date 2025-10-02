@@ -685,6 +685,16 @@ contract TenexiumProtocol is
         if (!success) revert TenexiumErrors.TransferFailed();
     }
 
+    // ==================== UTILIZATION MANAGEMENT ====================
+
+    /**
+     * @notice Update utilization rates for alpha pairs
+     * @param alphaNetuid Alpha subnet ID
+     */
+    function _updateUtilizationRate(uint16 alphaNetuid) internal override(PositionManager, LiquidationManager) {
+        PositionManager._updateUtilizationRate(alphaNetuid);
+    }
+
     // ==================== DELEGATE FUNCTIONS ====================
 
     /**

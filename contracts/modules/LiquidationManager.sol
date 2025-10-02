@@ -87,6 +87,11 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         totalBorrowed = totalBorrowed.safeSub(position.borrowed);
         totalCollateral = totalCollateral.safeSub(position.collateral);
 
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
+        pair.totalBorrowed = pair.totalBorrowed.safeSub(position.borrowed);
+        pair.totalCollateral = pair.totalCollateral.safeSub(position.collateral);
+        _updateUtilizationRate(alphaNetuid);
+
         // Clear the liquidated position
         position.alphaAmount = 0;
         position.borrowed = 0;
@@ -212,4 +217,12 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
     function getPositionHealthRatio(address user, uint16 alphaNetuid) public view returns (uint256) {
         return _getPositionHealthRatio(user, alphaNetuid);
     }
+
+    // ==================== UTILIZATION MANAGEMENT ====================
+
+    /**
+     * @notice Update utilization rates for alpha pairs
+     * @param alphaNetuid Alpha subnet ID
+     */
+    function _updateUtilizationRate(uint16 alphaNetuid) internal virtual;
 }
