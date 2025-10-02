@@ -74,7 +74,7 @@ contract TenexiumEvents {
         uint256 fees
     );
 
-    event CollateralAdded(address indexed user, uint256 indexed positionId, uint16 indexed alphaNetuid, uint256 amount);
+    event CollateralAdded(address indexed user, uint256 indexed positionId, uint16 alphaNetuid, uint256 amount);
 
     // ==================== RISK MANAGEMENT & LIQUIDATION EVENTS ====================
 
