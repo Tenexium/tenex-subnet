@@ -17,23 +17,23 @@ contract MultiSigWallet is ReentrancyGuard {
     event ExecutionFailure(uint256 indexed transactionId);
     event OwnerAddition(address indexed owner);
     event OwnerRemoval(address indexed owner);
-    event RequirementChange(uint256 required);
 
     struct Transaction {
         address destination;
         uint256 value;
         bytes data;
         bool executed;
-        uint256 confirmations;
     }
 
     mapping(address => bool) public isOwner;
     address[] public owners;
-    uint256 public required;
 
     mapping(uint256 => Transaction) public transactions;
     uint256 public transactionCount;
     mapping(uint256 => mapping(address => bool)) public confirmations;
+    // Confirmation versions so that owner set changes invalidate old confirmations
+    mapping(uint256 => mapping(address => uint256)) public confirmationVersion;
+    uint256 private ownerSetVersion;
 
     modifier onlyOwner() {
         require(isOwner[msg.sender], "MSW: not owner");
@@ -55,9 +55,8 @@ contract MultiSigWallet is ReentrancyGuard {
         _;
     }
 
-    constructor(address[] memory _owners, uint256 _required) {
+    constructor(address[] memory _owners) {
         require(_owners.length > 0, "MSW: owners=0");
-        require(_required > 0 && _required <= _owners.length, "MSW: bad required");
         for (uint256 i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
             require(owner != address(0), "MSW: owner=0");
@@ -66,25 +65,30 @@ contract MultiSigWallet is ReentrancyGuard {
             owners.push(owner);
             emit OwnerAddition(owner);
         }
-        required = _required;
-        emit RequirementChange(_required);
+        ownerSetVersion = 1;
     }
 
     receive() external payable {
         if (msg.value > 0) emit Deposit(msg.sender, msg.value);
     }
 
-    function addOwner(address owner) external onlyOwner {
+    modifier onlySelf() {
+        require(msg.sender == address(this), "MSW: only self");
+        _;
+    }
+
+    function addOwner(address owner) external onlySelf {
         require(owner != address(0), "MSW: owner=0");
         require(!isOwner[owner], "MSW: exists");
         owners.push(owner);
         isOwner[owner] = true;
         emit OwnerAddition(owner);
-        require(required <= owners.length, "MSW: req>owners");
+        ownerSetVersion += 1;
     }
 
-    function removeOwner(address owner) external onlyOwner {
+    function removeOwner(address owner) external onlySelf {
         require(isOwner[owner], "MSW: !owner");
+        require(owners.length > 1, "MSW: last owner");
         isOwner[owner] = false;
         // remove from array
         for (uint256 i = 0; i < owners.length; i++) {
@@ -94,16 +98,8 @@ contract MultiSigWallet is ReentrancyGuard {
                 break;
             }
         }
-        if (required > owners.length) {
-            changeRequirement(owners.length);
-        }
         emit OwnerRemoval(owner);
-    }
-
-    function changeRequirement(uint256 _required) public onlyOwner {
-        require(_required > 0 && _required <= owners.length, "MSW: bad required");
-        required = _required;
-        emit RequirementChange(_required);
+        ownerSetVersion += 1;
     }
 
     function submitTransaction(address destination, uint256 value, bytes calldata data)
@@ -124,7 +120,7 @@ contract MultiSigWallet is ReentrancyGuard {
         notConfirmed(transactionId, msg.sender)
     {
         confirmations[transactionId][msg.sender] = true;
-        transactions[transactionId].confirmations += 1;
+        confirmationVersion[transactionId][msg.sender] = ownerSetVersion;
         emit Confirmation(msg.sender, transactionId);
     }
 
@@ -136,7 +132,7 @@ contract MultiSigWallet is ReentrancyGuard {
     {
         require(confirmations[transactionId][msg.sender], "MSW: !conf");
         confirmations[transactionId][msg.sender] = false;
-        transactions[transactionId].confirmations -= 1;
+        confirmationVersion[transactionId][msg.sender] = 0;
         emit Revocation(msg.sender, transactionId);
     }
 
@@ -148,7 +144,7 @@ contract MultiSigWallet is ReentrancyGuard {
         notExecuted(transactionId)
     {
         Transaction storage txn = transactions[transactionId];
-        require(txn.confirmations >= required, "MSW: low conf");
+        require(_getConfirmationCount(transactionId) >= _getThreshold(), "MSW: low conf");
         txn.executed = true;
         (bool success,) = txn.destination.call{value: txn.value}(txn.data);
         if (success) {
@@ -164,8 +160,7 @@ contract MultiSigWallet is ReentrancyGuard {
         returns (uint256 transactionId)
     {
         transactionId = transactionCount;
-        transactions[transactionId] =
-            Transaction({destination: destination, value: value, data: data, executed: false, confirmations: 0});
+        transactions[transactionId] = Transaction({destination: destination, value: value, data: data, executed: false});
         transactionCount += 1;
     }
 
@@ -180,5 +175,37 @@ contract MultiSigWallet is ReentrancyGuard {
 
     function isConfirmed(uint256 transactionId, address owner) external view returns (bool) {
         return confirmations[transactionId][owner];
+    }
+
+    // Dynamic threshold and confirmation counts
+    function getThreshold() external view returns (uint256) {
+        return _getThreshold();
+    }
+
+    function getConfirmationCount(uint256 transactionId) external view returns (uint256) {
+        return _getConfirmationCount(transactionId);
+    }
+
+    function _getThreshold() internal view returns (uint256) {
+        uint256 ownerCount = owners.length;
+        // more than half => floor(n/2) + 1
+        return ownerCount / 2 + 1;
+    }
+
+    function _getConfirmationCount(uint256 transactionId) internal view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < owners.length; i++) {
+            if (
+                confirmations[transactionId][owners[i]]
+                    && confirmationVersion[transactionId][owners[i]] == ownerSetVersion
+            ) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    function getOwnerSetVersion() external view returns (uint256) {
+        return ownerSetVersion;
     }
 }
