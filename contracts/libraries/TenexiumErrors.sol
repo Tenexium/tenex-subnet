@@ -37,8 +37,10 @@ library TenexiumErrors {
     error UnstakeSlippage();
     error InsufficientProceeds();
 
-    // Transfer / Staking / Unstaking
+    // Transfer / TransferStake / MoveStake / Stake / Unstake
     error TransferFailed();
+    error TransferStakeFailed();
+    error MoveStakeFailed();
     error StakeFailed();
     error UnstakeFailed();
 
