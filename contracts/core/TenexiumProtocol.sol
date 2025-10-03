@@ -422,6 +422,15 @@ contract TenexiumProtocol is
     }
 
     /**
+     * @notice Update manager
+     * @param newManager New manager
+     */
+    function updateManager(address newManager) external onlyOwner {
+        if (newManager == address(0)) revert TenexiumErrors.InvalidValue();
+        manager = newManager;
+    }
+
+    /**
      * @notice Add a new alpha pair for trading
      * @param alphaNetuid Alpha subnet ID
      * @param maxLeverageForPair Maximum leverage for this pair
