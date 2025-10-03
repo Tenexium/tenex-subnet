@@ -3,11 +3,13 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 task("multisig:deploy", "Deploy MultiSigWallet")
   .addParam("owners", "Comma-separated owner addresses")
+  .addOptionalParam("lock", "Lock period in blocks", 14400, types.int) // default: 2 days, 14400 blocks
   .setAction(async (args, hre: HardhatRuntimeEnvironment) => {
     const { ethers } = hre;
     const owners: string[] = (args.owners as string).split(",").map((s) => s.trim());
     const MultiSig = await ethers.getContractFactory("MultiSigWallet");
-    const ms = await MultiSig.deploy(owners);
+    const lockPeriod: bigint = BigInt(args.lock ?? 0);
+    const ms = await MultiSig.deploy(owners, lockPeriod);
     await ms.waitForDeployment();
     console.log(`MultiSigWallet deployed at: ${await ms.getAddress()}`);
   });
@@ -89,4 +91,18 @@ task("multisig:propose-remove", "Propose removeOwner via multisig self-call")
     console.log(`submit removeOwner tx: ${tx.hash}`);
     await tx.wait();
     console.log("Submitted removeOwner proposal.");
+  });
+
+task("multisig:propose-lock", "Propose setLockPeriod via multisig self-call")
+  .addParam("multisig", "Address of MultiSigWallet")
+  .addParam("blocks", "New lock period in blocks", 14400, types.int) // default: 2 days, 14400 blocks
+  .setAction(async (args, hre: HardhatRuntimeEnvironment) => {
+    const { ethers } = hre;
+    const ms = await ethers.getContractAt("MultiSigWallet", args.multisig);
+    const iface = new ethers.Interface(["function setLockPeriod(uint256)"]);
+    const data = iface.encodeFunctionData("setLockPeriod", [BigInt(args.blocks)]);
+    const tx = await ms.submitTransaction(args.multisig, 0n, data);
+    console.log(`submit setLockPeriod tx: ${tx.hash}`);
+    await tx.wait();
+    console.log("Submitted setLockPeriod proposal.");
   });
