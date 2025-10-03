@@ -406,7 +406,7 @@ contract TenexiumProtocol is
      * @notice Update function permissions
      * @param _functionPermissions [Open position, Close position, Add collateral]
      */
-    function updateFunctionPermissions(bool[3] calldata _functionPermissions) external onlyOwner {
+    function updateFunctionPermissions(bool[3] calldata _functionPermissions) external onlyManager {
         functionPermissions = _functionPermissions;
 
         emit FunctionPermissionsUpdated(_functionPermissions, msg.sender);
@@ -436,7 +436,7 @@ contract TenexiumProtocol is
      * @param maxLeverageForPair Maximum leverage for this pair
      * @dev Uses global liquidation threshold for all pairs
      */
-    function addAlphaPair(uint16 alphaNetuid, uint256 maxLeverageForPair) external onlyOwner {
+    function addAlphaPair(uint16 alphaNetuid, uint256 maxLeverageForPair) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists(alphaNetuid);
         if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh(maxLeverageForPair);
 
@@ -454,7 +454,7 @@ contract TenexiumProtocol is
      * @param alphaNetuid Alpha subnet ID
      * @dev Requires no collateral or borrows outstanding in the pair
      */
-    function removeAlphaPair(uint16 alphaNetuid) external onlyOwner {
+    function removeAlphaPair(uint16 alphaNetuid) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
         if (pair.totalCollateral != 0 || pair.totalBorrowed != 0) revert TenexiumErrors.InvalidValue();
@@ -473,7 +473,7 @@ contract TenexiumProtocol is
      * @param alphaNetuid Alpha subnet ID
      * @param newMaxLeverage New maximum leverage for this pair
      */
-    function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage) external onlyOwner {
+    function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
         if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh(newMaxLeverage);
@@ -507,7 +507,7 @@ contract TenexiumProtocol is
      * @notice Manually reset liquidity circuit breaker (owner only)
      * @dev Should only be used after addressing underlying liquidity/utilization issues
      */
-    function resetLiquidityCircuitBreaker(bool _liquidityCircuitBreaker) external onlyOwner {
+    function resetLiquidityCircuitBreaker(bool _liquidityCircuitBreaker) external onlyManager {
         liquidityCircuitBreaker = _liquidityCircuitBreaker;
         _toggleEmergencyPause();
     }
@@ -738,7 +738,7 @@ contract TenexiumProtocol is
      * @notice Set the maximum number of liquidity providers per hotkey
      * @param _maxLiquidityProvidersPerHotkey The maximum number of liquidity providers per hotkey
      */
-    function setMaxLiquidityProvidersPerHotkey(uint256 _maxLiquidityProvidersPerHotkey) public onlyOwner {
+    function setMaxLiquidityProvidersPerHotkey(uint256 _maxLiquidityProvidersPerHotkey) public onlyManager {
         if (_maxLiquidityProvidersPerHotkey == 0 || _maxLiquidityProvidersPerHotkey > 10) {
             revert TenexiumErrors.InvalidValue();
         }
