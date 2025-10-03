@@ -71,4 +71,7 @@ library TenexiumErrors {
     // Liquidity provider tracking
     error AddressAlreadyAssociated();
     error MaxLiquidityProvidersPerHotkeyReached();
+
+    // Manager
+    error NotManager();
 }

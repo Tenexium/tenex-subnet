@@ -201,6 +201,9 @@ contract TenexiumStorage {
     // ==================== ADDRESS CONVERSION ====================
     IAddressConversion public ADDRESS_CONVERSION_CONTRACT;
 
+    // ==================== MANAGER ====================
+    address public manager;
+
     // ==================== STRUCTS ====================
 
     struct Position {
@@ -279,6 +282,11 @@ contract TenexiumStorage {
     modifier hasPermission(uint8 permissionIndex) {
         if (permissionIndex >= functionPermissions.length) revert TenexiumErrors.InvalidValue();
         if (!functionPermissions[permissionIndex]) revert TenexiumErrors.FunctionNotPermitted(permissionIndex);
+        _;
+    }
+
+    modifier onlyManager() {
+        if (msg.sender != manager) revert TenexiumErrors.NotManager();
         _;
     }
 }
