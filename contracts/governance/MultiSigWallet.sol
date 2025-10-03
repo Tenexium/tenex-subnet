@@ -17,6 +17,7 @@ contract MultiSigWallet is ReentrancyGuard {
     event ExecutionFailure(uint256 indexed transactionId);
     event OwnerAddition(address indexed owner);
     event OwnerRemoval(address indexed owner);
+    event LockPeriodChanged(uint256 oldLockPeriod, uint256 newLockPeriod);
 
     struct Transaction {
         address destination;
@@ -34,6 +35,8 @@ contract MultiSigWallet is ReentrancyGuard {
     // Confirmation versions so that owner set changes invalidate old confirmations
     mapping(uint256 => mapping(address => uint256)) public confirmationVersion;
     uint256 private ownerSetVersion;
+    uint256 public lockPeriod; // in blocks
+    mapping(uint256 => uint256) public submissionBlock; // txId => block.number at submission
 
     modifier onlyOwner() {
         require(isOwner[msg.sender], "MSW: not owner");
@@ -55,7 +58,7 @@ contract MultiSigWallet is ReentrancyGuard {
         _;
     }
 
-    constructor(address[] memory _owners) {
+    constructor(address[] memory _owners, uint256 _lockPeriod) {
         require(_owners.length > 0, "MSW: owners=0");
         for (uint256 i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
@@ -66,6 +69,8 @@ contract MultiSigWallet is ReentrancyGuard {
             emit OwnerAddition(owner);
         }
         ownerSetVersion = 1;
+        lockPeriod = _lockPeriod;
+        emit LockPeriodChanged(0, _lockPeriod);
     }
 
     receive() external payable {
@@ -100,6 +105,11 @@ contract MultiSigWallet is ReentrancyGuard {
         }
         emit OwnerRemoval(owner);
         ownerSetVersion += 1;
+    }
+
+    function setLockPeriod(uint256 newLockPeriod) external onlySelf {
+        emit LockPeriodChanged(lockPeriod, newLockPeriod);
+        lockPeriod = newLockPeriod;
     }
 
     function submitTransaction(address destination, uint256 value, bytes calldata data)
@@ -144,6 +154,7 @@ contract MultiSigWallet is ReentrancyGuard {
         notExecuted(transactionId)
     {
         Transaction storage txn = transactions[transactionId];
+        require(block.number >= submissionBlock[transactionId] + lockPeriod, "MSW: locked");
         require(_getConfirmationCount(transactionId) >= _getThreshold(), "MSW: low conf");
         txn.executed = true;
         (bool success,) = txn.destination.call{value: txn.value}(txn.data);
@@ -161,6 +172,7 @@ contract MultiSigWallet is ReentrancyGuard {
     {
         transactionId = transactionCount;
         transactions[transactionId] = Transaction({destination: destination, value: value, data: data, executed: false});
+        submissionBlock[transactionId] = block.number;
         transactionCount += 1;
     }
 
