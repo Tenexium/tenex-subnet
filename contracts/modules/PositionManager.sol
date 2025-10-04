@@ -334,15 +334,14 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
     function _updateUtilizationRate(uint16 alphaNetuid) internal virtual validAlphaPair(alphaNetuid) {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
 
-        if (pair.totalCollateral == 0) {
+        if (totalBorrowed == 0) {
             pair.utilizationRate = 0;
             pair.borrowingRate = 0;
-            return;
+        } else {
+            pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / totalBorrowed;
+            pair.borrowingRate =
+                RiskCalculator.dynamicBorrowRatePer360(totalBorrowed.safeMul(PRECISION) / totalLpStakes);
         }
-
-        // Update utilization and borrowing rates
-        pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
-        pair.borrowingRate = RiskCalculator.dynamicBorrowRatePer360(pair.utilizationRate);
 
         emit UtilizationRateUpdated(alphaNetuid, pair.utilizationRate, pair.borrowingRate);
     }
