@@ -26,6 +26,7 @@ library TenexiumErrors {
     error InsufficientContractBalance(uint256 haveWei, uint256 needWei);
     error UserCooldownActive(uint256 remainingBlocks);
     error LpCooldownActive(uint256 remainingBlocks);
+    error BorrowingFeesCooldownActive(uint256 remainingBlocks);
 
     // Positions
     error SlippageTooHigh();

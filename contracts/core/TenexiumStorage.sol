@@ -184,6 +184,9 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
+    // Accrued borrowing fees
+    uint256 public accruedBorrowingFees; // Accrued borrowing fees
+    uint256 public lastAccruedBorrowingFeesUpdate; // Last block when accrued borrowing fees were updated
     // Per-user position id counter (next id to assign)
     mapping(address => uint256) public nextPositionId;
 
@@ -217,6 +220,7 @@ contract TenexiumStorage {
         bool isActive; // Position status
         bytes32 validatorHotkey; // Hotkey used to stake alpha for this position
         uint16 alphaNetuid; // Alpha subnet ID for this position
+        uint256 borrowingFeeDebt; // Borrowing fee debt at position opening
     }
 
     struct AlphaPair {
