@@ -97,11 +97,4 @@ library AlphaMath {
     function raoToWei(uint256 raoAmount) internal pure returns (uint256) {
         return safeMul(raoAmount, WEI_PER_RAO);
     }
-
-    /**
-     * @notice Convert price from RAO per alpha to wei per alpha
-     */
-    function priceRaoToWei(uint256 priceRaoPerAlpha) internal pure returns (uint256) {
-        return raoToWei(priceRaoPerAlpha);
-    }
 }

@@ -182,17 +182,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
     // ==================== INTERNAL HELPER FUNCTIONS ====================
 
     /**
-     * @notice Get validated alpha price with safety checks
-     * @param alphaNetuid Alpha subnet ID
-     * @return price Current alpha price
-     */
-    function _getValidatedAlphaPrice(uint16 alphaNetuid) internal view returns (uint256 price) {
-        uint256 priceRao = ALPHA_PRECOMPILE.getAlphaPrice(alphaNetuid);
-        if (priceRao == 0) revert TenexiumErrors.InvalidAlphaPrice();
-        return AlphaMath.priceRaoToWei(priceRao);
-    }
-
-    /**
      * @notice Calculate accrued borrowing fees for a position
      * @param user Position owner
      * @param positionId User's position identifier
