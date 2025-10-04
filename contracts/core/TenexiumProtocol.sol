@@ -37,6 +37,7 @@ contract TenexiumProtocol is
     BuybackManager
 {
     using AlphaMath for uint256;
+    using RiskCalculator for RiskCalculator.PositionData;
 
     // Protocol version
     string public constant VERSION = "1.0.0";
@@ -205,8 +206,6 @@ contract TenexiumProtocol is
 
         maxLeverage = _maxLeverage;
         liquidationThreshold = _liquidationThreshold;
-
-        emit RiskParametersUpdated(_maxLeverage, _liquidationThreshold);
     }
 
     /**
@@ -231,8 +230,6 @@ contract TenexiumProtocol is
         liquidityBufferRatio = _liquidityBufferRatio;
 
         _updateLiquidityCircuitBreaker();
-
-        emit LiquidityGuardrailsUpdated(_minLiquidityThreshold, _maxUtilizationRate, _liquidityBufferRatio);
     }
 
     /**
@@ -246,8 +243,6 @@ contract TenexiumProtocol is
 
         userActionCooldownBlocks = _userCooldownBlocks;
         lpActionCooldownBlocks = _lpCooldownBlocks;
-
-        emit ActionCooldownsUpdated(_userCooldownBlocks, _lpCooldownBlocks);
     }
 
     /**
@@ -267,8 +262,6 @@ contract TenexiumProtocol is
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
-
-        emit BuybackParametersUpdated(_buybackRate, _buybackIntervalBlocks, _buybackExecutionThreshold);
     }
 
     /**
@@ -282,8 +275,6 @@ contract TenexiumProtocol is
 
         vestingDurationBlocks = _vestingDurationBlocks;
         cliffDurationBlocks = _cliffDurationBlocks;
-
-        emit VestingParametersUpdated(_vestingDurationBlocks, _cliffDurationBlocks);
     }
 
     /**
@@ -303,8 +294,6 @@ contract TenexiumProtocol is
         tradingFeeRate = _tradingFeeRate;
         borrowingFeeRate = _borrowingFeeRate;
         liquidationFeeRate = _liquidationFeeRate;
-
-        emit FeesUpdated(_tradingFeeRate, _borrowingFeeRate, _liquidationFeeRate);
     }
 
     /**
@@ -332,8 +321,6 @@ contract TenexiumProtocol is
         liquidationFeeLpShare = _liquidation[0];
         liquidationFeeLiquidatorShare = _liquidation[1];
         liquidationFeeProtocolShare = _liquidation[2];
-
-        emit FeeDistributionsUpdated();
     }
 
     /**
@@ -374,8 +361,6 @@ contract TenexiumProtocol is
         tier3MaxLeverage = _tierMaxLeverages[3];
         tier4MaxLeverage = _tierMaxLeverages[4];
         tier5MaxLeverage = _tierMaxLeverages[5];
-
-        emit TierParametersUpdated();
     }
 
     /**
@@ -384,10 +369,7 @@ contract TenexiumProtocol is
      */
     function updateProtocolValidatorHotkey(bytes32 newHotkey) external onlyOwner {
         if (newHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
-        bytes32 old = protocolValidatorHotkey;
         protocolValidatorHotkey = newHotkey;
-
-        emit ProtocolValidatorHotkeyUpdated(old, newHotkey, msg.sender);
     }
 
     /**
@@ -396,10 +378,7 @@ contract TenexiumProtocol is
      */
     function updateTreasury(address newTreasury) external onlyOwner {
         if (newTreasury == address(0)) revert TenexiumErrors.InvalidValue();
-        address old = treasury;
         treasury = newTreasury;
-
-        emit TreasuryUpdated(old, newTreasury, msg.sender);
     }
 
     /**
@@ -408,8 +387,6 @@ contract TenexiumProtocol is
      */
     function updateFunctionPermissions(bool[3] calldata _functionPermissions) external onlyManager {
         functionPermissions = _functionPermissions;
-
-        emit FunctionPermissionsUpdated(_functionPermissions, msg.sender);
     }
 
     /**
@@ -431,6 +408,30 @@ contract TenexiumProtocol is
     }
 
     /**
+     * @notice Update global accrued borrowing fees (called every 360 blocks)
+     * @dev This function should be called periodically to update the global fee accumulator
+     * @dev Has a 360-block cooldown to prevent excessive updates
+     */
+    function updateAccruedBorrowingFees() external {
+        // Check 360-block cooldown
+        if (block.number < lastAccruedBorrowingFeesUpdate + 360) {
+            revert TenexiumErrors.BorrowingFeesCooldownActive((lastAccruedBorrowingFeesUpdate + 360) - block.number);
+        }
+
+        if (totalBorrowed == 0) return;
+
+        // Calculate current borrowing rate based on global utilization
+        uint256 utilization = totalBorrowed.safeMul(PRECISION) / totalLpStakes;
+        uint256 ratePer360 = RiskCalculator.dynamicBorrowRatePer360(utilization);
+
+        // Update global accumulator
+        accruedBorrowingFees += ratePer360;
+
+        // Update last update block
+        lastAccruedBorrowingFeesUpdate = block.number;
+    }
+
+    /**
      * @notice Add a new alpha pair for trading
      * @param alphaNetuid Alpha subnet ID
      * @param maxLeverageForPair Maximum leverage for this pair
@@ -445,8 +446,6 @@ contract TenexiumProtocol is
         pair.maxLeverage = maxLeverageForPair;
         pair.borrowingRate = borrowingFeeRate;
         pair.isActive = true;
-
-        emit AlphaPairAdded(alphaNetuid, maxLeverageForPair);
     }
 
     /**
@@ -464,8 +463,6 @@ contract TenexiumProtocol is
         pair.maxLeverage = 0;
         pair.utilizationRate = 0;
         pair.borrowingRate = 0;
-
-        emit AlphaPairRemoved(alphaNetuid);
     }
 
     /**
@@ -478,10 +475,7 @@ contract TenexiumProtocol is
         if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
         if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh(newMaxLeverage);
 
-        uint256 oldMax = pair.maxLeverage;
         pair.maxLeverage = newMaxLeverage;
-
-        emit AlphaPairParametersUpdated(alphaNetuid, oldMax, newMaxLeverage);
     }
 
     // ==================== EMERGENCY FUNCTIONS ====================
@@ -500,7 +494,6 @@ contract TenexiumProtocol is
                 _unpause();
             }
         }
-        emit EmergencyPauseToggled(liquidityCircuitBreaker, msg.sender, block.number);
     }
 
     /**
@@ -692,25 +685,39 @@ contract TenexiumProtocol is
         if (!success) revert TenexiumErrors.TransferFailed();
     }
 
-    // ==================== UTILIZATION MANAGEMENT ====================
+    // ==================== DELEGATE FUNCTIONS ====================
 
     /**
      * @notice Update utilization rates for alpha pairs
      * @param alphaNetuid Alpha subnet ID
+     * @dev Delegate to PositionManager and LiquidationManager
      */
     function _updateUtilizationRate(uint16 alphaNetuid) internal override(PositionManager, LiquidationManager) {
         PositionManager._updateUtilizationRate(alphaNetuid);
     }
 
-    // ==================== DELEGATE FUNCTIONS ====================
-
     /**
      * @notice Update LP fee rewards
      * @param lp Address of the liquidity provider
-     * @dev Resolve multiple base definitions: delegate to FeeManager implementation
+     * @dev Delegate to FeeManager and LiquidityManager
      */
     function _updateLpFeeRewards(address lp) internal override(FeeManager, LiquidityManager) {
         FeeManager._updateLpFeeRewards(lp);
+    }
+
+    /**
+     * @notice Calculate accrued fees for a position using global accumulator
+     * @param user User address
+     * @param positionId User's position identifier
+     * @dev Delegate to PositionManager and LiquidationManager
+     */
+    function _calculatePositionFees(address user, uint256 positionId)
+        internal
+        view
+        override(PositionManager, LiquidationManager)
+        returns (uint256 accruedFees)
+    {
+        accruedFees = PositionManager._calculatePositionFees(user, positionId);
     }
 
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================
@@ -730,7 +737,6 @@ contract TenexiumProtocol is
         uniqueLiquidityProviders[msg.sender] = true;
         groupLiquidityProviders[hotkey].push(msg.sender);
         liquidityProviderSet[hotkey][msg.sender] = true;
-        emit AddressAssociated(msg.sender, hotkey, block.timestamp);
         return true;
     }
 
@@ -760,9 +766,7 @@ contract TenexiumProtocol is
      * @notice Authorize upgrade (owner only)
      * @param newImplementation New implementation address
      */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
-        emit ContractUpgraded(newImplementation, 1);
-    }
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ==================== FALLBACK ====================
 

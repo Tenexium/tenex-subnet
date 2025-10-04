@@ -87,6 +87,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         position.entryPrice = entryPrice;
         position.lastUpdateBlock = block.number;
         position.accruedFees = 0;
+        position.borrowingFeeDebt = accruedBorrowingFees;
         position.isActive = true;
         position.validatorHotkey = validatorHotkey;
 
@@ -131,8 +132,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint16 alphaNetuid = position.alphaNetuid;
 
         // Calculate accrued borrowing fees
-        uint256 accruedFees = _calculatePositionFees(msg.sender, positionId);
-        position.accruedFees += accruedFees;
+        position.accruedFees = _calculatePositionFees(msg.sender, positionId);
 
         uint256 alphaToClose = amountToClose == 0 ? position.alphaAmount : amountToClose;
         if (alphaToClose > position.alphaAmount) revert TenexiumErrors.InvalidValue();
@@ -308,23 +308,24 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
     }
 
     /**
-     * @notice Calculate accrued fees for a position
+     * @notice Calculate accrued fees for a position using global accumulator
      * @param user User address
      * @param positionId User's position identifier
      * @return accruedFees Total accrued borrowing fees
      */
-    function _calculatePositionFees(address user, uint256 positionId) internal view returns (uint256 accruedFees) {
+    function _calculatePositionFees(address user, uint256 positionId)
+        internal
+        view
+        virtual
+        returns (uint256 accruedFees)
+    {
         Position storage position = positions[user][positionId];
         if (!position.isActive) return 0;
 
-        uint256 blocksElapsed = block.number - position.lastUpdateBlock;
-        AlphaPair storage pair = alphaPairs[position.alphaNetuid];
-        uint256 utilization =
-            pair.totalCollateral == 0 ? 0 : pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
-        uint256 ratePer360 = RiskCalculator.dynamicBorrowRatePer360(utilization);
-        uint256 borrowingFeeAmount = position.borrowed.safeMul(ratePer360).safeMul(blocksElapsed) / (PRECISION * 360);
-
-        return borrowingFeeAmount;
+        // Calculate fees using global accumulator approach
+        // Fee = (currentAccruedBorrowingFees - positionBorrowingFeeDebt) * positionBorrowedAmount
+        uint256 feeAccumulator = accruedBorrowingFees - position.borrowingFeeDebt;
+        return position.borrowed.safeMul(feeAccumulator) / PRECISION;
     }
 
     /**
@@ -342,7 +343,5 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             pair.borrowingRate =
                 RiskCalculator.dynamicBorrowRatePer360(totalBorrowed.safeMul(PRECISION) / totalLpStakes);
         }
-
-        emit UtilizationRateUpdated(alphaNetuid, pair.utilizationRate, pair.borrowingRate);
     }
 }

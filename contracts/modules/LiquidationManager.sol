@@ -47,7 +47,7 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         uint256 simulatedTaoValue = AlphaMath.raoToWei(simulatedTaoValueRao);
 
         // Calculate total debt (borrowed + accrued fees)
-        uint256 accruedFees = _calculateTotalAccruedFees(user, positionId);
+        uint256 accruedFees = _calculatePositionFees(user, positionId);
         uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
 
         // Unstake alpha to get TAO using the validator hotkey used at open (fallback to protocolValidatorHotkey)
@@ -141,7 +141,7 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         if (simulatedTaoValueRao2 == 0) return true;
 
         // Calculate total debt including accrued fees
-        uint256 accruedFees = _calculateTotalAccruedFees(user, positionId);
+        uint256 accruedFees = _calculatePositionFees(user, positionId);
         uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
 
         if (totalDebt == 0) return false; // No debt means not liquidatable
@@ -171,34 +171,12 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         uint256 simulatedTaoValue = AlphaMath.raoToWei(simulatedTaoValueRao);
 
         // Calculate total debt including accrued fees
-        uint256 accruedFees = _calculateTotalAccruedFees(user, positionId);
+        uint256 accruedFees = _calculatePositionFees(user, positionId);
         uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
 
         if (totalDebt == 0) return type(uint256).max; // Infinite health ratio
 
         return simulatedTaoValue.safeMul(PRECISION) / totalDebt;
-    }
-
-    // ==================== INTERNAL HELPER FUNCTIONS ====================
-
-    /**
-     * @notice Calculate accrued borrowing fees for a position
-     * @param user Position owner
-     * @param positionId User's position identifier
-     * @return accruedFees Total accrued fees
-     */
-    function _calculateTotalAccruedFees(address user, uint256 positionId) internal view returns (uint256 accruedFees) {
-        Position storage position = positions[user][positionId];
-        if (!position.isActive) return 0;
-
-        uint256 blocksElapsed = block.number - position.lastUpdateBlock;
-        AlphaPair storage pair = alphaPairs[position.alphaNetuid];
-        uint256 utilization =
-            pair.totalCollateral == 0 ? 0 : pair.totalBorrowed.safeMul(PRECISION) / pair.totalCollateral;
-        uint256 ratePer360 = RiskCalculator.dynamicBorrowRatePer360(utilization);
-        uint256 borrowingFeeAmount = position.borrowed.safeMul(ratePer360).safeMul(blocksElapsed) / (PRECISION * 360);
-
-        return position.accruedFees + borrowingFeeAmount;
     }
 
     // ==================== PUBLIC THIN WRAPPERS ====================
@@ -218,4 +196,18 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
      * @param alphaNetuid Alpha subnet ID
      */
     function _updateUtilizationRate(uint16 alphaNetuid) internal virtual;
+
+    // ==================== ACCRUED BORROWING FEES CALCULATION FUNCTIONS ====================
+
+    /**
+     * @notice Calculate accrued borrowing fees for a position
+     * @param user Position owner
+     * @param positionId User's position identifier
+     * @return accruedFees Total accrued fees
+     */
+    function _calculatePositionFees(address user, uint256 positionId)
+        internal
+        view
+        virtual
+        returns (uint256 accruedFees);
 }
