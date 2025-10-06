@@ -34,8 +34,8 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         }
 
         // Accumulate per-share for LPs using total shares supply
-        if (lpFeeAmount > 0 && totalLpShares > 0) {
-            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpShares;
+        if (lpFeeAmount > 0 && totalLpStakes > 0) {
+            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpStakes;
             totalLpFees += lpFeeAmount;
         }
 
@@ -59,8 +59,8 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
             protocolFees += protocolFeeAmount;
         }
 
-        if (lpFeeAmount > 0 && totalLpShares > 0) {
-            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpShares;
+        if (lpFeeAmount > 0 && totalLpStakes > 0) {
+            accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpStakes;
             totalLpFees += lpFeeAmount;
         }
 

@@ -190,10 +190,6 @@ contract TenexiumStorage {
     // Per-user position id counter (next id to assign)
     mapping(address => uint256) public nextPositionId;
 
-    // ==================== LP SHARE TRACKING ====================
-    // Total LP shares
-    uint256 public totalLpShares;
-
     // ==================== LIQUIDATION STATISTICS ====================
 
     uint256 public totalLiquidations; // Total number of liquidations executed
