@@ -28,7 +28,6 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         // Calculate distribution amounts using trading fee shares
         uint256 protocolFeeAmount = feeAmount.safeMul(tradingFeeProtocolShare) / PRECISION;
         uint256 lpFeeAmount = feeAmount.safeMul(tradingFeeLpShare) / PRECISION;
-        uint256 liquidatorFeeAmount = feeAmount.safeMul(tradingFeeLiquidatorShare) / PRECISION;
 
         if (protocolFeeAmount > 0) {
             protocolFees += protocolFeeAmount;
@@ -40,18 +39,10 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
             totalLpFees += lpFeeAmount;
         }
 
-        // Accumulate per-score for liquidators
-        if (liquidatorFeeAmount > 0 && totalLiquidatorScore > 0) {
-            accLiquidatorFeesPerScore += (liquidatorFeeAmount * ACC_PRECISION) / totalLiquidatorScore;
-            totalLiquidatorFees += liquidatorFeeAmount;
-        }
-
         // Update distribution tracking
         totalFeesDistributed += feeAmount;
-        lastFeeDistributionBlock = block.number;
-        currentEpoch++;
 
-        emit FeesDistributed(lpFeeAmount, liquidatorFeeAmount, currentEpoch);
+        emit FeesDistributed(protocolFeeAmount, lpFeeAmount);
     }
 
     /**
@@ -63,7 +54,6 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
 
         uint256 protocolFeeAmount = feeAmount.safeMul(borrowingFeeProtocolShare) / PRECISION;
         uint256 lpFeeAmount = feeAmount.safeMul(borrowingFeeLpShare) / PRECISION;
-        uint256 liquidatorFeeAmount = feeAmount.safeMul(borrowingFeeLiquidatorShare) / PRECISION;
 
         if (protocolFeeAmount > 0) {
             protocolFees += protocolFeeAmount;
@@ -73,15 +63,10 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
             accLpFeesPerShare += (lpFeeAmount * ACC_PRECISION) / totalLpShares;
             totalLpFees += lpFeeAmount;
         }
-        if (liquidatorFeeAmount > 0 && totalLiquidatorScore > 0) {
-            accLiquidatorFeesPerScore += (liquidatorFeeAmount * ACC_PRECISION) / totalLiquidatorScore;
-            totalLiquidatorFees += liquidatorFeeAmount;
-        }
-        totalFeesDistributed += feeAmount;
-        lastFeeDistributionBlock = block.number;
-        currentEpoch++;
 
-        emit FeesDistributed(lpFeeAmount, liquidatorFeeAmount, currentEpoch);
+        totalFeesDistributed += feeAmount;
+
+        emit FeesDistributed(protocolFeeAmount, lpFeeAmount);
     }
 
     // ==================== REWARD ACCOUNTING AND CLAIMS ====================
@@ -114,54 +99,6 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         (bool success,) = payable(lp).call{value: rewards}("");
         if (!success) revert TenexiumErrors.TransferFailed();
         emit LpFeeRewardsClaimed(lp, rewards);
-    }
-
-    /**
-     * @notice Update liquidator score and fee rewards
-     * @param liquidator Address of the liquidator
-     * @param liquidationValue Value of the liquidation performed
-     */
-    function _updateLiquidatorFeeRewards(address liquidator, uint256 liquidationValue) internal {
-        // settle pending before updating score
-        uint256 prevScore = liquidatorScores[liquidator];
-        if (prevScore > 0) {
-            uint256 accumulated = (prevScore * accLiquidatorFeesPerScore) / ACC_PRECISION;
-            if (accumulated > liquidatorRewardDebt[liquidator]) {
-                uint256 pending = accumulated - liquidatorRewardDebt[liquidator];
-                liquidatorFeeRewards[liquidator] += pending;
-            }
-        }
-        // Score unit: use TAO scale-neutral units (wei -> TAO approximation)
-        uint256 scoreIncrease = liquidationValue / 1e18;
-        liquidatorScores[liquidator] = prevScore + scoreIncrease;
-        totalLiquidatorScore += scoreIncrease;
-        // update reward debt to new score
-        liquidatorRewardDebt[liquidator] = (liquidatorScores[liquidator] * accLiquidatorFeesPerScore) / ACC_PRECISION;
-        emit LiquidatorScoreUpdated(liquidator, liquidatorScores[liquidator], totalLiquidatorScore);
-    }
-
-    /**
-     * @notice Claim accrued liquidator fee rewards
-     * @param liquidator Address of the liquidator
-     * @return rewards Amount of TAO claimed
-     */
-    function _claimLiquidatorFeeRewards(address liquidator) internal returns (uint256 rewards) {
-        // settle pending
-        uint256 score = liquidatorScores[liquidator];
-        if (score > 0) {
-            uint256 accumulated = (score * accLiquidatorFeesPerScore) / ACC_PRECISION;
-            if (accumulated > liquidatorRewardDebt[liquidator]) {
-                uint256 pending = accumulated - liquidatorRewardDebt[liquidator];
-                liquidatorFeeRewards[liquidator] += pending;
-                liquidatorRewardDebt[liquidator] = accumulated;
-            }
-        }
-        rewards = liquidatorFeeRewards[liquidator];
-        if (rewards == 0) revert TenexiumErrors.NoRewards();
-        liquidatorFeeRewards[liquidator] = 0;
-        (bool success,) = payable(liquidator).call{value: rewards}("");
-        if (!success) revert TenexiumErrors.TransferFailed();
-        emit LiquidatorFeeRewardsClaimed(liquidator, rewards);
     }
 
     // ==================== FEE CALCULATION FUNCTIONS ====================

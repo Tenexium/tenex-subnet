@@ -52,13 +52,9 @@ contract TenexiumEvents {
 
     // ==================== FEE EVENTS ====================
 
-    event FeesDistributed(uint256 lpAmount, uint256 liquidatorAmount, uint256 epoch);
+    event FeesDistributed(uint256 protocolAmount, uint256 lpAmount);
 
     event LpFeeRewardsClaimed(address indexed lp, uint256 amount);
-
-    event LiquidatorFeeRewardsClaimed(address indexed liquidator, uint256 amount);
-
-    event LiquidatorScoreUpdated(address indexed liquidator, uint256 newScore, uint256 totalScore);
 
     // ==================== BUYBACK & VESTING EVENTS ====================
 
