@@ -625,14 +625,6 @@ contract TenexiumProtocol is
         rewards = _claimLpFeeRewards(msg.sender);
     }
 
-    /**
-     * @notice Claim accrued liquidator fee rewards
-     * @return rewards Amount of TAO claimed
-     */
-    function claimLiquidatorFeeRewards() external whenNotPaused nonReentrant lpRateLimit returns (uint256 rewards) {
-        rewards = _claimLiquidatorFeeRewards(msg.sender);
-    }
-
     // ==================== BUYBACK FUNCTIONS ====================
 
     /**
