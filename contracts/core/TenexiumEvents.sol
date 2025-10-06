@@ -8,9 +8,9 @@ pragma solidity ^0.8.19;
 contract TenexiumEvents {
     // ==================== LIQUIDITY PROVIDER EVENTS ====================
 
-    event LiquidityAdded(address indexed provider, uint256 amount, uint256 shares, uint256 totalStakes);
+    event LiquidityAdded(address indexed provider, uint256 amount, uint256 amountAfter, uint256 totalStakes);
 
-    event LiquidityRemoved(address indexed provider, uint256 amount, uint256 shares, uint256 totalStakes);
+    event LiquidityRemoved(address indexed provider, uint256 amount, uint256 amountAfter, uint256 totalStakes);
 
     // ==================== POSITION EVENTS ====================
 
