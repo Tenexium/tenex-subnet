@@ -66,7 +66,7 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         uint256 newTotalLp = totalLpStakes - withdrawAmount;
         uint256 newUtilizationRate = newTotalLp > 0 ? totalBorrowed.safeMul(PRECISION) / newTotalLp : 0;
 
-        if (newUtilizationRate > maxUtilizationRate) revert TenexiumErrors.UtilizationExceeded(newUtilizationRate);
+        if (newUtilizationRate > maxUtilizationRate) revert TenexiumErrors.UtilizationExceeded();
 
         // Update rewards before changing stake
         _updateLpFeeRewards(msg.sender);
@@ -108,7 +108,7 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
      * @param depositAmount Amount of TAO being deposited
      * @return shares Number of LP shares to mint
      */
-    function calculateLpShares(uint256 depositAmount) public view returns (uint256 shares) {
+    function calculateLpShares(uint256 depositAmount) internal view returns (uint256 shares) {
         if (totalLpShares == 0 || totalLpStakes == 0) {
             return depositAmount;
         }

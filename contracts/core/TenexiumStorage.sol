@@ -184,6 +184,9 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
+    // Accrued borrowing fees
+    uint256 public accruedBorrowingFees; // Accrued borrowing fees
+    uint256 public lastAccruedBorrowingFeesUpdate; // Last block when accrued borrowing fees were updated
     // Per-user position id counter (next id to assign)
     mapping(address => uint256) public nextPositionId;
 
@@ -217,6 +220,7 @@ contract TenexiumStorage {
         bool isActive; // Position status
         bytes32 validatorHotkey; // Hotkey used to stake alpha for this position
         uint16 alphaNetuid; // Alpha subnet ID for this position
+        uint256 borrowingFeeDebt; // Borrowing fee debt at position opening
     }
 
     struct AlphaPair {
@@ -250,20 +254,18 @@ contract TenexiumStorage {
     // ==================== MODIFIERS ====================
 
     modifier validPosition(address user, uint256 positionId) {
-        if (!positions[user][positionId].isActive) revert TenexiumErrors.PositionNotFound(user, positionId);
+        if (!positions[user][positionId].isActive) revert TenexiumErrors.PositionNotFound();
         _;
     }
 
     modifier validAlphaPair(uint16 alphaNetuid) {
-        if (!alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
+        if (!alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairMissing();
         _;
     }
 
     modifier userRateLimit() {
         if (block.number < lastUserActionBlock[msg.sender] + userActionCooldownBlocks) {
-            revert TenexiumErrors.UserCooldownActive(
-                (lastUserActionBlock[msg.sender] + userActionCooldownBlocks) - block.number
-            );
+            revert TenexiumErrors.UserCooldownActive();
         }
         lastUserActionBlock[msg.sender] = block.number;
         _;
@@ -271,9 +273,7 @@ contract TenexiumStorage {
 
     modifier lpRateLimit() {
         if (block.number < lastLpActionBlock[msg.sender] + lpActionCooldownBlocks) {
-            revert TenexiumErrors.LpCooldownActive(
-                (lastLpActionBlock[msg.sender] + lpActionCooldownBlocks) - block.number
-            );
+            revert TenexiumErrors.LpCooldownActive();
         }
         lastLpActionBlock[msg.sender] = block.number;
         _;
@@ -281,7 +281,7 @@ contract TenexiumStorage {
 
     modifier hasPermission(uint8 permissionIndex) {
         if (permissionIndex >= functionPermissions.length) revert TenexiumErrors.InvalidValue();
-        if (!functionPermissions[permissionIndex]) revert TenexiumErrors.FunctionNotPermitted(permissionIndex);
+        if (!functionPermissions[permissionIndex]) revert TenexiumErrors.FunctionNotPermitted();
         _;
     }
 
