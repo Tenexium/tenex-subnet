@@ -47,9 +47,7 @@ contract TenexiumEvents {
         uint16 alphaNetuid,
         uint256 positionValue,
         uint256 liquidationFee,
-        uint256 liquidatorBonus,
-        string justificationUrl,
-        bytes32 contentHash
+        uint256 liquidatorBonus
     );
 
     // ==================== FEE EVENTS ====================

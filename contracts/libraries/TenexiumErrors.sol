@@ -31,7 +31,6 @@ library TenexiumErrors {
     // Positions
     error SlippageTooHigh();
     error MinDeposit();
-    error PositionExists();
     error InsufficientLiquidity();
     error SwapSimInvalid();
     error UnstakeSimInvalid();
@@ -46,13 +45,10 @@ library TenexiumErrors {
     error UnstakeFailed();
 
     // Liquidation
-    error PositionInactive();
     error NoAlpha();
     error NotLiquidatable();
-    error InvalidAlphaPrice();
     error LiquiFeeTransferFailed();
     error CollateralReturnFailed();
-    error ArrayLengthMismatch();
     error PositionNotFound(address user, uint256 positionId);
 
     // Rewards

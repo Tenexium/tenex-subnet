@@ -22,21 +22,12 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
      * @notice Liquidate an undercollateralized position
      * @param user Address of the position owner
      * @param positionId User's position identifier
-     * @param justificationUrl URL with liquidation justification
-     * @param contentHash Hash of justification content
      * @dev Uses single threshold approach - liquidate immediately when threshold hit
      */
-    function _liquidatePosition(address user, uint256 positionId, string calldata justificationUrl, bytes32 contentHash)
-        internal
-    {
+    function _liquidatePosition(address user, uint256 positionId) internal {
         Position storage position = positions[user][positionId];
         uint16 alphaNetuid = position.alphaNetuid;
-        if (!position.isActive) revert TenexiumErrors.PositionInactive();
         if (position.alphaAmount == 0) revert TenexiumErrors.NoAlpha();
-
-        // Sanity checks for optional metadata
-        if (bytes(justificationUrl).length > 512) revert TenexiumErrors.InvalidValue();
-        if (contentHash == bytes32(0)) revert TenexiumErrors.InvalidValue();
 
         // Verify liquidation is justified using single threshold
         if (!_isPositionLiquidatable(user, positionId)) revert TenexiumErrors.NotLiquidatable();
@@ -110,15 +101,7 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         liquidatorLiquidationValue[msg.sender] = liquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
 
         emit PositionLiquidated(
-            user,
-            msg.sender,
-            positionId,
-            alphaNetuid,
-            simulatedTaoValue,
-            liquidationFeeAmount,
-            liquidatorFeeShareTotal,
-            justificationUrl,
-            contentHash
+            user, msg.sender, positionId, alphaNetuid, simulatedTaoValue, liquidationFeeAmount, liquidatorFeeShareTotal
         );
     }
 

@@ -108,7 +108,7 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
      * @param depositAmount Amount of TAO being deposited
      * @return shares Number of LP shares to mint
      */
-    function calculateLpShares(uint256 depositAmount) public view returns (uint256 shares) {
+    function calculateLpShares(uint256 depositAmount) internal view returns (uint256 shares) {
         if (totalLpShares == 0 || totalLpStakes == 0) {
             return depositAmount;
         }

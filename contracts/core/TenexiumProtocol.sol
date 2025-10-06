@@ -610,14 +610,13 @@ contract TenexiumProtocol is
      * @notice Liquidate an undercollateralized position
      * @param user Address of the position owner
      * @param positionId User's position identifier
-     * @param justificationUrl Off-chain evidence URL
-     * @param contentHash Hash of justification content
      */
-    function liquidatePosition(address user, uint256 positionId, string calldata justificationUrl, bytes32 contentHash)
+    function liquidatePosition(address user, uint256 positionId)
         external
+        validPosition(user, positionId)
         nonReentrant
     {
-        _liquidatePosition(user, positionId, justificationUrl, contentHash);
+        _liquidatePosition(user, positionId);
         _updateLiquidityCircuitBreaker();
     }
 
