@@ -44,14 +44,8 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Calculate and distribute trading fee on gross notional BEFORE staking
         uint256 tradingFeeAmount = _calculateTradingFee(msg.sender, totalTaoToStakeGross);
-        if (tradingFeeAmount > 0) {
-            _distributeTradingFees(tradingFeeAmount);
-            // Accumulate protocol's share of trading fees in protocolFees
-            uint256 protocolShare = tradingFeeAmount.safeMul(tradingFeeProtocolShare) / PRECISION;
-            if (protocolShare > 0) {
-                protocolFees += protocolShare;
-            }
-        }
+        // Distribute trading fees
+        _distributeTradingFees(tradingFeeAmount);
 
         // Net TAO to stake after fee withholding
         uint256 taoToStakeNet = totalTaoToStakeGross.safeSub(tradingFeeAmount);
@@ -197,20 +191,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Distribute fees
         _distributeTradingFees(tradingFeeAmount);
         _distributeBorrowingFees(feesToPay);
-
-        // Accumulate protocol shares in protocolFees
-        if (tradingFeeAmount > 0) {
-            uint256 protocolTradingShare = tradingFeeAmount.safeMul(tradingFeeProtocolShare) / PRECISION;
-            if (protocolTradingShare > 0) {
-                protocolFees += protocolTradingShare;
-            }
-        }
-        if (feesToPay > 0) {
-            uint256 protocolBorrowShare = feesToPay.safeMul(borrowingFeeProtocolShare) / PRECISION;
-            if (protocolBorrowShare > 0) {
-                protocolFees += protocolBorrowShare;
-            }
-        }
 
         // Return net proceeds to user
         if (netReturn > 0) {
