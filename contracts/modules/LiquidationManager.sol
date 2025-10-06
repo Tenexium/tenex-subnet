@@ -27,10 +27,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
     function _liquidatePosition(address user, uint256 positionId) internal {
         Position storage position = positions[user][positionId];
         uint16 alphaNetuid = position.alphaNetuid;
-        if (position.alphaAmount == 0) revert TenexiumErrors.NoAlpha();
-
-        // Verify liquidation is justified using single threshold
-        if (!_isPositionLiquidatable(user, positionId)) revert TenexiumErrors.NotLiquidatable();
 
         // Calculate liquidation details using accurate simulation
         uint256 simulatedTaoValueRao = ALPHA_PRECOMPILE.simSwapAlphaForTao(alphaNetuid, uint64(position.alphaAmount));
@@ -97,8 +93,13 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         // Update liquidation statistics
         totalLiquidations = totalLiquidations + 1;
         totalLiquidationValue = totalLiquidationValue.safeAdd(simulatedTaoValue);
-        liquidatorLiquidations[msg.sender] = liquidatorLiquidations[msg.sender] + 1;
-        liquidatorLiquidationValue[msg.sender] = liquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
+        totalLiquidatorLiquidations[msg.sender] = totalLiquidatorLiquidations[msg.sender] + 1;
+        totalLiquidatorLiquidationValue[msg.sender] =
+            totalLiquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
+        dailyLiquidatorLiquidations[msg.sender][block.number / 7200] =
+            dailyLiquidatorLiquidations[msg.sender][block.number / 7200] + 1;
+        dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200] =
+            dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200].safeAdd(simulatedTaoValue);
 
         emit PositionLiquidated(
             user, msg.sender, positionId, alphaNetuid, simulatedTaoValue, liquidationFeeAmount, liquidatorFeeShareTotal
@@ -115,7 +116,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
      */
     function _isPositionLiquidatable(address user, uint256 positionId) internal view returns (bool liquidatable) {
         Position storage position = positions[user][positionId];
-        if (!position.isActive || position.alphaAmount == 0) return false;
 
         // Get current value using accurate simulation
         uint256 simulatedTaoValueRao =
@@ -131,12 +131,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
         uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
         return healthRatio < liquidationThreshold; // Use single threshold only
-    }
-
-    // ==================== PUBLIC THIN WRAPPERS ====================
-
-    function isPositionLiquidatable(address user, uint256 positionId) public view returns (bool) {
-        return _isPositionLiquidatable(user, positionId);
     }
 
     // ==================== UTILIZATION MANAGEMENT ====================

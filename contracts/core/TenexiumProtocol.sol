@@ -405,6 +405,15 @@ contract TenexiumProtocol is
     }
 
     /**
+     * @notice Update max liquidation count
+     * @param newMaxLiquidationCount New max liquidation count
+     */
+    function updateMaxLiquidationCount(uint256 newMaxLiquidationCount) external onlyManager {
+        if (newMaxLiquidationCount < 1) revert TenexiumErrors.InvalidValue();
+        maxLiquidationCount = newMaxLiquidationCount;
+    }
+
+    /**
      * @notice Update global accrued borrowing fees (called every 360 blocks)
      * @dev This function should be called periodically to update the global fee accumulator
      * @dev Has a 360-block cooldown to prevent excessive updates
@@ -611,8 +620,34 @@ contract TenexiumProtocol is
         validPosition(user, positionId)
         nonReentrant
     {
-        _liquidatePosition(user, positionId);
-        _updateLiquidityCircuitBreaker();
+        // Prevent multiple calls in the same block
+        if (lastLiquidationBlock[msg.sender][user][positionId] == block.number) {
+            return;
+        }
+
+        // Update the last liquidation block
+        lastLiquidationBlock[msg.sender][user][positionId] = block.number;
+
+        if (!_isPositionLiquidatable(user, positionId)) {
+            // Reset first liquidatable block for this liquidator when position is not liquidatable
+            firstLiquidatableBlock[msg.sender][user][positionId] = 0;
+            return;
+        }
+
+        // If this is the first time this liquidator sees position as liquidatable, record the block
+        if (firstLiquidatableBlock[msg.sender][user][positionId] == 0) {
+            firstLiquidatableBlock[msg.sender][user][positionId] = block.number;
+        }
+
+        // Check if position has been liquidatable for 10 consecutive blocks for this liquidator
+        uint256 blocksSinceFirstLiquidatable = block.number - firstLiquidatableBlock[msg.sender][user][positionId] + 1;
+        if (blocksSinceFirstLiquidatable >= maxLiquidationCount) {
+            _liquidatePosition(user, positionId);
+            _updateLiquidityCircuitBreaker();
+            // Reset counters after liquidation
+            firstLiquidatableBlock[msg.sender][user][positionId] = 0;
+            return;
+        }
     }
 
     // ==================== REWARD CLAIM FUNCTIONS ====================

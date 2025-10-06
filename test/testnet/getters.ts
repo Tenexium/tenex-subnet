@@ -256,13 +256,11 @@ async function main() {
         
         const totalFeesCollected = await TenexiumProtocol.totalFeesCollected();
         const totalFeesDistributed = await TenexiumProtocol.totalFeesDistributed();
-        const lastFeeDistributionBlock = await TenexiumProtocol.lastFeeDistributionBlock();
-        const currentEpoch = await TenexiumProtocol.currentEpoch();
+        const lastAccruedBorrowingFeesUpdate = await TenexiumProtocol.lastAccruedBorrowingFeesUpdate();
         
         console.log("Total Fees Collected:", ethers.formatEther(totalFeesCollected), "TAO");
         console.log("Total Fees Distributed:", ethers.formatEther(totalFeesDistributed), "TAO");
-        console.log("Last Fee Distribution Block:", lastFeeDistributionBlock.toString());
-        console.log("Current Epoch:", currentEpoch.toString());
+        console.log("Last Fee Distribution Block:", lastAccruedBorrowingFeesUpdate.toString());
 
         // ==================== LP AND LIQUIDATOR STATE ====================
         console.log("\n👥 LP AND LIQUIDATOR STATE:");
@@ -270,17 +268,17 @@ async function main() {
         
         const totalLpFees = await TenexiumProtocol.totalLpFees();
         const totalLpStakes = await TenexiumProtocol.totalLpStakes();
-        const totalLiquidatorFees = await TenexiumProtocol.totalLiquidatorFees();
-        const totalLiquidatorScore = await TenexiumProtocol.totalLiquidatorScore();
+        const totalLiquidations = await TenexiumProtocol.totalLiquidations();
+        const totalLiquidationValue = await TenexiumProtocol.totalLiquidationValue();
         const accLpFeesPerShare = await TenexiumProtocol.accLpFeesPerShare();
-        const accLiquidatorFeesPerScore = await TenexiumProtocol.accLiquidatorFeesPerScore();
+        const accruedBorrowingFees = await TenexiumProtocol.accruedBorrowingFees();
         
         console.log("Total LP Fees:", ethers.formatEther(totalLpFees), "TAO");
         console.log("Total LP Stakes:", ethers.formatEther(totalLpStakes), "TAO");
-        console.log("Total Liquidator Fees:", ethers.formatEther(totalLiquidatorFees), "TAO");
-        console.log("Total Liquidator Score:", totalLiquidatorScore.toString());
+        console.log("Total Liquidations:", totalLiquidations.toString());
+        console.log("Total Liquidation Value:", ethers.formatEther(totalLiquidationValue), "TAO");
         console.log("Acc LP Fees Per Share:", accLpFeesPerShare.toString());
-        console.log("Acc Liquidator Fees Per Score:", accLiquidatorFeesPerScore.toString());
+        console.log("Accrued Borrowing Fees:", ethers.formatEther(accruedBorrowingFees), "TAO");
 
         // ==================== COMPLEX GETTER FUNCTIONS ====================
         console.log("\n🔍 COMPLEX GETTER FUNCTIONS:");

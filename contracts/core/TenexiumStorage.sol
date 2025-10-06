@@ -123,20 +123,22 @@ contract TenexiumStorage {
     // Fee distribution tracking
     uint256 public totalFeesCollected; // Total fees collected
     uint256 public totalFeesDistributed; // Total fees distributed
-    uint256 public lastFeeDistributionBlock; // Last fee distribution block
-    uint256 public currentEpoch; // Current epoch
+    uint256 public lastAccruedBorrowingFeesUpdate; // Last block when accrued borrowing fees were updated
+
+    // Max liquidation count
+    uint256 public maxLiquidationCount; // Max liquidation count
 
     // LP fee tracking
     uint256 public totalLpFees; // Total LP fees collected
     uint256 public totalLpStakes; // Total LP stakes
 
-    // Liquidator fee tracking
-    uint256 public totalLiquidatorFees; // Total liquidator fees collected
-    uint256 public totalLiquidatorScore; // Total liquidator score
+    // Total liquidations tracking
+    uint256 public totalLiquidations; // Total number of liquidations executed
+    uint256 public totalLiquidationValue; // Total TAO value liquidated
 
     // Accumulator-based fee accounting
     uint256 public accLpFeesPerShare; // Accumulated LP fees per share
-    uint256 public accLiquidatorFeesPerScore; // Accumulated liquidator fees per score
+    uint256 public accruedBorrowingFees; // Accrued borrowing fees
 
     // ==================== MAPPINGS ====================
 
@@ -158,14 +160,14 @@ contract TenexiumStorage {
     // LP fee rewards
     mapping(address => uint256) public lpFeeRewards;
 
-    // Liquidator fee rewards
-    mapping(address => uint256) public liquidatorFeeRewards;
+    // Total number of liquidations by liquidator
+    mapping(address => uint256) public totalLiquidatorLiquidations;
 
-    // Liquidator scores
-    mapping(address => uint256) public liquidatorScores;
+    // Total TAO value liquidated by liquidator
+    mapping(address => uint256) public totalLiquidatorLiquidationValue;
 
-    // Liquidator reward debt
-    mapping(address => uint256) public liquidatorRewardDebt;
+    // Per-user position id counter (next id to assign)
+    mapping(address => uint256) public nextPositionId;
 
     // Vesting schedules
     mapping(address => VestingSchedule[]) public vestingSchedules;
@@ -184,18 +186,11 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
-    // Accrued borrowing fees
-    uint256 public accruedBorrowingFees; // Accrued borrowing fees
-    uint256 public lastAccruedBorrowingFeesUpdate; // Last block when accrued borrowing fees were updated
-    // Per-user position id counter (next id to assign)
-    mapping(address => uint256) public nextPositionId;
-
     // ==================== LIQUIDATION STATISTICS ====================
-
-    uint256 public totalLiquidations; // Total number of liquidations executed
-    uint256 public totalLiquidationValue; // Total TAO value liquidated
-    mapping(address => uint256) public liquidatorLiquidations; // Number of liquidations by liquidator
-    mapping(address => uint256) public liquidatorLiquidationValue; // Total TAO value liquidated by liquidator
+    mapping(address => mapping(uint256 => uint256)) public dailyLiquidatorLiquidations; // Number of liquidations by liquidator
+    mapping(address => mapping(uint256 => uint256)) public dailyLiquidatorLiquidationValue; // Total TAO value liquidated by liquidator
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public lastLiquidationBlock; // Last block when liquidatePosition was called for a position
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public firstLiquidatableBlock; // First block when position became liquidatable for each liquidator
 
     // ==================== ADDRESS CONVERSION ====================
     IAddressConversion public ADDRESS_CONVERSION_CONTRACT;
@@ -250,7 +245,9 @@ contract TenexiumStorage {
     // ==================== MODIFIERS ====================
 
     modifier validPosition(address user, uint256 positionId) {
-        if (!positions[user][positionId].isActive) revert TenexiumErrors.PositionNotFound();
+        if (!positions[user][positionId].isActive || positions[user][positionId].alphaAmount == 0) {
+            revert TenexiumErrors.PositionNotFound();
+        }
         _;
     }
 
