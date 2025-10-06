@@ -31,7 +31,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Check tier-based leverage limit
         uint256 userMaxLeverage = _getUserMaxLeverage(msg.sender);
-        if (!(leverage >= PRECISION && leverage <= userMaxLeverage)) revert TenexiumErrors.LeverageTooHigh(leverage);
+        if (!(leverage >= PRECISION && leverage <= userMaxLeverage)) revert TenexiumErrors.LeverageTooHigh();
 
         uint256 collateralAmount = msg.value;
         uint256 borrowedAmount = collateralAmount.safeMul(leverage - PRECISION) / PRECISION;

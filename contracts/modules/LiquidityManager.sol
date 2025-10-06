@@ -66,7 +66,7 @@ abstract contract LiquidityManager is TenexiumStorage, TenexiumEvents {
         uint256 newTotalLp = totalLpStakes - withdrawAmount;
         uint256 newUtilizationRate = newTotalLp > 0 ? totalBorrowed.safeMul(PRECISION) / newTotalLp : 0;
 
-        if (newUtilizationRate > maxUtilizationRate) revert TenexiumErrors.UtilizationExceeded(newUtilizationRate);
+        if (newUtilizationRate > maxUtilizationRate) revert TenexiumErrors.UtilizationExceeded();
 
         // Update rewards before changing stake
         _updateLpFeeRewards(msg.sender);

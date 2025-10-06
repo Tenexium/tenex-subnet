@@ -41,12 +41,12 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
 
         uint256 buybackAmount = availableFees.safeMul(targetFraction) / PRECISION;
         if (address(this).balance < buybackAmount) {
-            revert TenexiumErrors.InsufficientContractBalance(address(this).balance, buybackAmount);
+            revert TenexiumErrors.InsufficientContractBalance();
         }
 
         // Use simulation to check expected alpha amount and slippage
         uint256 expectedAlpha = ALPHA_PRECOMPILE.simSwapTaoForAlpha(TENEX_NETUID, uint64(buybackAmount.weiToRao()));
-        if (expectedAlpha == 0) revert TenexiumErrors.BuybackSimInvalid(buybackAmount);
+        if (expectedAlpha == 0) revert TenexiumErrors.BuybackSimInvalid();
 
         // Execute buyback by staking TAO to get Tenexium alpha
         uint256 actualAlphaReceived = _stakeTaoForAlpha(protocolValidatorHotkey, buybackAmount, TENEX_NETUID);

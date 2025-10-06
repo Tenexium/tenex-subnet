@@ -254,20 +254,18 @@ contract TenexiumStorage {
     // ==================== MODIFIERS ====================
 
     modifier validPosition(address user, uint256 positionId) {
-        if (!positions[user][positionId].isActive) revert TenexiumErrors.PositionNotFound(user, positionId);
+        if (!positions[user][positionId].isActive) revert TenexiumErrors.PositionNotFound();
         _;
     }
 
     modifier validAlphaPair(uint16 alphaNetuid) {
-        if (!alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
+        if (!alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairMissing();
         _;
     }
 
     modifier userRateLimit() {
         if (block.number < lastUserActionBlock[msg.sender] + userActionCooldownBlocks) {
-            revert TenexiumErrors.UserCooldownActive(
-                (lastUserActionBlock[msg.sender] + userActionCooldownBlocks) - block.number
-            );
+            revert TenexiumErrors.UserCooldownActive();
         }
         lastUserActionBlock[msg.sender] = block.number;
         _;
@@ -275,9 +273,7 @@ contract TenexiumStorage {
 
     modifier lpRateLimit() {
         if (block.number < lastLpActionBlock[msg.sender] + lpActionCooldownBlocks) {
-            revert TenexiumErrors.LpCooldownActive(
-                (lastLpActionBlock[msg.sender] + lpActionCooldownBlocks) - block.number
-            );
+            revert TenexiumErrors.LpCooldownActive();
         }
         lastLpActionBlock[msg.sender] = block.number;
         _;
@@ -285,7 +281,7 @@ contract TenexiumStorage {
 
     modifier hasPermission(uint8 permissionIndex) {
         if (permissionIndex >= functionPermissions.length) revert TenexiumErrors.InvalidValue();
-        if (!functionPermissions[permissionIndex]) revert TenexiumErrors.FunctionNotPermitted(permissionIndex);
+        if (!functionPermissions[permissionIndex]) revert TenexiumErrors.FunctionNotPermitted();
         _;
     }
 

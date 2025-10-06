@@ -199,9 +199,9 @@ contract TenexiumProtocol is
      * @param _liquidationThreshold New liquidation threshold
      */
     function updateRiskParameters(uint256 _maxLeverage, uint256 _liquidationThreshold) external onlyOwner {
-        if (_maxLeverage > 20 * PRECISION) revert TenexiumErrors.LeverageTooHigh(_maxLeverage);
+        if (_maxLeverage > 20 * PRECISION) revert TenexiumErrors.LeverageTooHigh();
         if (_liquidationThreshold < (105 * PRECISION) / 100) {
-            revert TenexiumErrors.ThresholdTooLow(_liquidationThreshold);
+            revert TenexiumErrors.ThresholdTooLow();
         }
 
         maxLeverage = _maxLeverage;
@@ -219,11 +219,11 @@ contract TenexiumProtocol is
         uint256 _maxUtilizationRate,
         uint256 _liquidityBufferRatio
     ) external onlyOwner {
-        if (_minLiquidityThreshold < 100e18) revert TenexiumErrors.ThresholdTooLow(_minLiquidityThreshold);
+        if (_minLiquidityThreshold < 100e18) revert TenexiumErrors.ThresholdTooLow();
         if (_maxUtilizationRate > (95 * PRECISION) / 100) {
-            revert TenexiumErrors.UtilizationExceeded(_maxUtilizationRate);
+            revert TenexiumErrors.UtilizationExceeded();
         }
-        if (_liquidityBufferRatio > (50 * PRECISION) / 100) revert TenexiumErrors.FeeTooHigh(_liquidityBufferRatio);
+        if (_liquidityBufferRatio > (50 * PRECISION) / 100) revert TenexiumErrors.FeeTooHigh();
 
         minLiquidityThreshold = _minLiquidityThreshold;
         maxUtilizationRate = _maxUtilizationRate;
@@ -238,8 +238,8 @@ contract TenexiumProtocol is
      * @param _lpCooldownBlocks New LP cooldown in blocks
      */
     function updateActionCooldowns(uint256 _userCooldownBlocks, uint256 _lpCooldownBlocks) external onlyOwner {
-        if (_userCooldownBlocks > 7_200) revert TenexiumErrors.UserCooldownTooLarge(_userCooldownBlocks);
-        if (_lpCooldownBlocks > 7_200) revert TenexiumErrors.LpCooldownTooLarge(_lpCooldownBlocks);
+        if (_userCooldownBlocks > 7_200) revert TenexiumErrors.UserCooldownTooLarge();
+        if (_lpCooldownBlocks > 7_200) revert TenexiumErrors.LpCooldownTooLarge();
 
         userActionCooldownBlocks = _userCooldownBlocks;
         lpActionCooldownBlocks = _lpCooldownBlocks;
@@ -256,8 +256,8 @@ contract TenexiumProtocol is
         uint256 _buybackIntervalBlocks,
         uint256 _buybackExecutionThreshold
     ) external onlyOwner {
-        if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh(_buybackRate);
-        if (_buybackIntervalBlocks < 360) revert TenexiumErrors.IntervalTooShort(_buybackIntervalBlocks);
+        if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
+        if (_buybackIntervalBlocks < 360) revert TenexiumErrors.IntervalTooShort();
 
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
@@ -270,8 +270,8 @@ contract TenexiumProtocol is
      * @param _cliffDurationBlocks Cliff duration before vesting starts releasing, in blocks
      */
     function updateVestingParameters(uint256 _vestingDurationBlocks, uint256 _cliffDurationBlocks) external onlyOwner {
-        if (_vestingDurationBlocks < 216000) revert TenexiumErrors.DurationTooShort(_vestingDurationBlocks);
-        if (_cliffDurationBlocks > _vestingDurationBlocks) revert TenexiumErrors.CliffTooLong(_cliffDurationBlocks);
+        if (_vestingDurationBlocks < 216000) revert TenexiumErrors.DurationTooShort();
+        if (_cliffDurationBlocks > _vestingDurationBlocks) revert TenexiumErrors.CliffTooLong();
 
         vestingDurationBlocks = _vestingDurationBlocks;
         cliffDurationBlocks = _cliffDurationBlocks;
@@ -287,9 +287,9 @@ contract TenexiumProtocol is
         external
         onlyOwner
     {
-        if (_tradingFeeRate > PRECISION / 100) revert TenexiumErrors.FeeTooHigh(_tradingFeeRate);
-        if (_borrowingFeeRate > (1 * PRECISION) / 1000) revert TenexiumErrors.FeeTooHigh(_borrowingFeeRate);
-        if (_liquidationFeeRate > (10 * PRECISION) / 100) revert TenexiumErrors.FeeTooHigh(_liquidationFeeRate);
+        if (_tradingFeeRate > PRECISION / 100) revert TenexiumErrors.FeeTooHigh();
+        if (_borrowingFeeRate > (1 * PRECISION) / 1000) revert TenexiumErrors.FeeTooHigh();
+        if (_liquidationFeeRate > (10 * PRECISION) / 100) revert TenexiumErrors.FeeTooHigh();
 
         tradingFeeRate = _tradingFeeRate;
         borrowingFeeRate = _borrowingFeeRate;
@@ -334,14 +334,11 @@ contract TenexiumProtocol is
         uint256[6] calldata _tierFeeDiscounts,
         uint256[6] calldata _tierMaxLeverages
     ) external onlyOwner {
-        if (_tierFeeDiscounts[0] > PRECISION) revert TenexiumErrors.FeeTooHigh(_tierFeeDiscounts[0]);
-        if (_tierFeeDiscounts[1] > PRECISION) revert TenexiumErrors.FeeTooHigh(_tierFeeDiscounts[1]);
-        if (_tierFeeDiscounts[2] > PRECISION) revert TenexiumErrors.FeeTooHigh(_tierFeeDiscounts[2]);
-        if (_tierFeeDiscounts[3] > PRECISION) revert TenexiumErrors.FeeTooHigh(_tierFeeDiscounts[3]);
-        if (_tierFeeDiscounts[4] > PRECISION) revert TenexiumErrors.FeeTooHigh(_tierFeeDiscounts[4]);
-        if (_tierFeeDiscounts[5] > PRECISION) revert TenexiumErrors.FeeTooHigh(_tierFeeDiscounts[5]);
         for (uint256 i = 0; i < 6; i++) {
-            if (_tierMaxLeverages[i] > maxLeverage) revert TenexiumErrors.LeverageTooHigh(_tierMaxLeverages[i]);
+            if (_tierFeeDiscounts[i] > PRECISION) revert TenexiumErrors.FeeTooHigh();
+        }
+        for (uint256 i = 0; i < 6; i++) {
+            if (_tierMaxLeverages[i] > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
         }
 
         tier1Threshold = _tierThresholds[0];
@@ -414,9 +411,7 @@ contract TenexiumProtocol is
      */
     function updateAccruedBorrowingFees() external {
         // Check 360-block cooldown
-        if (block.number < lastAccruedBorrowingFeesUpdate + 360) {
-            revert TenexiumErrors.BorrowingFeesCooldownActive((lastAccruedBorrowingFeesUpdate + 360) - block.number);
-        }
+        if (block.number < lastAccruedBorrowingFeesUpdate + 360) revert TenexiumErrors.BorrowingFeesCooldownActive();
 
         if (totalBorrowed == 0) return;
 
@@ -438,8 +433,8 @@ contract TenexiumProtocol is
      * @dev Uses global liquidation threshold for all pairs
      */
     function addAlphaPair(uint16 alphaNetuid, uint256 maxLeverageForPair) external onlyManager {
-        if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists(alphaNetuid);
-        if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh(maxLeverageForPair);
+        if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
+        if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.netuid = alphaNetuid;
@@ -455,7 +450,7 @@ contract TenexiumProtocol is
      */
     function removeAlphaPair(uint16 alphaNetuid) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
+        if (!pair.isActive) revert TenexiumErrors.PairMissing();
         if (pair.totalCollateral != 0 || pair.totalBorrowed != 0) revert TenexiumErrors.InvalidValue();
 
         // Deactivate and clear parameters
@@ -472,8 +467,8 @@ contract TenexiumProtocol is
      */
     function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        if (!pair.isActive) revert TenexiumErrors.PairMissing(alphaNetuid);
-        if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh(newMaxLeverage);
+        if (!pair.isActive) revert TenexiumErrors.PairMissing();
+        if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
 
         pair.maxLeverage = newMaxLeverage;
     }
@@ -774,7 +769,7 @@ contract TenexiumProtocol is
      * @dev This prevents accidental TAO loss and ensures proper protocol interaction
      */
     receive() external payable {
-        revert TenexiumErrors.DirectTaoTransferProhibited(msg.sender, msg.value);
+        revert TenexiumErrors.DirectTaoTransferProhibited();
     }
 
     /**
@@ -782,6 +777,6 @@ contract TenexiumProtocol is
      * @dev Prevents accidental function calls with invalid data
      */
     fallback() external payable {
-        revert TenexiumErrors.FunctionNotFound(msg.sig);
+        revert TenexiumErrors.FunctionNotFound();
     }
 }
