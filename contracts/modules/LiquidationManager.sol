@@ -118,10 +118,8 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         if (!position.isActive || position.alphaAmount == 0) return false;
 
         // Get current value using accurate simulation
-        uint256 simulatedTaoValueRao2 =
+        uint256 simulatedTaoValueRao =
             ALPHA_PRECOMPILE.simSwapAlphaForTao(position.alphaNetuid, uint64(position.alphaAmount));
-
-        if (simulatedTaoValueRao2 == 0) return true;
 
         // Calculate total debt including accrued fees
         uint256 accruedFees = _calculatePositionFees(user, positionId);
@@ -130,46 +128,15 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         if (totalDebt == 0) return false; // No debt means not liquidatable
 
         // Single threshold check: currentValue / totalDebt < threshold
-        uint256 simulatedTaoWei2 = AlphaMath.raoToWei(simulatedTaoValueRao2);
-        uint256 healthRatio = simulatedTaoWei2.safeMul(PRECISION) / totalDebt;
+        uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
+        uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
         return healthRatio < liquidationThreshold; // Use single threshold only
-    }
-
-    /**
-     * @notice Get position health ratio using single threshold system
-     * @param user Position owner
-     * @param positionId User's position identifier
-     * @return healthRatio Current health ratio (PRECISION = 100%)
-     */
-    function _getPositionHealthRatio(address user, uint256 positionId) internal view returns (uint256 healthRatio) {
-        Position storage position = positions[user][positionId];
-        if (!position.isActive || position.alphaAmount == 0) return 0;
-
-        // Get current value using accurate simulation
-        if (position.alphaAmount == 0) return 0;
-        uint256 simulatedTaoValueRao =
-            ALPHA_PRECOMPILE.simSwapAlphaForTao(position.alphaNetuid, uint64(position.alphaAmount));
-
-        if (simulatedTaoValueRao == 0) return 0;
-        uint256 simulatedTaoValue = AlphaMath.raoToWei(simulatedTaoValueRao);
-
-        // Calculate total debt including accrued fees
-        uint256 accruedFees = _calculatePositionFees(user, positionId);
-        uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
-
-        if (totalDebt == 0) return type(uint256).max; // Infinite health ratio
-
-        return simulatedTaoValue.safeMul(PRECISION) / totalDebt;
     }
 
     // ==================== PUBLIC THIN WRAPPERS ====================
 
     function isPositionLiquidatable(address user, uint256 positionId) public view returns (bool) {
         return _isPositionLiquidatable(user, positionId);
-    }
-
-    function getPositionHealthRatio(address user, uint256 positionId) public view returns (uint256) {
-        return _getPositionHealthRatio(user, positionId);
     }
 
     // ==================== UTILIZATION MANAGEMENT ====================
