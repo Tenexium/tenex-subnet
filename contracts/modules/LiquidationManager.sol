@@ -126,7 +126,7 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         // Single threshold check: currentValue / totalDebt < threshold
         uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
         uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
-        return healthRatio < liquidationThreshold; // Use single threshold only
+        return healthRatio < alphaPairs[position.alphaNetuid].liquidationThreshold; // Use single threshold only
     }
 
     // ==================== UTILIZATION MANAGEMENT ====================
