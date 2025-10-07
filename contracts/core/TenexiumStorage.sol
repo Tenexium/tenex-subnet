@@ -223,6 +223,7 @@ contract TenexiumStorage {
         uint256 borrowingRate; // Current borrowing rate
         uint256 maxLeverage; // Maximum leverage allowed
         bool isActive; // Pair status
+        uint256 liquidationThreshold; // Liquidation threshold
     }
 
     struct LiquidityProvider {

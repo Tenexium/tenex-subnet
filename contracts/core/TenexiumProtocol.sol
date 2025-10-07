@@ -447,13 +447,17 @@ contract TenexiumProtocol is
      * @param maxLeverageForPair Maximum leverage for this pair
      * @dev Uses global liquidation threshold for all pairs
      */
-    function addAlphaPair(uint16 alphaNetuid, uint256 maxLeverageForPair) external onlyManager {
+    function addAlphaPair(uint16 alphaNetuid, uint256 maxLeverageForPair, uint256 liquidationThresholdForPair)
+        external
+        onlyManager
+    {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
         if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.netuid = alphaNetuid;
         pair.maxLeverage = maxLeverageForPair;
+        pair.liquidationThreshold = liquidationThresholdForPair;
         pair.borrowingRate = borrowingFeeRate;
         pair.isActive = true;
     }
@@ -471,7 +475,7 @@ contract TenexiumProtocol is
         // Deactivate and clear parameters
         pair.isActive = false;
         pair.maxLeverage = 0;
-        pair.utilizationRate = 0;
+        pair.liquidationThreshold = 0;
         pair.borrowingRate = 0;
     }
 
@@ -480,12 +484,19 @@ contract TenexiumProtocol is
      * @param alphaNetuid Alpha subnet ID
      * @param newMaxLeverage New maximum leverage for this pair
      */
-    function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage) external onlyManager {
+    function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage, uint256 newLiquidationThreshold)
+        external
+        onlyManager
+    {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing();
         if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
+        if (newLiquidationThreshold < (105 * PRECISION) / 100) {
+            revert TenexiumErrors.ThresholdTooLow();
+        }
 
         pair.maxLeverage = newMaxLeverage;
+        pair.liquidationThreshold = newLiquidationThreshold;
     }
 
     // ==================== EMERGENCY FUNCTIONS ====================
@@ -642,7 +653,10 @@ contract TenexiumProtocol is
         }
 
         // If this is the first time this liquidator sees position as liquidatable, record the block
-        if (firstLiquidatableBlock[msg.sender][user][positionId] == 0) {
+        if (
+            firstLiquidatableBlock[msg.sender][user][positionId] == 0
+                || block.number - firstLiquidatableBlock[msg.sender][user][positionId] > maxLiquidationCount
+        ) {
             firstLiquidatableBlock[msg.sender][user][positionId] = block.number;
             consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 1;
         } else {
