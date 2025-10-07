@@ -25,20 +25,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
     function _executeBuyback() internal {
         if (!_canExecuteBuyback()) revert TenexiumErrors.BuybackConditionsNotMet();
 
-        // Market-responsive sizing
-        uint256 targetFraction = buybackRate;
-
-        // Time ramp: linearly increase fraction up to 100% over 7 intervals without execution
-        uint256 intervalsSince = (block.number - lastBuybackBlock) / buybackIntervalBlocks;
-        if (intervalsSince > 0) {
-            uint256 rampBoost = intervalsSince * ((10 * PRECISION) / 100); // +10% per interval
-            if (rampBoost > (50 * PRECISION) / 100) rampBoost = (50 * PRECISION) / 100; // cap extra at +50%
-            uint256 boosted = targetFraction + rampBoost;
-            if (boosted > PRECISION) boosted = PRECISION;
-            targetFraction = boosted;
-        }
-
-        uint256 buybackAmount = buybackPool.safeMul(targetFraction) / PRECISION;
+        uint256 buybackAmount = buybackPool;
 
         // Use simulation to check expected alpha amount and slippage
         uint256 expectedAlpha = ALPHA_PRECOMPILE.simSwapTaoForAlpha(TENEX_NETUID, uint64(buybackAmount.weiToRao()));
@@ -87,7 +74,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
      * @param alphaAmount Amount of alpha tokens to vest
      */
     function _createVestingScheduleForBuyback(uint256 alphaAmount) internal {
-        address beneficiary = treasury;
+        address beneficiary = address(this);
 
         VestingSchedule memory schedule = VestingSchedule({
             totalAmount: alphaAmount,
@@ -109,7 +96,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
      * @return claimed Amount of tokens claimed
      */
     function _claimVestedTokens(bytes32 beneficiarySs58Address) internal returns (uint256 claimed) {
-        VestingSchedule[] storage schedules = vestingSchedules[msg.sender];
+        VestingSchedule[] storage schedules = vestingSchedules[address(this)];
         if (schedules.length == 0) revert TenexiumErrors.NoVestingSchedules();
 
         uint256 totalClaimable = 0;
