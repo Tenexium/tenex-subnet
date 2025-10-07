@@ -63,6 +63,7 @@ contract TenexiumProtocol is
      * @param _buybackRate Fraction of pool to spend per buyback (scaled by PRECISION)
      * @param _buybackIntervalBlocks Minimum interval between buybacks, in blocks
      * @param _buybackExecutionThreshold Minimum balance required to execute a buyback
+     * @param _buybackBurningRate Rate at which bought-back alpha is burned (scaled by PRECISION)
      * @param _vestingDurationBlocks Total vesting duration for bought-back alpha, in blocks
      * @param _cliffDurationBlocks Cliff duration before vesting starts releasing, in blocks
      * @param _baseTradingFeeRate Base trading fee rate (scaled by PRECISION, e.g., 0.3% = 3 * PRECISION / 1000)
@@ -89,6 +90,7 @@ contract TenexiumProtocol is
         uint256 _buybackRate,
         uint256 _buybackIntervalBlocks,
         uint256 _buybackExecutionThreshold,
+        uint256 _buybackBurningRate,
         uint256 _vestingDurationBlocks,
         uint256 _cliffDurationBlocks,
         uint256 _baseTradingFeeRate,
@@ -127,6 +129,7 @@ contract TenexiumProtocol is
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
+        buybackBurningRate = _buybackBurningRate;
 
         // 5) Vesting parameters
         vestingDurationBlocks = _vestingDurationBlocks;
@@ -254,14 +257,16 @@ contract TenexiumProtocol is
     function updateBuybackParameters(
         uint256 _buybackRate,
         uint256 _buybackIntervalBlocks,
-        uint256 _buybackExecutionThreshold
+        uint256 _buybackExecutionThreshold,
+        uint256 _buybackBurningRate
     ) external onlyOwner {
-        if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
+        if (_buybackRate > PRECISION || _buybackBurningRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
         if (_buybackIntervalBlocks < 360) revert TenexiumErrors.IntervalTooShort();
 
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
+        buybackBurningRate = _buybackBurningRate;
     }
 
     /**

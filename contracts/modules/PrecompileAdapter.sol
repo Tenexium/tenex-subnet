@@ -13,7 +13,7 @@ abstract contract PrecompileAdapter is TenexiumStorage {
     using AlphaMath for uint256;
 
     // Mapping address of ZERO h160 address(0x0000000000000000000000000000000000000000)
-    bytes32 public constant BURN_HOTKEY = 0xc2cdcf01af7163d2d99b2ec87954e4c1b735e9e9ea80f8775bf29dd9457eaca1;
+    bytes32 public constant BURN_ADDRESS = 0xc2cdcf01af7163d2d99b2ec87954e4c1b735e9e9ea80f8775bf29dd9457eaca1;
 
     /**
      * @notice Stake TAO for Alpha tokens using the staking precompile
@@ -103,7 +103,7 @@ abstract contract PrecompileAdapter is TenexiumStorage {
         bytes memory data = abi.encodeWithSelector(
             STAKING_PRECOMPILE.moveStake.selector,
             validatorHotkey,
-            BURN_HOTKEY,
+            BURN_ADDRESS,
             uint256(alphaNetuid),
             uint256(alphaNetuid),
             alphaAmount
@@ -111,8 +111,7 @@ abstract contract PrecompileAdapter is TenexiumStorage {
         (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
         if (!success) revert TenexiumErrors.MoveStakeFailed();
 
-        bytes32 _protocolSs58Address = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this));
-        _transferStake(BURN_HOTKEY, _protocolSs58Address, uint256(alphaNetuid), uint256(alphaNetuid), alphaAmount);
+        _transferStake(BURN_ADDRESS, BURN_ADDRESS, uint256(alphaNetuid), uint256(alphaNetuid), alphaAmount);
     }
 
     /**
