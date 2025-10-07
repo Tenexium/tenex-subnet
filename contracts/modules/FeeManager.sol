@@ -106,10 +106,15 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
     /**
      * @notice Calculate discounted fee based on user's tier
      * @param user User address
-     * @param originalFee Original fee amount
+     * @param positionValue Position value in TAO
      * @return discountedFee Fee after applying tier discount
      */
-    function _calculateDiscountedFee(address user, uint256 originalFee) internal view returns (uint256 discountedFee) {
+    function _calculateTradingFeeWithDiscount(address user, uint256 positionValue)
+        internal
+        view
+        returns (uint256 discountedFee)
+    {
+        uint256 baseFee = positionValue.safeMul(tradingFeeRate) / PRECISION;
         bytes32 user_ss58Pubkey = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(user);
         uint256 balance = STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, user_ss58Pubkey, TENEX_NETUID);
         uint256 discount;
@@ -120,8 +125,29 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         else if (balance >= tier1Threshold) discount = tier1FeeDiscount;
         else discount = tier0FeeDiscount;
 
-        discountedFee = originalFee.safeMul(PRECISION - discount) / PRECISION;
+        discountedFee = baseFee.safeMul(PRECISION - discount) / PRECISION;
 
         return discountedFee;
+    }
+
+    /**
+     * @notice Calculate accrued fees for a position using global accumulator
+     * @param user User address
+     * @param positionId User's position identifier
+     * @return accruedFees Total accrued borrowing fees
+     */
+    function _calculatePositionFees(address user, uint256 positionId)
+        internal
+        view
+        virtual
+        returns (uint256 accruedFees)
+    {
+        Position storage position = positions[user][positionId];
+        if (!position.isActive) return 0;
+
+        // Calculate fees using global accumulator approach
+        // Fee = (currentAccruedBorrowingFees - positionBorrowingFeeDebt) * positionBorrowedAmount
+        uint256 feeAccumulator = accruedBorrowingFees - position.borrowingFeeDebt;
+        return position.borrowed.safeMul(feeAccumulator) / PRECISION;
     }
 }

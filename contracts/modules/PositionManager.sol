@@ -43,7 +43,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 totalTaoToStakeGross = collateralAmount + borrowedAmount;
 
         // Calculate and distribute trading fee on gross notional BEFORE staking
-        uint256 tradingFeeAmount = _calculateTradingFee(msg.sender, totalTaoToStakeGross);
+        uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, totalTaoToStakeGross);
         // Distribute trading fees
         _distributeTradingFees(tradingFeeAmount);
 
@@ -145,7 +145,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 feesToPay = position.accruedFees.safeMul(alphaToClose) / position.alphaAmount;
 
         // Calculate trading fees using actual TAO value on close leg
-        uint256 tradingFeeAmount = _calculateTradingFee(msg.sender, expectedTaoAmount);
+        uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, expectedTaoAmount);
 
         // Execute unstake operation
         bytes32 validatorHotkey = position.validatorHotkey;
@@ -245,20 +245,12 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
      * @return hasLiquidity Whether sufficient liquidity exists
      */
     function _checkSufficientLiquidity(uint256 borrowAmount) internal view returns (bool hasLiquidity) {
-        uint256 availableLiquidity = _internalAvailableLiquidity();
+        uint256 availableLiquidity = totalLpStakes > totalBorrowed ? totalLpStakes - totalBorrowed : 0;
 
         // Ensure enough liquidity with buffer
         uint256 requiredLiquidity = borrowAmount.safeMul(PRECISION + liquidityBufferRatio) / PRECISION;
 
         return availableLiquidity >= requiredLiquidity;
-    }
-
-    /**
-     * @notice Get available liquidity in the pool
-     * @return availableLiquidity Amount of TAO available for borrowing
-     */
-    function _internalAvailableLiquidity() internal view returns (uint256 availableLiquidity) {
-        return totalLpStakes > totalBorrowed ? totalLpStakes - totalBorrowed : 0;
     }
 
     /**
@@ -273,39 +265,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (balance >= tier2Threshold) return tier2MaxLeverage;
         if (balance >= tier1Threshold) return tier1MaxLeverage;
         return tier0MaxLeverage;
-    }
-
-    /**
-     * @notice Calculate trading fees for a position
-     * @param user User address
-     * @param positionValue Position value in TAO
-     * @return tradingFee Trading fee amount
-     */
-    function _calculateTradingFee(address user, uint256 positionValue) internal view returns (uint256 tradingFee) {
-        uint256 baseFee = positionValue.safeMul(tradingFeeRate) / PRECISION;
-        // Apply tier-based discount
-        return _calculateDiscountedFee(user, baseFee);
-    }
-
-    /**
-     * @notice Calculate accrued fees for a position using global accumulator
-     * @param user User address
-     * @param positionId User's position identifier
-     * @return accruedFees Total accrued borrowing fees
-     */
-    function _calculatePositionFees(address user, uint256 positionId)
-        internal
-        view
-        virtual
-        returns (uint256 accruedFees)
-    {
-        Position storage position = positions[user][positionId];
-        if (!position.isActive) return 0;
-
-        // Calculate fees using global accumulator approach
-        // Fee = (currentAccruedBorrowingFees - positionBorrowingFeeDebt) * positionBorrowedAmount
-        uint256 feeAccumulator = accruedBorrowingFees - position.borrowingFeeDebt;
-        return position.borrowed.safeMul(feeAccumulator) / PRECISION;
     }
 
     /**

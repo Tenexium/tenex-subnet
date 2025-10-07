@@ -735,10 +735,10 @@ contract TenexiumProtocol is
     function _calculatePositionFees(address user, uint256 positionId)
         internal
         view
-        override(PositionManager, LiquidationManager)
+        override(FeeManager, LiquidationManager)
         returns (uint256 accruedFees)
     {
-        accruedFees = PositionManager._calculatePositionFees(user, positionId);
+        accruedFees = FeeManager._calculatePositionFees(user, positionId);
     }
 
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================
