@@ -159,6 +159,12 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (actualTaoReceived < totalCosts) revert TenexiumErrors.InsufficientProceeds();
 
         uint256 netReturn = actualTaoReceived - totalCosts;
+        // If net return is greater than collateral to return, take a 10% performance fee
+        if (netReturn > collateralToReturn) {
+            uint256 perfFee = (netReturn - collateralToReturn).safeMul(100000000) / PRECISION; // 10%
+            netReturn -= perfFee;
+            protocolFees += perfFee;
+        }
 
         // Update position (partial or full close)
         if (alphaToClose == position.alphaAmount) {

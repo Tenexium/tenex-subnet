@@ -28,6 +28,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         // Calculate distribution amounts using trading fee shares
         uint256 protocolFeeAmount = feeAmount.safeMul(tradingFeeProtocolShare) / PRECISION;
         uint256 lpFeeAmount = feeAmount.safeMul(tradingFeeLpShare) / PRECISION;
+        lpFeeAmount = lpFeeAmount.safeMul(900000000) / PRECISION; // 90% - Reserve 10% for LP Recovery
 
         if (protocolFeeAmount > 0) {
             protocolFees += protocolFeeAmount;
@@ -54,6 +55,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
 
         uint256 protocolFeeAmount = feeAmount.safeMul(borrowingFeeProtocolShare) / PRECISION;
         uint256 lpFeeAmount = feeAmount.safeMul(borrowingFeeLpShare) / PRECISION;
+        lpFeeAmount = lpFeeAmount.safeMul(900000000) / PRECISION; // 90% - Reserve 10% for LP Recovery
 
         if (protocolFeeAmount > 0) {
             protocolFees += protocolFeeAmount;
