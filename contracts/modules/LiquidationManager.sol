@@ -27,10 +27,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
     function _liquidatePosition(address user, uint256 positionId) internal {
         Position storage position = positions[user][positionId];
         uint16 alphaNetuid = position.alphaNetuid;
-        if (position.alphaAmount == 0) revert TenexiumErrors.NoAlpha();
-
-        // Verify liquidation is justified using single threshold
-        if (!_isPositionLiquidatable(user, positionId)) revert TenexiumErrors.NotLiquidatable();
 
         // Calculate liquidation details using accurate simulation
         uint256 simulatedTaoValueRao = ALPHA_PRECOMPILE.simSwapAlphaForTao(alphaNetuid, uint64(position.alphaAmount));
@@ -55,20 +51,19 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
 
         // 2. Distribute liquidation fee on actual proceeds (post-debt)
         uint256 liquidationFeeAmount = remaining.safeMul(liquidationFeeRate) / PRECISION;
-        if (liquidationFeeAmount > 0 && remaining > 0) {
-            uint256 feeToDistribute = liquidationFeeAmount > remaining ? remaining : liquidationFeeAmount;
-            // Liquidator gets 100% of the liquidator share directly
-            uint256 liquidatorFeeShare = feeToDistribute.safeMul(liquidationFeeLiquidatorShare) / PRECISION;
-            if (liquidatorFeeShare > 0) {
-                (bool success,) = msg.sender.call{value: liquidatorFeeShare}("");
-                if (!success) revert TenexiumErrors.LiquiFeeTransferFailed();
-            }
+        uint256 liquidatorFeeShare = liquidationFeeAmount.safeMul(liquidationFeeLiquidatorShare) / PRECISION;
+        // Liquidator gets 100% of the liquidator share directly
+        if (liquidatorFeeShare > 0) {
+            (bool success,) = msg.sender.call{value: liquidatorFeeShare}("");
+            if (!success) revert TenexiumErrors.LiquiFeeTransferFailed();
+        }
+        uint256 protocolFeeShare = liquidationFeeAmount.safeMul(liquidationFeeProtocolShare) / PRECISION;
+        if (protocolFeeShare > 0) {
             // Protocol share of liquidation fees (accounted into protocolFees; buybacks funded via withdrawal)
-            uint256 protocolFeeShare = feeToDistribute.safeMul(liquidationFeeProtocolShare) / PRECISION;
             protocolFees = protocolFees.safeAdd(protocolFeeShare);
-            remaining = remaining.safeSub(feeToDistribute);
         }
 
+        remaining = remaining.safeSub(liquidationFeeAmount);
         // 3. Return any remaining collateral to user
         if (remaining > 0) {
             (bool success,) = user.call{value: remaining}("");
@@ -91,17 +86,19 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         position.accruedFees = 0;
         position.isActive = false;
 
-        // Calculate liquidator bonus (share of liquidation fee)
-        uint256 liquidatorFeeShareTotal = liquidationFeeAmount.safeMul(liquidationFeeLiquidatorShare) / PRECISION;
-
         // Update liquidation statistics
         totalLiquidations = totalLiquidations + 1;
         totalLiquidationValue = totalLiquidationValue.safeAdd(simulatedTaoValue);
-        liquidatorLiquidations[msg.sender] = liquidatorLiquidations[msg.sender] + 1;
-        liquidatorLiquidationValue[msg.sender] = liquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
+        totalLiquidatorLiquidations[msg.sender] = totalLiquidatorLiquidations[msg.sender] + 1;
+        totalLiquidatorLiquidationValue[msg.sender] =
+            totalLiquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
+        dailyLiquidatorLiquidations[msg.sender][block.number / 7200] =
+            dailyLiquidatorLiquidations[msg.sender][block.number / 7200] + 1;
+        dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200] =
+            dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200].safeAdd(simulatedTaoValue);
 
         emit PositionLiquidated(
-            user, msg.sender, positionId, alphaNetuid, simulatedTaoValue, liquidationFeeAmount, liquidatorFeeShareTotal
+            user, msg.sender, positionId, alphaNetuid, simulatedTaoValue, liquidationFeeAmount, liquidatorFeeShare
         );
     }
 
@@ -115,7 +112,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
      */
     function _isPositionLiquidatable(address user, uint256 positionId) internal view returns (bool liquidatable) {
         Position storage position = positions[user][positionId];
-        if (!position.isActive || position.alphaAmount == 0) return false;
 
         // Get current value using accurate simulation
         uint256 simulatedTaoValueRao =
@@ -131,12 +127,6 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
         uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
         uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
         return healthRatio < liquidationThreshold; // Use single threshold only
-    }
-
-    // ==================== PUBLIC THIN WRAPPERS ====================
-
-    function isPositionLiquidatable(address user, uint256 positionId) public view returns (bool) {
-        return _isPositionLiquidatable(user, positionId);
     }
 
     // ==================== UTILIZATION MANAGEMENT ====================
