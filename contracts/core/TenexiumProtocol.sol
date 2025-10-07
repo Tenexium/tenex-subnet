@@ -635,23 +635,28 @@ contract TenexiumProtocol is
         lastLiquidationBlock[msg.sender][user][positionId] = block.number;
 
         if (!_isPositionLiquidatable(user, positionId)) {
-            // Reset first liquidatable block for this liquidator when position is not liquidatable
+            // Reset counters when position is not liquidatable
             firstLiquidatableBlock[msg.sender][user][positionId] = 0;
+            consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 0;
             return;
         }
 
         // If this is the first time this liquidator sees position as liquidatable, record the block
         if (firstLiquidatableBlock[msg.sender][user][positionId] == 0) {
             firstLiquidatableBlock[msg.sender][user][positionId] = block.number;
+            consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 1;
+        } else {
+            // Increment consecutive liquidatable blocks counter
+            consecutiveLiquidatableBlocks[msg.sender][user][positionId]++;
         }
 
-        // Check if position has been liquidatable for 10 consecutive blocks for this liquidator
-        uint256 blocksSinceFirstLiquidatable = block.number - firstLiquidatableBlock[msg.sender][user][positionId] + 1;
-        if (blocksSinceFirstLiquidatable >= maxLiquidationCount) {
+        // Check if position has been liquidatable for maxLiquidationCount consecutive blocks for this liquidator
+        if (consecutiveLiquidatableBlocks[msg.sender][user][positionId] >= maxLiquidationCount) {
             _liquidatePosition(user, positionId);
             _updateLiquidityCircuitBreaker();
             // Reset counters after liquidation
             firstLiquidatableBlock[msg.sender][user][positionId] = 0;
+            consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 0;
             return;
         }
     }

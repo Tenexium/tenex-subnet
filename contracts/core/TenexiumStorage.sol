@@ -191,6 +191,7 @@ contract TenexiumStorage {
     mapping(address => mapping(uint256 => uint256)) public dailyLiquidatorLiquidationValue; // Total TAO value liquidated by liquidator
     mapping(address => mapping(address => mapping(uint256 => uint256))) public lastLiquidationBlock; // Last block when liquidatePosition was called for a position
     mapping(address => mapping(address => mapping(uint256 => uint256))) public firstLiquidatableBlock; // First block when position became liquidatable for each liquidator
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public consecutiveLiquidatableBlocks; // Consecutive blocks position has been liquidatable for each liquidator
 
     // ==================== ADDRESS CONVERSION ====================
     IAddressConversion public ADDRESS_CONVERSION_CONTRACT;
