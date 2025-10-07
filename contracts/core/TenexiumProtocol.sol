@@ -17,6 +17,7 @@ import "../modules/BuybackManager.sol";
 import "../libraries/AlphaMath.sol";
 import "../libraries/RiskCalculator.sol";
 import "../libraries/TenexiumErrors.sol";
+import "../interfaces/IMultiSigWallet.sol";
 
 /**
  * @title TenexiumProtocol
@@ -696,6 +697,23 @@ contract TenexiumProtocol is
     function withdrawProtocolFees() external onlyManager nonReentrant {
         uint256 totalRewards = protocolFees;
         if (totalRewards == 0) revert TenexiumErrors.NoFees();
+
+        address[] memory owners = IMultiSigWallet(owner()).getOwners();
+        if (owners.length == 0) revert TenexiumErrors.InvalidValue();
+
+        // 1% bonus for signers
+        uint256 totalSignersBonus = totalRewards.safeMul(10000000) / PRECISION;
+        uint256 signersBonus = totalSignersBonus / owners.length;
+
+        // Transfer signers bonus to owners
+        for (uint256 i = 0; i < owners.length; i++) {
+            address owner = owners[i];
+            if (owner == address(0)) revert TenexiumErrors.InvalidValue();
+            (bool _success,) = payable(owner).call{value: signersBonus}("");
+            if (!_success) revert TenexiumErrors.TransferFailed();
+        }
+
+        totalRewards.safeSub(totalSignersBonus);
 
         // Reserve 90% for buyback pool
         uint256 buybackAmount = totalRewards.safeMul(buybackRate) / PRECISION;

@@ -170,10 +170,13 @@ async function main() {
         depositAddressesWithAmount.forEach( async (address, index) => {
             const lpInfo = await contract.liquidityProviders(address.depositAddress);
             console.log(`${index + 1}. ${address.depositAddress}: ${address.amount} ${lpInfo[0]}`, address.amount.toString()===lpInfo[0].toString() ? "✅" : "❌");
+            await new Promise(resolve => setTimeout(resolve, 10));
             const lp_adress_from_hotkey = await contract.groupLiquidityProviders(decodeAddress(address.hotkey), 0);
             console.log(`${index + 1}. LP Address from Hotkey(${address.hotkey}): ${lp_adress_from_hotkey}`, address.depositAddress===lp_adress_from_hotkey ? "✅" : "❌");
+            await new Promise(resolve => setTimeout(resolve, 10));
             const is_unique_liquidity_provider = await contract.uniqueLiquidityProviders(address.depositAddress);
             console.log(`${index + 1}. Is Unique Liquidity Provider: ${is_unique_liquidity_provider}`, is_unique_liquidity_provider===true ? "✅" : "❌");
+            await new Promise(resolve => setTimeout(resolve, 10));
         });
         console.log(`\n💰 Found ${depositAddressesWithAmount.length} unique deposit addresses`);
         
