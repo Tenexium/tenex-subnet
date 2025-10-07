@@ -15,7 +15,8 @@ export interface DeployConfig {
     
     // Buyback economics
     buybackExecutionThreshold: string; // min balance to execute buyback (wei)
-    buybackRate: string;              // 50% of pool per buyback (PRECISION=1e9)
+    buybackRate: string;              // 90% of pool per buyback (PRECISION=1e9)
+    buybackBurningRate: string;       // 82.5% of pool per buyback (PRECISION=1e9)
     buybackIntervalBlocks: string;    // cadence blocks (default)
     vestingDurationBlocks: string;    // ~12 months in blocks (example)
     cliffDurationBlocks: string;      // ~3 months in blocks (example)
@@ -64,7 +65,8 @@ const deployConfig: DeployConfig = {
     
     // Buyback economics
     buybackExecutionThreshold: "1000000000000000000", // min balance to execute buyback (wei)
-    buybackRate: "500000000",                         // 50% of pool per buyback (PRECISION=1e9)
+    buybackRate: "900000000",                         // 90% of pool per buyback (PRECISION=1e9)
+    buybackBurningRate: "825000000",                   // 82.5% of pool per buyback (PRECISION=1e9)
     buybackIntervalBlocks: "7200",                    // cadence blocks (default)
     vestingDurationBlocks: "2628000",                 // ~12 months in blocks (example)
     cliffDurationBlocks: "648000",                    // ~3 months in blocks (example)

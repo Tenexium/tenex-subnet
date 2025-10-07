@@ -681,6 +681,7 @@ contract TenexiumProtocol is
      */
     function claimVestedBuybackTokens(bytes32 ss58Address)
         external
+        onlyManager
         whenNotPaused
         nonReentrant
         returns (uint256 claimed)
@@ -692,12 +693,12 @@ contract TenexiumProtocol is
     /**
      * @notice Withdraw protocol fees
      */
-    function withdrawProtocolFees() external onlyOwner nonReentrant {
+    function withdrawProtocolFees() external onlyManager nonReentrant {
         uint256 totalRewards = protocolFees;
         if (totalRewards == 0) revert TenexiumErrors.NoFees();
 
         // Reserve 90% for buyback pool
-        uint256 buybackAmount = (totalRewards * 90) / 100;
+        uint256 buybackAmount = totalRewards.safeMul(buybackRate) / PRECISION;
         uint256 withdrawAmount = totalRewards - buybackAmount;
 
         // Fund buyback pool
