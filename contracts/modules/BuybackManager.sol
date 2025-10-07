@@ -26,7 +26,6 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         if (!_canExecuteBuyback()) revert TenexiumErrors.BuybackConditionsNotMet();
 
         // Market-responsive sizing
-        uint256 availableFees = buybackPool;
         uint256 targetFraction = buybackRate;
 
         // Time ramp: linearly increase fraction up to 100% over 7 intervals without execution
@@ -39,10 +38,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
             targetFraction = boosted;
         }
 
-        uint256 buybackAmount = availableFees.safeMul(targetFraction) / PRECISION;
-        if (address(this).balance < buybackAmount) {
-            revert TenexiumErrors.InsufficientContractBalance();
-        }
+        uint256 buybackAmount = buybackPool.safeMul(targetFraction) / PRECISION;
 
         // Use simulation to check expected alpha amount and slippage
         uint256 expectedAlpha = ALPHA_PRECOMPILE.simSwapTaoForAlpha(TENEX_NETUID, uint64(buybackAmount.weiToRao()));
@@ -55,6 +51,10 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         uint256 actualSlippage =
             expectedAlpha > actualAlphaReceived ? ((expectedAlpha - actualAlphaReceived) * 10000) / expectedAlpha : 0;
 
+        // Burn alpha tokens
+        uint256 alphaToBurn = actualAlphaReceived.safeMul(buybackBurningRate) / PRECISION;
+        _burnAlpha(protocolValidatorHotkey, alphaToBurn, TENEX_NETUID);
+
         // Update accounting
         buybackPool -= buybackAmount;
         totalTaoUsedForBuybacks += buybackAmount;
@@ -62,7 +62,8 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         lastBuybackBlock = block.number;
 
         // Create vesting schedule for bought tokens (lock them)
-        _createVestingScheduleForBuyback(actualAlphaReceived);
+        uint256 vestingAlpha = actualAlphaReceived - alphaToBurn;
+        _createVestingScheduleForBuyback(vestingAlpha);
 
         emit BuybackExecuted(buybackAmount, actualAlphaReceived, block.number, actualSlippage);
     }
@@ -75,8 +76,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         if (block.number < lastBuybackBlock + buybackIntervalBlocks) return false;
         // Enforce minimum pool threshold before executing to avoid dust buybacks
         if (buybackPool < buybackExecutionThreshold) return false;
-        uint256 available = buybackPool;
-        uint256 planned = available.safeMul(buybackRate) / PRECISION;
+        uint256 planned = buybackPool.safeMul(buybackRate) / PRECISION;
         return address(this).balance >= planned;
     }
 
@@ -145,10 +145,6 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
      * @return vested Amount of tokens vested
      */
     function _calculateVestedAmount(VestingSchedule memory schedule) internal view returns (uint256 vested) {
-        if (block.number < schedule.cliffBlock || schedule.revoked) {
-            return 0;
-        }
-
         if (block.number >= schedule.endBlock) {
             return schedule.totalAmount;
         }

@@ -23,7 +23,6 @@ library TenexiumErrors {
     error LpMinDeposit();
     error InvalidWithdrawalAmount();
     error UtilizationExceeded();
-    error InsufficientContractBalance();
     error UserCooldownActive();
     error LpCooldownActive();
     error BorrowingFeesCooldownActive();

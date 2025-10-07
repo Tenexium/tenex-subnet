@@ -118,7 +118,7 @@ contract TenexiumStorage {
     uint256 public lastBuybackBlock; // Last buyback block
     uint256 public totalTaoUsedForBuybacks; // Total TAO used for buybacks
     uint256 public totalAlphaBought; // Total Alpha tokens bought
-    uint256 public accumulatedFees; // Accumulated fees
+    uint256 public buybackBurningRate; // Buyback burning rate
 
     // Fee distribution tracking
     uint256 public totalFeesCollected; // Total fees collected
