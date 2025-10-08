@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";
 import "../libraries/AlphaMath.sol";
-import "../libraries/RiskCalculator.sol";
 import "../libraries/TenexiumErrors.sol";
 import "./PrecompileAdapter.sol";
 
@@ -14,7 +13,6 @@ import "./PrecompileAdapter.sol";
  */
 abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, PrecompileAdapter {
     using AlphaMath for uint256;
-    using RiskCalculator for RiskCalculator.PositionData;
 
     // ==================== LIQUIDATION FUNCTIONS ====================
 

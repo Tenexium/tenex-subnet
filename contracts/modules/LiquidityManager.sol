@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";
 import "../libraries/AlphaMath.sol";
-import "../libraries/RiskCalculator.sol";
 import "../libraries/TenexiumErrors.sol";
 
 /**

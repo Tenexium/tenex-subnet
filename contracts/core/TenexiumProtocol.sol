@@ -15,7 +15,6 @@ import "../modules/LiquidationManager.sol";
 import "../modules/FeeManager.sol";
 import "../modules/BuybackManager.sol";
 import "../libraries/AlphaMath.sol";
-import "../libraries/RiskCalculator.sol";
 import "../libraries/TenexiumErrors.sol";
 import "../interfaces/IMultiSigWallet.sol";
 
@@ -38,7 +37,6 @@ contract TenexiumProtocol is
     BuybackManager
 {
     using AlphaMath for uint256;
-    using RiskCalculator for RiskCalculator.PositionData;
 
     // Protocol version
     string public constant VERSION = "1.0.0";
@@ -432,7 +430,7 @@ contract TenexiumProtocol is
 
         // Calculate current borrowing rate based on global utilization
         uint256 utilization = totalBorrowed.safeMul(PRECISION) / totalLpStakes;
-        uint256 ratePer360 = RiskCalculator.dynamicBorrowRatePer360(utilization);
+        uint256 ratePer360 = _dynamicBorrowRatePer360(utilization);
 
         // Update global accumulator
         accruedBorrowingFees += ratePer360;

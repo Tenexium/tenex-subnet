@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";
 import "../libraries/AlphaMath.sol";
-import "../libraries/RiskCalculator.sol";
 import "../libraries/TenexiumErrors.sol";
 import "./FeeManager.sol";
 import "./PrecompileAdapter.sol";
@@ -15,7 +14,6 @@ import "./PrecompileAdapter.sol";
  */
 abstract contract PositionManager is FeeManager, PrecompileAdapter {
     using AlphaMath for uint256;
-    using RiskCalculator for RiskCalculator.PositionData;
 
     // ==================== POSITION MANAGEMENT FUNCTIONS ====================
 
@@ -285,8 +283,26 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             pair.borrowingRate = 0;
         } else {
             pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / totalBorrowed;
-            pair.borrowingRate =
-                RiskCalculator.dynamicBorrowRatePer360(totalBorrowed.safeMul(PRECISION) / totalLpStakes);
+            pair.borrowingRate = _dynamicBorrowRatePer360(totalBorrowed.safeMul(PRECISION) / totalLpStakes);
+        }
+    }
+
+    /**
+     * @notice Unified dynamic borrow rate model per 360 blocks (utilization-kinked)
+     * @param utilization Utilization in PRECISION (PRECISION = 100%)
+     * @return ratePer360 Borrow rate accrued over 360 blocks
+     */
+    function _dynamicBorrowRatePer360(uint256 utilization) internal pure virtual returns (uint256 ratePer360) {
+        // Baseline aligned to spec: 0.005% per 360 blocks at zero utilization.
+        // Kink at 80%; steeper slope beyond kink.
+        uint256 baseRate = 50_000; // 0.005% per 360 blocks (0.00005 * 1e9)
+        uint256 kink = 800_000_000; // 80% of PRECISION (0.8 * 1e9)
+        uint256 slope1 = 150_000; // 0.015% per 360 blocks below kink (0.00015 * 1e9)
+        uint256 slope2 = 800_000; // 0.08% per 360 blocks above kink (0.0008 * 1e9)
+        if (utilization <= kink) {
+            return baseRate + (utilization * slope1) / kink;
+        } else {
+            return baseRate + slope1 + ((utilization - kink) * slope2) / (1_000_000_000 - kink);
         }
     }
 }
