@@ -798,6 +798,21 @@ contract TenexiumProtocol is
         return groupLiquidityProviders[hotkey].length;
     }
 
+    // ==================== INSURANCE FUND FUNCTIONS ====================
+
+    /**
+     * @notice Receive insurance fund from InsuranceManager contract
+     * @dev This function allows the InsuranceManager to send TAO to this contract
+     * @dev Only callable by the InsuranceManager contract
+     */
+    function receiveInsuranceFund() external payable {
+        if (msg.sender != insuranceFund) revert TenexiumErrors.InvalidValue();
+        if (msg.value == 0) revert TenexiumErrors.InvalidValue();
+
+        // The TAO is automatically added to the contract's balance
+        // No additional processing needed as this is just a funding mechanism
+    }
+
     // ==================== UPGRADES (UUPS) ====================
 
     /**
