@@ -38,7 +38,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (!_checkSufficientLiquidity(borrowedAmount)) revert TenexiumErrors.InsufficientLiquidity();
 
         // Gross notional and fee withholding before staking
-        uint256 totalTaoToStakeGross = collateralAmount + borrowedAmount;
+        uint256 totalTaoToStakeGross = collateralAmount.safeAdd(borrowedAmount);
 
         // Calculate and distribute trading fee on gross notional BEFORE staking
         uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, totalTaoToStakeGross);
@@ -84,19 +84,19 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         position.validatorHotkey = validatorHotkey;
 
         // Update global state
-        totalCollateral += collateralAmount;
-        totalBorrowed += borrowedAmount;
-        userCollateral[msg.sender] += collateralAmount;
-        userTotalBorrowed[msg.sender] += borrowedAmount;
+        totalCollateral = totalCollateral.safeAdd(collateralAmount);
+        totalBorrowed = totalBorrowed.safeAdd(borrowedAmount);
+        userCollateral[msg.sender] = userCollateral[msg.sender].safeAdd(collateralAmount);
+        userTotalBorrowed[msg.sender] = userTotalBorrowed[msg.sender].safeAdd(borrowedAmount);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        pair.totalCollateral += collateralAmount;
-        pair.totalBorrowed += borrowedAmount;
+        pair.totalCollateral = pair.totalCollateral.safeAdd(collateralAmount);
+        pair.totalBorrowed = pair.totalBorrowed.safeAdd(borrowedAmount);
 
         _updateUtilizationRate(alphaNetuid);
 
         // Update metrics
-        totalVolume += totalTaoToStakeGross;
+        totalVolume = totalVolume.safeAdd(totalTaoToStakeGross);
         totalTrades += 1;
         userTotalVolume[msg.sender] += totalTaoToStakeGross;
 
@@ -153,15 +153,17 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (actualTaoReceived < minAcceptableTao) revert TenexiumErrors.UnstakeSlippage();
 
         // Calculate net return after all costs
-        uint256 totalCosts = borrowedToRepay + feesToPay + tradingFeeAmount;
+        uint256 totalCosts = borrowedToRepay.safeAdd(feesToPay).safeAdd(tradingFeeAmount);
         if (actualTaoReceived < totalCosts) revert TenexiumErrors.InsufficientProceeds();
 
-        uint256 netReturn = actualTaoReceived - totalCosts;
-        // If net return is greater than collateral to return, take a 10% performance fee
+        uint256 netReturn = actualTaoReceived.safeSub(totalCosts);
+        // If net return is greater than collateral to return, take a performance fee for insurance fund
         if (netReturn > collateralToReturn) {
-            uint256 perfFee = (netReturn - collateralToReturn).safeMul(100000000) / PRECISION; // 10%
-            netReturn -= perfFee;
-            protocolFees += perfFee;
+            uint256 perfFeeInsurance =
+                (netReturn.safeSub(collateralToReturn)).safeMul(perfFeeInsuranceShare) / PRECISION;
+            netReturn = netReturn.safeSub(perfFeeInsurance);
+            (bool success,) = payable(insuranceFund).call{value: perfFeeInsurance}("");
+            if (!success) revert TenexiumErrors.TransferFailed();
         }
 
         // Update position (partial or full close)
@@ -174,21 +176,21 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             position.accruedFees = 0;
         } else {
             // Partial close
-            position.alphaAmount -= alphaToClose;
-            position.borrowed -= borrowedToRepay;
-            position.collateral -= collateralToReturn;
-            position.accruedFees -= feesToPay;
+            position.alphaAmount = position.alphaAmount.safeSub(alphaToClose);
+            position.borrowed = position.borrowed.safeSub(borrowedToRepay);
+            position.collateral = position.collateral.safeSub(collateralToReturn);
+            position.accruedFees = position.accruedFees.safeSub(feesToPay);
         }
 
         // Update global state
-        totalBorrowed -= borrowedToRepay;
-        totalCollateral -= collateralToReturn;
-        userTotalBorrowed[msg.sender] -= borrowedToRepay;
-        userCollateral[msg.sender] -= collateralToReturn;
+        totalBorrowed = totalBorrowed.safeSub(borrowedToRepay);
+        totalCollateral = totalCollateral.safeSub(collateralToReturn);
+        userTotalBorrowed[msg.sender] = userTotalBorrowed[msg.sender].safeSub(borrowedToRepay);
+        userCollateral[msg.sender] = userCollateral[msg.sender].safeSub(collateralToReturn);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        pair.totalBorrowed -= borrowedToRepay;
-        pair.totalCollateral -= collateralToReturn;
+        pair.totalBorrowed = pair.totalBorrowed.safeSub(borrowedToRepay);
+        pair.totalCollateral = pair.totalCollateral.safeSub(collateralToReturn);
 
         _updateUtilizationRate(alphaNetuid);
 
@@ -228,15 +230,15 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint16 alphaNetuid = position.alphaNetuid;
 
         // Add TAO to collateral
-        position.collateral += msg.value;
+        position.collateral = position.collateral.safeAdd(msg.value);
         position.lastUpdateBlock = block.number;
 
         // Update global state
-        totalCollateral += msg.value;
-        userCollateral[msg.sender] += msg.value;
+        totalCollateral = totalCollateral.safeAdd(msg.value);
+        userCollateral[msg.sender] = userCollateral[msg.sender].safeAdd(msg.value);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        pair.totalCollateral += msg.value;
+        pair.totalCollateral = pair.totalCollateral.safeAdd(msg.value);
 
         emit CollateralAdded(msg.sender, positionId, alphaNetuid, msg.value);
     }
@@ -249,7 +251,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
      * @return hasLiquidity Whether sufficient liquidity exists
      */
     function _checkSufficientLiquidity(uint256 borrowAmount) internal view returns (bool hasLiquidity) {
-        uint256 availableLiquidity = totalLpStakes > totalBorrowed ? totalLpStakes - totalBorrowed : 0;
+        uint256 availableLiquidity = totalLpStakes > totalBorrowed ? totalLpStakes.safeSub(totalBorrowed) : 0;
 
         // Ensure enough liquidity with buffer
         uint256 requiredLiquidity = borrowAmount.safeMul(PRECISION + liquidityBufferRatio) / PRECISION;
@@ -269,40 +271,5 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (balance >= tier2Threshold) return tier2MaxLeverage;
         if (balance >= tier1Threshold) return tier1MaxLeverage;
         return tier0MaxLeverage;
-    }
-
-    /**
-     * @notice Update utilization rates for alpha pairs
-     * @param alphaNetuid Alpha subnet ID
-     */
-    function _updateUtilizationRate(uint16 alphaNetuid) internal virtual validAlphaPair(alphaNetuid) {
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
-
-        if (totalBorrowed == 0) {
-            pair.utilizationRate = 0;
-            pair.borrowingRate = 0;
-        } else {
-            pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / totalBorrowed;
-            pair.borrowingRate = _dynamicBorrowRatePer360(totalBorrowed.safeMul(PRECISION) / totalLpStakes);
-        }
-    }
-
-    /**
-     * @notice Unified dynamic borrow rate model per 360 blocks (utilization-kinked)
-     * @param utilization Utilization in PRECISION (PRECISION = 100%)
-     * @return ratePer360 Borrow rate accrued over 360 blocks
-     */
-    function _dynamicBorrowRatePer360(uint256 utilization) internal pure virtual returns (uint256 ratePer360) {
-        // Baseline aligned to spec: 0.005% per 360 blocks at zero utilization.
-        // Kink at 80%; steeper slope beyond kink.
-        uint256 baseRate = 50_000; // 0.005% per 360 blocks (0.00005 * 1e9)
-        uint256 kink = 800_000_000; // 80% of PRECISION (0.8 * 1e9)
-        uint256 slope1 = 150_000; // 0.015% per 360 blocks below kink (0.00015 * 1e9)
-        uint256 slope2 = 800_000; // 0.08% per 360 blocks above kink (0.0008 * 1e9)
-        if (utilization <= kink) {
-            return baseRate + (utilization * slope1) / kink;
-        } else {
-            return baseRate + slope1 + ((utilization - kink) * slope2) / (1_000_000_000 - kink);
-        }
     }
 }

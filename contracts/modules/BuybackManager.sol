@@ -38,19 +38,14 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         uint256 actualSlippage =
             expectedAlpha > actualAlphaReceived ? ((expectedAlpha - actualAlphaReceived) * 10000) / expectedAlpha : 0;
 
-        // Burn alpha tokens
-        uint256 alphaToBurn = actualAlphaReceived.safeMul(buybackBurningRate) / PRECISION;
-        _burnAlpha(protocolValidatorHotkey, alphaToBurn, TENEX_NETUID);
+        // Burn 100% of received alpha tokens for avoiding selling pressure
+        _burnAlpha(protocolValidatorHotkey, actualAlphaReceived, TENEX_NETUID);
 
         // Update accounting
         buybackPool -= buybackAmount;
         totalTaoUsedForBuybacks += buybackAmount;
         totalAlphaBought += actualAlphaReceived;
         lastBuybackBlock = block.number;
-
-        // Create vesting schedule for bought tokens (lock them)
-        uint256 vestingAlpha = actualAlphaReceived - alphaToBurn;
-        _createVestingScheduleForBuyback(vestingAlpha);
 
         emit BuybackExecuted(buybackAmount, actualAlphaReceived, block.number, actualSlippage);
     }
@@ -63,82 +58,9 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         if (block.number < lastBuybackBlock + buybackIntervalBlocks) return false;
         // Enforce minimum pool threshold before executing to avoid dust buybacks
         if (buybackPool < buybackExecutionThreshold) return false;
-        uint256 planned = buybackPool.safeMul(buybackRate) / PRECISION;
-        return address(this).balance >= planned;
-    }
-
-    // ==================== VESTING FUNCTIONS ====================
-
-    /**
-     * @notice Create vesting schedule for buyback tokens (locks them)
-     * @param alphaAmount Amount of alpha tokens to vest
-     */
-    function _createVestingScheduleForBuyback(uint256 alphaAmount) internal {
-        address beneficiary = address(this);
-
-        VestingSchedule memory schedule = VestingSchedule({
-            totalAmount: alphaAmount,
-            claimedAmount: 0,
-            startBlock: block.number,
-            cliffBlock: block.number + cliffDurationBlocks,
-            endBlock: block.number + vestingDurationBlocks,
-            revoked: false
-        });
-
-        vestingSchedules[beneficiary].push(schedule);
-
-        emit VestingScheduleCreated(beneficiary, alphaAmount, block.number, vestingDurationBlocks);
-    }
-
-    /**
-     * @notice Claim vested tokens to specified SS58 address
-     * @param beneficiarySs58Address SS58 address to receive the tokens
-     * @return claimed Amount of tokens claimed
-     */
-    function _claimVestedTokens(bytes32 beneficiarySs58Address) internal returns (uint256 claimed) {
-        VestingSchedule[] storage schedules = vestingSchedules[address(this)];
-        if (schedules.length == 0) revert TenexiumErrors.NoVestingSchedules();
-
-        uint256 totalClaimable = 0;
-
-        for (uint256 i = 0; i < schedules.length; i++) {
-            VestingSchedule storage schedule = schedules[i];
-
-            if (schedule.revoked || block.number < schedule.cliffBlock) {
-                continue;
-            }
-
-            uint256 vested = _calculateVestedAmount(schedule);
-            uint256 claimable = vested - schedule.claimedAmount;
-
-            if (claimable > 0) {
-                schedule.claimedAmount += claimable;
-                totalClaimable += claimable;
-            }
-        }
-
-        if (totalClaimable > 0) {
-            _transferStake(beneficiarySs58Address, protocolValidatorHotkey, TENEX_NETUID, TENEX_NETUID, totalClaimable);
-            claimed = totalClaimable;
-            emit TokensClaimed(msg.sender, beneficiarySs58Address, totalClaimable);
-        }
-
-        return claimed;
-    }
-
-    /**
-     * @notice Calculate vested amount for a schedule
-     * @param schedule Vesting schedule
-     * @return vested Amount of tokens vested
-     */
-    function _calculateVestedAmount(VestingSchedule memory schedule) internal view returns (uint256 vested) {
-        if (block.number >= schedule.endBlock) {
-            return schedule.totalAmount;
-        }
-
-        uint256 vestingBlocks = block.number - schedule.startBlock;
-        uint256 totalBlocks = schedule.endBlock - schedule.startBlock;
-
-        return schedule.totalAmount.safeMul(vestingBlocks) / totalBlocks;
+        uint256 availableBalance = address(this).balance.safeSub(totalLpStakes).safeSub(totalBorrowed).safeSub(
+            totalPendingLpFees
+        ).safeSub(protocolFees);
+        return availableBalance >= buybackPool;
     }
 }

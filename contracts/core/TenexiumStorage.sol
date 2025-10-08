@@ -47,9 +47,9 @@ contract TenexiumStorage {
     uint256 public buybackIntervalBlocks; // Buyback interval in blocks
     uint256 public buybackExecutionThreshold; // Min balance to execute buyback
 
-    // Vesting parameters
-    uint256 public vestingDurationBlocks; // Vesting duration in blocks
-    uint256 public cliffDurationBlocks; // Cliff duration in blocks
+    // Share parameters
+    uint256 public protocolFeeGoveranceShare; // Protocol fee goverance share
+    uint256 public protocolFeeInsuranceShare; // Protocol fee insurance share
 
     // Fee parameters
     uint256 public tradingFeeRate; // Trading fee
@@ -118,18 +118,18 @@ contract TenexiumStorage {
     uint256 public lastBuybackBlock; // Last buyback block
     uint256 public totalTaoUsedForBuybacks; // Total TAO used for buybacks
     uint256 public totalAlphaBought; // Total Alpha tokens bought
-    uint256 public buybackBurningRate; // Buyback burning rate
 
     // Fee distribution tracking
-    uint256 public totalFeesCollected; // Total fees collected
-    uint256 public totalFeesDistributed; // Total fees distributed
+    uint256 public totalTradingFees; // Total trading fees collected
+    uint256 public totalBorrowingFees; // Total borrowing fees collected
+    uint256 public totalLiquidationFees; // Total liquidation fees collected
     uint256 public lastAccruedBorrowingFeesUpdate; // Last block when accrued borrowing fees were updated
 
     // Max liquidation count
     uint256 public maxLiquidationCount; // Max liquidation count
 
     // LP fee tracking
-    uint256 public totalLpFees; // Total LP fees collected
+    uint256 public totalPendingLpFees; // Total pending LP fees
     uint256 public totalLpStakes; // Total LP stakes
 
     // Total liquidations tracking
@@ -170,7 +170,7 @@ contract TenexiumStorage {
     mapping(address => uint256) public nextPositionId;
 
     // Vesting schedules
-    mapping(address => VestingSchedule[]) public vestingSchedules;
+    mapping(address => uint256) public vestingSchedules;
 
     // Alpha pairs
     mapping(uint16 => AlphaPair) public alphaPairs;
@@ -186,6 +186,10 @@ contract TenexiumStorage {
     // The maximum number of liquidity providers per hotkey
     uint256 public maxLiquidityProvidersPerHotkey;
 
+    // Insurance Rate for LP and Performance fees
+    uint256 public lpFeeInsuranceShare; // LP fee insurance share
+    uint256 public perfFeeInsuranceShare; // Performance fee insurance share
+
     // ==================== LIQUIDATION STATISTICS ====================
     mapping(address => mapping(uint256 => uint256)) public dailyLiquidatorLiquidations; // Number of liquidations by liquidator
     mapping(address => mapping(uint256 => uint256)) public dailyLiquidatorLiquidationValue; // Total TAO value liquidated by liquidator
@@ -198,6 +202,9 @@ contract TenexiumStorage {
 
     // ==================== MANAGER ====================
     address public manager;
+
+    // ==================== INSURANCE FUND ====================
+    address public insuranceFund;
 
     // ==================== STRUCTS ====================
 
@@ -233,15 +240,6 @@ contract TenexiumStorage {
         uint256 shares; // LP shares
         uint256 rewardDebt; // Accumulator-based reward debt for LP fee claims
         bool isActive; // LP status
-    }
-
-    struct VestingSchedule {
-        uint256 totalAmount; // Total alpha tokens vesting
-        uint256 claimedAmount; // Amount already claimed
-        uint256 startBlock; // Vesting start block
-        uint256 cliffBlock; // Cliff end block
-        uint256 endBlock; // Vesting end block
-        bool revoked; // Whether vesting is revoked
     }
 
     // ==================== MODIFIERS ====================

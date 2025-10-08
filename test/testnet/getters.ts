@@ -78,16 +78,6 @@ async function main() {
         console.log("Buyback Interval Blocks:", buybackIntervalBlocks.toString());
         console.log("Buyback Execution Threshold:", ethers.formatEther(buybackExecutionThreshold), "TAO");
 
-        // ==================== VESTING PARAMETERS ====================
-        console.log("\n📅 VESTING PARAMETERS:");
-        console.log("-".repeat(40));
-        
-        const vestingDurationBlocks = await TenexiumProtocol.vestingDurationBlocks();
-        const cliffDurationBlocks = await TenexiumProtocol.cliffDurationBlocks();
-        
-        console.log("Vesting Duration Blocks:", vestingDurationBlocks.toString());
-        console.log("Cliff Duration Blocks:", cliffDurationBlocks.toString());
-
         // ==================== FEE PARAMETERS ====================
         console.log("\n💸 FEE PARAMETERS:");
         console.log("-".repeat(40));
@@ -242,38 +232,38 @@ async function main() {
         const lastBuybackBlock = await TenexiumProtocol.lastBuybackBlock();
         const totalTaoUsedForBuybacks = await TenexiumProtocol.totalTaoUsedForBuybacks();
         const totalAlphaBought = await TenexiumProtocol.totalAlphaBought();
-        const accumulatedFees = await TenexiumProtocol.accumulatedFees();
         
         console.log("Buyback Pool:", ethers.formatEther(buybackPool), "TAO");
         console.log("Last Buyback Block:", lastBuybackBlock.toString());
         console.log("Total TAO Used for Buybacks:", ethers.formatEther(totalTaoUsedForBuybacks), "TAO");
         console.log("Total Alpha Bought:", ethers.formatEther(totalAlphaBought), "Alpha");
-        console.log("Accumulated Fees:", ethers.formatEther(accumulatedFees), "TAO");
 
         // ==================== FEE TRACKING STATE ====================
         console.log("\n📊 FEE TRACKING STATE:");
         console.log("-".repeat(40));
         
-        const totalFeesCollected = await TenexiumProtocol.totalFeesCollected();
-        const totalFeesDistributed = await TenexiumProtocol.totalFeesDistributed();
+        const totalTradingFees = await TenexiumProtocol.totalTradingFees();
+        const totalBorrowingFees = await TenexiumProtocol.totalBorrowingFees();
+        const totalLiquidationFees = await TenexiumProtocol.totalLiquidationFees();
         const lastAccruedBorrowingFeesUpdate = await TenexiumProtocol.lastAccruedBorrowingFeesUpdate();
         
-        console.log("Total Fees Collected:", ethers.formatEther(totalFeesCollected), "TAO");
-        console.log("Total Fees Distributed:", ethers.formatEther(totalFeesDistributed), "TAO");
+        console.log("Total Trading Fees:", ethers.formatEther(totalTradingFees), "TAO");
+        console.log("Total Borrowing Fees:", ethers.formatEther(totalBorrowingFees), "TAO");
+        console.log("Total Liquidation Fees:", ethers.formatEther(totalLiquidationFees), "TAO");
         console.log("Last Fee Distribution Block:", lastAccruedBorrowingFeesUpdate.toString());
 
         // ==================== LP AND LIQUIDATOR STATE ====================
         console.log("\n👥 LP AND LIQUIDATOR STATE:");
         console.log("-".repeat(40));
         
-        const totalLpFees = await TenexiumProtocol.totalLpFees();
+        const totalPendingLpFees = await TenexiumProtocol.totalPendingLpFees();
         const totalLpStakes = await TenexiumProtocol.totalLpStakes();
         const totalLiquidations = await TenexiumProtocol.totalLiquidations();
         const totalLiquidationValue = await TenexiumProtocol.totalLiquidationValue();
         const accLpFeesPerShare = await TenexiumProtocol.accLpFeesPerShare();
         const accruedBorrowingFees = await TenexiumProtocol.accruedBorrowingFees();
         
-        console.log("Total LP Fees:", ethers.formatEther(totalLpFees), "TAO");
+        console.log("Total Pending LP Fees:", ethers.formatEther(totalPendingLpFees), "TAO");
         console.log("Total LP Stakes:", ethers.formatEther(totalLpStakes), "TAO");
         console.log("Total Liquidations:", totalLiquidations.toString());
         console.log("Total Liquidation Value:", ethers.formatEther(totalLiquidationValue), "TAO");
@@ -289,7 +279,7 @@ async function main() {
         console.log("  - Total Collateral Amount:", ethers.formatEther(await TenexiumProtocol.totalCollateral()), "TAO");
         console.log("  - Total Borrowed Amount:", ethers.formatEther(await TenexiumProtocol.totalBorrowed()), "TAO");
         console.log("  - Total Volume Amount:", ethers.formatEther(await TenexiumProtocol.totalVolume()), "TAO");
-        console.log("  - Total Trades Count:", await TenexiumProtocol.totalTrades().toString());
+        console.log("  - Total Trades Count:", (await TenexiumProtocol.totalTrades()).toString());
         console.log("  - Protocol Fees Amount:", ethers.formatEther(await TenexiumProtocol.protocolFees()), "TAO");
         console.log("  - Total LP Stakes Amount:", ethers.formatEther(await TenexiumProtocol.totalLpStakes()), "TAO");
 
@@ -299,6 +289,8 @@ async function main() {
         console.log("  - Total Borrowed User:", ethers.formatEther(await TenexiumProtocol.userTotalBorrowed(signer.address)), "TAO");
         console.log("  - Total Volume User:", ethers.formatEther(await TenexiumProtocol.userTotalVolume(signer.address)), "TAO");
         console.log("  - Is Liquidity Provider:", (await TenexiumProtocol.liquidityProviders(signer.address)).isActive);
+        console.log("  - LP Stake:", ethers.formatEther((await TenexiumProtocol.liquidityProviders(signer.address)).stake), "TAO");
+        console.log("  - LP Shares:", ethers.formatEther((await TenexiumProtocol.liquidityProviders(signer.address)).shares), "x");
 
         // Get user position (should be empty for new user)
         const userPosition = await TenexiumProtocol.positions(signer.address, tenexNetuid);

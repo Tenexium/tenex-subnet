@@ -56,9 +56,6 @@ library TenexiumErrors {
     // Buyback / vesting
     error BuybackSimInvalid();
     error AmountZero();
-    error DurationTooShort();
-    error CliffTooLong();
-    error NoVestingSchedules();
     error PercentageTooHigh();
     error IntervalTooShort();
     error BuybackConditionsNotMet();

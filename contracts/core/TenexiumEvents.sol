@@ -59,10 +59,4 @@ contract TenexiumEvents {
     // ==================== BUYBACK & VESTING EVENTS ====================
 
     event BuybackExecuted(uint256 taoAmount, uint256 alphaReceived, uint256 blockNumber, uint256 slippage);
-
-    event VestingScheduleCreated(
-        address indexed beneficiary, uint256 amount, uint256 startBlock, uint256 durationBlocks
-    );
-
-    event TokensClaimed(address indexed beneficiary, bytes32 indexed ss58Address, uint256 amount);
 }
