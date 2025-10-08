@@ -29,6 +29,8 @@
     "upgrade:mainnet:subnet-manager:proxy": "npx hardhat upgrade:subnet-manager:proxy --save --network mainnet",
     "deploy:testnet:address-conversion": "npx hardhat deploy:address-conversion --save --network testnet",
     "deploy:mainnet:address-conversion": "npx hardhat deploy:address-conversion --save --network mainnet",
+    "deploy:testnet:insurance-manager": "npx hardhat deploy:insurance-manager --network testnet",
+    "deploy:mainnet:insurance-manager": "npx hardhat deploy:insurance-manager --network mainnet",
     "storage-check": "npx hardhat clean && npx hardhat storage-layout --check",
     "storage-update": "npx hardhat clean && npx hardhat storage-layout --update",
     "anvil": "anvil -p 8545",

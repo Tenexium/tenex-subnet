@@ -1,0 +1,10 @@
+{
+  "network": "mainnet",
+  "deployer": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6",
+  "timestamp": "2025-10-08T18:09:52.128Z",
+  "insuranceManager": {
+    "address": "0xd817f171BC3B6B73bb34797cCC9E3835Fb1b73c0",
+    "tenexiumProtocol": "0x2cc611c0c47C30F6E291487ee55996b2AE726522"
+  },
+  "lastUpdated": "2025-10-08T18:09:52.129Z"
+}

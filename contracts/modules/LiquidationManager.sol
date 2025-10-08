@@ -7,6 +7,7 @@ import "../libraries/AlphaMath.sol";
 import "../libraries/TenexiumErrors.sol";
 import "./FeeManager.sol";
 import "./PrecompileAdapter.sol";
+import "../interfaces/IInsuranceManager.sol";
 
 /**
  * @title LiquidationManager
@@ -99,6 +100,14 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
             dailyLiquidatorLiquidations[msg.sender][block.number / 7200] + 1;
         dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200] =
             dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200].safeAdd(simulatedTaoValue);
+
+        uint256 insuranceAmountRequired = totalLpStakes.safeSub(totalBorrowed).safeAdd(totalPendingLpFees).safeAdd(
+            protocolFees
+        ).safeAdd(buybackPool).safeSub(address(this).balance);
+        uint256 availableInsurance = IInsuranceManager(insuranceFund).getNetBalance();
+        if (insuranceAmountRequired < availableInsurance && insuranceAmountRequired > 0) {
+            IInsuranceManager(insuranceFund).fund(insuranceAmountRequired);
+        }
 
         emit PositionLiquidated(
             user, msg.sender, positionId, alphaNetuid, simulatedTaoValue, liquidationFeeAmount, liquidatorFeeShare
