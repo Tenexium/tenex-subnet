@@ -60,7 +60,7 @@ task("deploy:insurance-manager", "Deploy InsuranceManager contract")
         console.log("\n📦 Deploying InsuranceManager...");
         const InsuranceManager = await hre.ethers.getContractFactory("InsuranceManager");
         
-        const insuranceManager = await InsuranceManager.deploy(tenexiumProtocol);
+        const insuranceManager = await InsuranceManager.deploy(tenexiumProtocol, {gasLimit: 10_000_000n});
         await insuranceManager.waitForDeployment();
         
         const insuranceManagerAddress = await insuranceManager.getAddress();

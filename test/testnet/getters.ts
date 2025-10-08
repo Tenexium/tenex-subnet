@@ -173,6 +173,40 @@ async function main() {
         console.log("Tier 4 Max Leverage:", ethers.formatUnits(tier4MaxLeverage, 9), "x");
         console.log("Tier 5 Max Leverage:", ethers.formatUnits(tier5MaxLeverage, 9), "x");
 
+        // ==================== Governance & Insurance Rates ====================
+        console.log("\n🔍 Governance & Insurance Rates:");
+        console.log("-".repeat(40));
+        
+        const protocolFeeGoveranceShare = await TenexiumProtocol.protocolFeeGoveranceShare();
+        const protocolFeeInsuranceShare = await TenexiumProtocol.protocolFeeInsuranceShare();
+        const lpFeeInsuranceShare = await TenexiumProtocol.lpFeeInsuranceShare();
+        const perfFeeInsuranceShare = await TenexiumProtocol.perfFeeInsuranceShare();
+        
+        console.log("Protocol Fee Goverance Share:", protocolFeeGoveranceShare.toString());
+        console.log("Protocol Fee Insurance Share:", protocolFeeInsuranceShare.toString());
+        console.log("LP Fee Insurance Share:", lpFeeInsuranceShare.toString());
+        console.log("Perf Fee Insurance Share:", perfFeeInsuranceShare.toString());
+
+        // ==================== MAX LIQUIDATION COUNT ====================
+        console.log("\n🔍 MAX LIQUIDATION COUNT:");
+        console.log("-".repeat(40));
+        
+        const maxLiquidationCount = await TenexiumProtocol.maxLiquidationCount();
+        console.log("Max Liquidation Count:", maxLiquidationCount.toString());
+
+        // ==================== MANAGER, INSURANCE MANAGER && ADDRESS CONVERSION CONTRACT ====================
+        console.log("\n🔒 MANAGER, INSURANCE MANAGER && ADDRESS CONVERSION CONTRACT:");
+        console.log("-".repeat(40));
+        
+        const Manager = await TenexiumProtocol.manager();
+        console.log("Manager Address:", Manager);
+
+        const insuranceManager = await TenexiumProtocol.insuranceManager();
+        console.log("Insurance Manager Address:", insuranceManager);
+
+        const addressConversionContract = await TenexiumProtocol.ADDRESS_CONVERSION_CONTRACT();
+        console.log("Address Conversion Contract:", addressConversionContract);
+
         // ==================== PROTOCOL CONFIGURATION ====================
         console.log("\n🔧 PROTOCOL CONFIGURATION:");
         console.log("-".repeat(40));

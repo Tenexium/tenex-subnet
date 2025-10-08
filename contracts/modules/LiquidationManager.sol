@@ -39,7 +39,18 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
 
         // Unstake alpha to get TAO using the validator hotkey used at open (fallback to protocolValidatorHotkey)
         bytes32 vHotkey = position.validatorHotkey == bytes32(0) ? protocolValidatorHotkey : position.validatorHotkey;
-        uint256 taoReceived = _unstakeAlphaForTao(vHotkey, position.alphaAmount, alphaNetuid);
+
+        // Try to unstake alpha increasing the limit price gradually until successful
+        uint256 slippage = 100;
+        uint256 taoReceived = 0;
+        while (slippage <= 1000) {
+            uint256 minAcceptableTao = simulatedTaoValue.safeMul(10000 - slippage) / 10000;
+            uint256 limitPrice = minAcceptableTao / position.alphaAmount;
+            taoReceived = _unstakeAlphaForTao(vHotkey, position.alphaAmount, limitPrice, false, alphaNetuid);
+            if (taoReceived > 0) break;
+            slippage += 100;
+        }
+
         if (taoReceived == 0) revert TenexiumErrors.UnstakeFailed();
 
         // Payment waterfall: Debt > Liquidation fee (split) > User
@@ -104,9 +115,9 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         uint256 insuranceAmountRequired = totalLpStakes.safeSub(totalBorrowed).safeAdd(totalPendingLpFees).safeAdd(
             protocolFees
         ).safeAdd(buybackPool).safeSub(address(this).balance);
-        uint256 availableInsurance = IInsuranceManager(insuranceFund).getNetBalance();
+        uint256 availableInsurance = IInsuranceManager(insuranceManager).getNetBalance();
         if (insuranceAmountRequired < availableInsurance && insuranceAmountRequired > 0) {
-            IInsuranceManager(insuranceFund).fund(insuranceAmountRequired);
+            IInsuranceManager(insuranceManager).fund(insuranceAmountRequired);
         }
 
         emit PositionLiquidated(

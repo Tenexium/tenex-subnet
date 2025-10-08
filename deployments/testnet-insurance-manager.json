@@ -1,10 +1,10 @@
 {
   "network": "testnet",
   "deployer": "0xD17863aa942F5e0C611ABE6E1Ba2256147E71e89",
-  "timestamp": "2025-10-08T18:07:14.383Z",
+  "timestamp": "2025-10-08T18:45:25.769Z",
   "insuranceManager": {
-    "address": "0xA0aa952D3d1a5b03D416E336c10360A8F8b1282F",
-    "tenexiumProtocol": "0x2cc611c0c47C30F6E291487ee55996b2AE726522"
+    "address": "0x46E417335a8a7eCCE81a188437901C304Ff4528b",
+    "tenexiumProtocol": "0x40325E3A28247cA79207c0C75a878444bF4f7991"
   },
-  "lastUpdated": "2025-10-08T18:07:14.383Z"
+  "lastUpdated": "2025-10-08T18:45:25.769Z"
 }

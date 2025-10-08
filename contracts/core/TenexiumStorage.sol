@@ -203,8 +203,8 @@ contract TenexiumStorage {
     // ==================== MANAGER ====================
     address public manager;
 
-    // ==================== INSURANCE FUND ====================
-    address public insuranceFund;
+    // ==================== INSURANCE MANAGER ====================
+    address public insuranceManager;
 
     // ==================== STRUCTS ====================
 
