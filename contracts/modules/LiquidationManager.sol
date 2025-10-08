@@ -5,13 +5,14 @@ import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";
 import "../libraries/AlphaMath.sol";
 import "../libraries/TenexiumErrors.sol";
+import "./FeeManager.sol";
 import "./PrecompileAdapter.sol";
 
 /**
  * @title LiquidationManager
  * @notice Functions for position liquidation using single threshold approach
  */
-abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, PrecompileAdapter {
+abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
     using AlphaMath for uint256;
 
     // ==================== LIQUIDATION FUNCTIONS ====================
@@ -45,6 +46,9 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
 
         // 1. Repay debt first
         uint256 debtRepayment = remaining < totalDebt ? remaining : totalDebt;
+        uint256 availableBorrowingFees =
+            debtRepayment > position.borrowed ? debtRepayment.safeSub(position.borrowed) : 0;
+        _distributeBorrowingFees(availableBorrowingFees);
         remaining = remaining.safeSub(debtRepayment);
 
         // 2. Distribute liquidation fee on actual proceeds (post-debt)
@@ -61,6 +65,7 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
             protocolFees = protocolFees.safeAdd(protocolFeeShare);
         }
 
+        totalLiquidationFees = totalLiquidationFees.safeAdd(liquidationFeeAmount);
         remaining = remaining.safeSub(liquidationFeeAmount);
         // 3. Return any remaining collateral to user
         if (remaining > 0) {
@@ -121,31 +126,9 @@ abstract contract LiquidationManager is TenexiumStorage, TenexiumEvents, Precomp
 
         if (totalDebt == 0) return false; // No debt means not liquidatable
 
-        // Single threshold check: currentValue / totalDebt < threshold
+        //health ratio check: currentValue / totalDebt < threshold
         uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
         uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
-        return healthRatio < alphaPairs[position.alphaNetuid].liquidationThreshold; // Use single threshold only
+        return healthRatio < alphaPairs[position.alphaNetuid].liquidationThreshold;
     }
-
-    // ==================== UTILIZATION MANAGEMENT ====================
-
-    /**
-     * @notice Update utilization rates for alpha pairs
-     * @param alphaNetuid Alpha subnet ID
-     */
-    function _updateUtilizationRate(uint16 alphaNetuid) internal virtual;
-
-    // ==================== ACCRUED BORROWING FEES CALCULATION FUNCTIONS ====================
-
-    /**
-     * @notice Calculate accrued borrowing fees for a position
-     * @param user Position owner
-     * @param positionId User's position identifier
-     * @return accruedFees Total accrued fees
-     */
-    function _calculatePositionFees(address user, uint256 positionId)
-        internal
-        view
-        virtual
-        returns (uint256 accruedFees);
 }

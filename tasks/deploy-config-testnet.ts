@@ -15,11 +15,16 @@ export interface DeployConfig {
     
     // Buyback economics
     buybackExecutionThreshold: string; // min balance to execute buyback (wei)
-    buybackRate: string;              // 90% of pool per buyback (PRECISION=1e9)
-    buybackBurningRate: string;       // 82.5% of pool per buyback (PRECISION=1e9)
+    buybackRate: string;              // 60% of pool per buyback (PRECISION=1e9)
     buybackIntervalBlocks: string;    // cadence blocks (default)
-    vestingDurationBlocks: string;    // ~12 months in blocks (example)
-    cliffDurationBlocks: string;      // ~3 months in blocks (example)
+
+    // Governance Fee
+    protocolFeeGoveranceShare: string; // 1% of protocol fees (PRECISION=1e9)
+
+    // Insurance Rates
+    protocolFeeInsuranceShare: string; // 10% of protocol fees (PRECISION=1e9)
+    lpFeeInsuranceShare: string; // 10% of lp fees (PRECISION=1e9)
+    perfFeeInsuranceShare: string; // 10% of positive position profits (PRECISION=1e9)
 
     // Fee parameters (governable)
     baseLiquidationFee: string;       // 2% = 0.02 * 1e9 (PRECISION)
@@ -65,11 +70,16 @@ const deployConfig: DeployConfig = {
     
     // Buyback economics
     buybackExecutionThreshold: "1000000000000000000", // min balance to execute buyback (wei)
-    buybackRate: "900000000",                         // 90% of pool per buyback (PRECISION=1e9)
-    buybackBurningRate: "825000000",                   // 82.5% of pool per buyback (PRECISION=1e9)
+    buybackRate: "600000000",                         // 60% of pool per buyback (PRECISION=1e9)
     buybackIntervalBlocks: "7200",                    // cadence blocks (default)
-    vestingDurationBlocks: "2628000",                 // ~12 months in blocks (example)
-    cliffDurationBlocks: "648000",                    // ~3 months in blocks (example)
+
+    // Governance Fee
+    protocolFeeGoveranceShare: "10000000",            // 1% of protocol fees (PRECISION=1e9)
+
+    // Insurance Rates
+    protocolFeeInsuranceShare: "100000000",           // 10% of protocol fees (PRECISION=1e9)
+    lpFeeInsuranceShare: "100000000",                 // 10% of lp fees (PRECISION=1e9)
+    perfFeeInsuranceShare: "100000000",               // 10% of positive position profits (PRECISION=1e9)
 
     // Fee parameters (governable)
     baseLiquidationFee: "20000000",                   // 2% = 0.02 * 1e9 (PRECISION)

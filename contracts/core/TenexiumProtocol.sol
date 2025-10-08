@@ -62,9 +62,10 @@ contract TenexiumProtocol is
      * @param _buybackRate Fraction of pool to spend per buyback (scaled by PRECISION)
      * @param _buybackIntervalBlocks Minimum interval between buybacks, in blocks
      * @param _buybackExecutionThreshold Minimum balance required to execute a buyback
-     * @param _buybackBurningRate Rate at which bought-back alpha is burned (scaled by PRECISION)
-     * @param _vestingDurationBlocks Total vesting duration for bought-back alpha, in blocks
-     * @param _cliffDurationBlocks Cliff duration before vesting starts releasing, in blocks
+     * @param _protocolFeeGoveranceShare Protocol fee goverance share
+     * @param _protocolFeeInsuranceShare Protocol fee insurance share
+     * @param _lpFeeInsuranceShare LP fee insurance share
+     * @param _perfFeeInsuranceShare Performance fee insurance share
      * @param _baseTradingFeeRate Base trading fee rate (scaled by PRECISION, e.g., 0.3% = 3 * PRECISION / 1000)
      * @param _baseBorrowingFeeRate Base borrowing fee rate per 360 blocks (scaled by PRECISION)
      * @param _baseLiquidationFeeRate Base liquidation fee rate (scaled by PRECISION, e.g., 2% = 2 * PRECISION / 100)
@@ -89,9 +90,10 @@ contract TenexiumProtocol is
         uint256 _buybackRate,
         uint256 _buybackIntervalBlocks,
         uint256 _buybackExecutionThreshold,
-        uint256 _buybackBurningRate,
-        uint256 _vestingDurationBlocks,
-        uint256 _cliffDurationBlocks,
+        uint256 _protocolFeeGoveranceShare,
+        uint256 _protocolFeeInsuranceShare,
+        uint256 _lpFeeInsuranceShare,
+        uint256 _perfFeeInsuranceShare,
         uint256 _baseTradingFeeRate,
         uint256 _baseBorrowingFeeRate,
         uint256 _baseLiquidationFeeRate,
@@ -128,18 +130,21 @@ contract TenexiumProtocol is
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
-        buybackBurningRate = _buybackBurningRate;
 
-        // 5) Vesting parameters
-        vestingDurationBlocks = _vestingDurationBlocks;
-        cliffDurationBlocks = _cliffDurationBlocks;
+        // 5) Protocol fee goverance share
+        protocolFeeGoveranceShare = _protocolFeeGoveranceShare;
 
-        // 6) Fee parameters
+        // 6) Insurance Rates
+        protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
+        lpFeeInsuranceShare = _lpFeeInsuranceShare;
+        perfFeeInsuranceShare = _perfFeeInsuranceShare;
+
+        // 7) Fee parameters
         tradingFeeRate = _baseTradingFeeRate;
         borrowingFeeRate = _baseBorrowingFeeRate;
         liquidationFeeRate = _baseLiquidationFeeRate;
 
-        // 7) Fee distributions
+        // 8) Fee distributions
         if (
             _tradingFeeDistribution[0] + _tradingFeeDistribution[1] + _tradingFeeDistribution[2] != PRECISION
                 || _borrowingFeeDistribution[0] + _borrowingFeeDistribution[1] + _borrowingFeeDistribution[2] != PRECISION
@@ -159,7 +164,7 @@ contract TenexiumProtocol is
         liquidationFeeLiquidatorShare = _liquidationFeeDistribution[1];
         liquidationFeeProtocolShare = _liquidationFeeDistribution[2];
 
-        // 8) Tier thresholds and parameters
+        // 9) Tier thresholds and parameters
         tier1Threshold = _tierThresholds[0];
         tier2Threshold = _tierThresholds[1];
         tier3Threshold = _tierThresholds[2];
@@ -180,16 +185,16 @@ contract TenexiumProtocol is
         tier4MaxLeverage = _tierMaxLeverages[4];
         tier5MaxLeverage = _tierMaxLeverages[5];
 
-        // 9) Protocol validator hotkey
+        // 10) Protocol validator hotkey
         protocolValidatorHotkey = _protocolValidatorHotkey;
 
-        // 10) Treasury default to owner at initialization
+        // 11) Treasury default to owner at initialization
         treasury = owner();
 
-        // 11) Function permissions
+        // 12) Function permissions
         functionPermissions = _functionPermissions;
 
-        // 12) Max liquidity providers per hotkey
+        // 13) Max liquidity providers per hotkey
         maxLiquidityProvidersPerHotkey = _maxLiquidityProvidersPerHotkey;
     }
 
@@ -256,29 +261,38 @@ contract TenexiumProtocol is
     function updateBuybackParameters(
         uint256 _buybackRate,
         uint256 _buybackIntervalBlocks,
-        uint256 _buybackExecutionThreshold,
-        uint256 _buybackBurningRate
+        uint256 _buybackExecutionThreshold
     ) external onlyOwner {
-        if (_buybackRate > PRECISION || _buybackBurningRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
+        if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
         if (_buybackIntervalBlocks < 360) revert TenexiumErrors.IntervalTooShort();
 
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
-        buybackBurningRate = _buybackBurningRate;
     }
 
     /**
-     * @notice Update vesting schedule parameters for buybacks
-     * @param _vestingDurationBlocks Total vesting duration for bought-back alpha, in blocks
-     * @param _cliffDurationBlocks Cliff duration before vesting starts releasing, in blocks
+     * @notice Update Insurance Rates parameters
+     * @param _protocolFeeGoveranceShare Protocol fee goverance share
+     * @param _protocolFeeInsuranceShare Protocol fee insurance share
+     * @param _lpFeeInsuranceShare LP fee insurance share
+     * @param _perfFeeInsuranceShare Performance fee insurance share
      */
-    function updateVestingParameters(uint256 _vestingDurationBlocks, uint256 _cliffDurationBlocks) external onlyOwner {
-        if (_vestingDurationBlocks < 216000) revert TenexiumErrors.DurationTooShort();
-        if (_cliffDurationBlocks > _vestingDurationBlocks) revert TenexiumErrors.CliffTooLong();
+    function updateInsuranceRates(
+        uint256 _protocolFeeGoveranceShare,
+        uint256 _protocolFeeInsuranceShare,
+        uint256 _lpFeeInsuranceShare,
+        uint256 _perfFeeInsuranceShare
+    ) external onlyOwner {
+        if (
+            _protocolFeeGoveranceShare > PRECISION || _protocolFeeInsuranceShare > PRECISION
+                || _lpFeeInsuranceShare > PRECISION || _perfFeeInsuranceShare > PRECISION
+        ) revert TenexiumErrors.PercentageTooHigh();
 
-        vestingDurationBlocks = _vestingDurationBlocks;
-        cliffDurationBlocks = _cliffDurationBlocks;
+        protocolFeeGoveranceShare = _protocolFeeGoveranceShare;
+        protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
+        lpFeeInsuranceShare = _lpFeeInsuranceShare;
+        perfFeeInsuranceShare = _perfFeeInsuranceShare;
     }
 
     /**
@@ -406,6 +420,15 @@ contract TenexiumProtocol is
     function updateManager(address newManager) external onlyOwner {
         if (newManager == address(0)) revert TenexiumErrors.InvalidValue();
         manager = newManager;
+    }
+
+    /**
+     * @notice Update insurance fund
+     * @param newInsuranceFund New insurance fund
+     */
+    function updateInsuranceFund(address newInsuranceFund) external onlyOwner {
+        if (newInsuranceFund == address(0)) revert TenexiumErrors.InvalidValue();
+        insuranceFund = newInsuranceFund;
     }
 
     /**
@@ -693,22 +716,6 @@ contract TenexiumProtocol is
     }
 
     /**
-     * @notice Claim vested buyback tokens to specified SS58 address
-     * @param ss58Address SS58 address to receive the tokens
-     * @return claimed Amount of alpha base units transferred
-     */
-    function claimVestedBuybackTokens(bytes32 ss58Address)
-        external
-        onlyManager
-        whenNotPaused
-        nonReentrant
-        returns (uint256 claimed)
-    {
-        if (ss58Address == bytes32(0)) revert TenexiumErrors.InvalidValue();
-        claimed = _claimVestedTokens(ss58Address);
-    }
-
-    /**
      * @notice Withdraw protocol fees
      */
     function withdrawProtocolFees() external onlyManager nonReentrant {
@@ -718,68 +725,37 @@ contract TenexiumProtocol is
         address[] memory owners = IMultiSigWallet(owner()).getOwners();
         if (owners.length == 0) revert TenexiumErrors.InvalidValue();
 
-        // 1% bonus for signers
-        uint256 totalSignersBonus = totalRewards.safeMul(10000000) / PRECISION;
-        uint256 signersBonus = totalSignersBonus / owners.length;
+        // governance fee for signers
+        uint256 totalGovernanceFee = totalRewards.safeMul(protocolFeeGoveranceShare) / PRECISION;
+        uint256 governanceFee = totalGovernanceFee / owners.length;
 
-        // Transfer signers bonus to owners
+        // Transfer governance fee to owners
         for (uint256 i = 0; i < owners.length; i++) {
             address owner = owners[i];
             if (owner == address(0)) revert TenexiumErrors.InvalidValue();
-            (bool _success,) = payable(owner).call{value: signersBonus}("");
-            if (!_success) revert TenexiumErrors.TransferFailed();
+            (bool __success,) = payable(owner).call{value: governanceFee}("");
+            if (!__success) revert TenexiumErrors.TransferFailed();
         }
 
-        totalRewards.safeSub(totalSignersBonus);
-
-        // Reserve 90% for buyback pool
+        // Reserve buyback fee for buyback pool
         uint256 buybackAmount = totalRewards.safeMul(buybackRate) / PRECISION;
-        uint256 withdrawAmount = totalRewards - buybackAmount;
-
         // Fund buyback pool
         buybackPool += buybackAmount;
+
+        // Reserve insurance fee for LP Recover
+        uint256 insuranceFundAmount = totalRewards.safeMul(protocolFeeInsuranceShare) / PRECISION;
+        (bool _success,) = payable(insuranceFund).call{value: insuranceFundAmount}("");
+        if (!_success) revert TenexiumErrors.TransferFailed();
 
         // Reset protocol fees
         protocolFees = 0;
 
+        uint256 withdrawAmount =
+            totalRewards.safeSub(totalGovernanceFee).safeSub(buybackAmount).safeSub(insuranceFundAmount);
+
         // Transfer remaining fees to treasury
         (bool success,) = payable(treasury).call{value: withdrawAmount}("");
         if (!success) revert TenexiumErrors.TransferFailed();
-    }
-
-    // ==================== DELEGATE FUNCTIONS ====================
-
-    /**
-     * @notice Update utilization rates for alpha pairs
-     * @param alphaNetuid Alpha subnet ID
-     * @dev Delegate to PositionManager and LiquidationManager
-     */
-    function _updateUtilizationRate(uint16 alphaNetuid) internal override(PositionManager, LiquidationManager) {
-        PositionManager._updateUtilizationRate(alphaNetuid);
-    }
-
-    /**
-     * @notice Update LP fee rewards
-     * @param lp Address of the liquidity provider
-     * @dev Delegate to FeeManager and LiquidityManager
-     */
-    function _updateLpFeeRewards(address lp) internal override(FeeManager, LiquidityManager) {
-        FeeManager._updateLpFeeRewards(lp);
-    }
-
-    /**
-     * @notice Calculate accrued fees for a position using global accumulator
-     * @param user User address
-     * @param positionId User's position identifier
-     * @dev Delegate to PositionManager and LiquidationManager
-     */
-    function _calculatePositionFees(address user, uint256 positionId)
-        internal
-        view
-        override(FeeManager, LiquidationManager)
-        returns (uint256 accruedFees)
-    {
-        accruedFees = FeeManager._calculatePositionFees(user, positionId);
     }
 
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================

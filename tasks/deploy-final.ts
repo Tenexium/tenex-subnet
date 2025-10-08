@@ -91,9 +91,10 @@ task("deploy:new_proxy", "Deploy Tenexium Protocol with upgradeable parameters")
                     deployConfig.buybackRate,
                     deployConfig.buybackIntervalBlocks,
                     deployConfig.buybackExecutionThreshold,
-                    deployConfig.buybackBurningRate,
-                    deployConfig.vestingDurationBlocks,
-                    deployConfig.cliffDurationBlocks,
+                    deployConfig.protocolFeeGoveranceShare,
+                    deployConfig.protocolFeeInsuranceShare,
+                    deployConfig.lpFeeInsuranceShare,
+                    deployConfig.perfFeeInsuranceShare,
                     deployConfig.baseTradingFee,
                     deployConfig.borrowingFeeRate,
                     deployConfig.baseLiquidationFee,
@@ -287,8 +288,10 @@ task("upgrade:proxy", "Upgrade proxy contract to new implementation")
             // Prepare upgrade data
             const upgradeData = initializationData ? initializationData : "0x";
             
-            // Perform upgrade via upgradeToAndCall
-            const upgradeTx = await proxyContract.upgradeToAndCall(newImplementationAddress, upgradeData);
+            // Perform upgrade via upgradeToAndCall with gas limit override
+            const upgradeTx = await proxyContract.upgradeToAndCall(newImplementationAddress, upgradeData, {
+                gasLimit: 10_000_000n // Set high gas limit to avoid estimation issues
+            });
             console.log(`  Transaction Hash: ${upgradeTx.hash}`);
             
             await upgradeTx.wait();
@@ -501,8 +504,10 @@ task("upgrade:subnet-manager:proxy", "Upgrade subnet manager proxy to new implem
             // Prepare upgrade data
             const upgradeData = "0x";
             
-            // Perform upgrade via upgradeToAndCall
-            const upgradeTx = await proxyContract.upgradeToAndCall(newImplementationAddress, upgradeData);
+            // Perform upgrade via upgradeToAndCall with gas limit override
+            const upgradeTx = await proxyContract.upgradeToAndCall(newImplementationAddress, upgradeData, {
+                gasLimit: 10_000_000n // Set high gas limit to avoid estimation issues
+            });
             console.log(`  Transaction Hash: ${upgradeTx.hash}`);
             
             await upgradeTx.wait();
