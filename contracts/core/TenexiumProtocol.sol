@@ -423,12 +423,12 @@ contract TenexiumProtocol is
     }
 
     /**
-     * @notice Update insurance fund
-     * @param newInsuranceFund New insurance fund
+     * @notice Update insurance manager
+     * @param newInsuranceManager New insurance manager
      */
-    function updateInsuranceFund(address newInsuranceFund) external onlyOwner {
-        if (newInsuranceFund == address(0)) revert TenexiumErrors.InvalidValue();
-        insuranceFund = newInsuranceFund;
+    function updateInsuranceManager(address newInsuranceManager) external onlyOwner {
+        if (newInsuranceManager == address(0)) revert TenexiumErrors.InvalidValue();
+        insuranceManager = newInsuranceManager;
     }
 
     /**
@@ -743,15 +743,15 @@ contract TenexiumProtocol is
         buybackPool += buybackAmount;
 
         // Reserve insurance fee for LP Recover
-        uint256 insuranceFundAmount = totalRewards.safeMul(protocolFeeInsuranceShare) / PRECISION;
-        (bool _success,) = payable(insuranceFund).call{value: insuranceFundAmount}("");
+        uint256 insuranceAmount = totalRewards.safeMul(protocolFeeInsuranceShare) / PRECISION;
+        (bool _success,) = payable(insuranceManager).call{value: insuranceAmount}("");
         if (!_success) revert TenexiumErrors.TransferFailed();
 
         // Reset protocol fees
         protocolFees = 0;
 
         uint256 withdrawAmount =
-            totalRewards.safeSub(totalGovernanceFee).safeSub(buybackAmount).safeSub(insuranceFundAmount);
+            totalRewards.safeSub(totalGovernanceFee).safeSub(buybackAmount).safeSub(insuranceAmount);
 
         // Transfer remaining fees to treasury
         (bool success,) = payable(treasury).call{value: withdrawAmount}("");
@@ -806,7 +806,7 @@ contract TenexiumProtocol is
      * @dev Only callable by the InsuranceManager contract
      */
     function receiveInsuranceFund() external payable {
-        if (msg.sender != insuranceFund) revert TenexiumErrors.InvalidValue();
+        if (msg.sender != insuranceManager) revert TenexiumErrors.InvalidValue();
         if (msg.value == 0) revert TenexiumErrors.InvalidValue();
 
         // The TAO is automatically added to the contract's balance

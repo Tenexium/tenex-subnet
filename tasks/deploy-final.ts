@@ -196,7 +196,7 @@ task("deploy:implementation", "Deploy new implementation contract for upgrades")
             console.log("\n�� Deploying TenexiumProtocol Implementation...");
             const TenexiumProtocol = await hre.ethers.getContractFactory("TenexiumProtocol");
             
-            const newImplementation = await TenexiumProtocol.deploy();
+            const newImplementation = await TenexiumProtocol.deploy({gasLimit: 10_000_000n});
             await newImplementation.waitForDeployment();
             
             const implementationAddress = await newImplementation.getAddress();

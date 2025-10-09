@@ -56,10 +56,12 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Calculate minimum acceptable alpha with slippage tolerance
         uint256 minAcceptableAlpha = expectedAlphaAmount.safeMul(10000 - maxSlippage) / 10000;
+        // Calculate limit price based on minimum acceptable alpha
+        uint256 limitPrice = taoToStakeNet / minAcceptableAlpha;
 
         // Execute stake operation using net TAO
         bytes32 validatorHotkey = _getAlphaValidatorHotkey(alphaNetuid);
-        uint256 actualAlphaReceived = _stakeTaoForAlpha(validatorHotkey, taoToStakeNet, alphaNetuid);
+        uint256 actualAlphaReceived = _stakeTaoForAlpha(validatorHotkey, taoToStakeNet, limitPrice, false, alphaNetuid);
 
         // Verify slippage tolerance
         if (actualAlphaReceived < minAcceptableAlpha) revert TenexiumErrors.SlippageTooHigh();
@@ -136,6 +138,8 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Calculate minimum acceptable TAO with slippage tolerance
         uint256 minAcceptableTao = expectedTaoAmount.safeMul(10000 - maxSlippage) / 10000;
+        // Calculate limit price based on minimum acceptable TAO
+        uint256 limitPrice = minAcceptableTao / alphaToClose;
 
         // Calculate position components to repay
         uint256 borrowedToRepay = position.borrowed.safeMul(alphaToClose) / position.alphaAmount;
@@ -147,7 +151,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Execute unstake operation
         bytes32 validatorHotkey = position.validatorHotkey;
-        uint256 actualTaoReceived = _unstakeAlphaForTao(validatorHotkey, alphaToClose, alphaNetuid);
+        uint256 actualTaoReceived = _unstakeAlphaForTao(validatorHotkey, alphaToClose, limitPrice, false, alphaNetuid);
 
         // Verify slippage tolerance
         if (actualTaoReceived < minAcceptableTao) revert TenexiumErrors.UnstakeSlippage();
@@ -162,7 +166,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             uint256 perfFeeInsurance =
                 (netReturn.safeSub(collateralToReturn)).safeMul(perfFeeInsuranceShare) / PRECISION;
             netReturn = netReturn.safeSub(perfFeeInsurance);
-            (bool success,) = payable(insuranceFund).call{value: perfFeeInsurance}("");
+            (bool success,) = payable(insuranceManager).call{value: perfFeeInsurance}("");
             if (!success) revert TenexiumErrors.TransferFailed();
         }
 

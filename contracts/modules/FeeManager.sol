@@ -30,7 +30,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
 
         // Reserve insurance fee for LP Recover
         uint256 insuranceFeeAmount = lpFeeAmount.safeMul(lpFeeInsuranceShare) / PRECISION;
-        (bool _success,) = payable(insuranceFund).call{value: insuranceFeeAmount}("");
+        (bool _success,) = payable(insuranceManager).call{value: insuranceFeeAmount}("");
         if (!_success) revert TenexiumErrors.TransferFailed();
         lpFeeAmount = lpFeeAmount.safeSub(insuranceFeeAmount);
 
@@ -62,7 +62,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
 
         // Reserve insurance fee for LP Recover
         uint256 insuranceFeeAmount = lpFeeAmount.safeMul(lpFeeInsuranceShare) / PRECISION;
-        (bool _success,) = payable(insuranceFund).call{value: insuranceFeeAmount}("");
+        (bool _success,) = payable(insuranceManager).call{value: insuranceFeeAmount}("");
         if (!_success) revert TenexiumErrors.TransferFailed();
         lpFeeAmount = lpFeeAmount.safeSub(insuranceFeeAmount);
 

@@ -16,22 +16,32 @@ abstract contract PrecompileAdapter is TenexiumStorage {
     bytes32 public constant BURN_ADDRESS = 0xc2cdcf01af7163d2d99b2ec87954e4c1b735e9e9ea80f8775bf29dd9457eaca1;
 
     /**
-     * @notice Stake TAO for Alpha tokens using the staking precompile
+     * @notice Stake TAO for Alpha tokens using the staking precompile with price limit
      * @param validatorHotkey Validator hotkey
      * @param taoAmount TAO amount to stake (wei)
+     * @param limitPrice Price limit in rao per alpha (0 for no limit)
+     * @param allowPartial Whether to allow partial stake execution
      * @param alphaNetuid Alpha subnet ID
      * @return alphaReceived Alpha tokens received (in alpha base units)
      */
-    function _stakeTaoForAlpha(bytes32 validatorHotkey, uint256 taoAmount, uint16 alphaNetuid)
-        internal
-        returns (uint256 alphaReceived)
-    {
+    function _stakeTaoForAlpha(
+        bytes32 validatorHotkey,
+        uint256 taoAmount,
+        uint256 limitPrice,
+        bool allowPartial,
+        uint16 alphaNetuid
+    ) internal returns (uint256 alphaReceived) {
         bytes32 _protocolSs58Address = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this));
         uint256 initialStake = STAKING_PRECOMPILE.getStake(validatorHotkey, _protocolSs58Address, uint256(alphaNetuid));
 
         uint256 amountRao = taoAmount.weiToRao();
         bytes memory data = abi.encodeWithSelector(
-            STAKING_PRECOMPILE.addStake.selector, validatorHotkey, amountRao, uint256(alphaNetuid)
+            STAKING_PRECOMPILE.addStakeLimit.selector,
+            validatorHotkey,
+            amountRao,
+            limitPrice,
+            allowPartial,
+            uint256(alphaNetuid)
         );
         (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
         if (!success) revert TenexiumErrors.StakeFailed();
@@ -43,20 +53,30 @@ abstract contract PrecompileAdapter is TenexiumStorage {
     }
 
     /**
-     * @notice Unstake Alpha tokens for TAO using the staking precompile
+     * @notice Unstake Alpha tokens for TAO using the staking precompile with price limit
      * @param validatorHotkey Validator hotkey
      * @param alphaAmount Alpha amount to unstake (alpha base units)
+     * @param limitPrice Price limit in rao per alpha (0 for no limit)
+     * @param allowPartial Whether to allow partial unstake execution
      * @param alphaNetuid Alpha subnet ID
      * @return taoReceived TAO received from unstaking (wei)
      */
-    function _unstakeAlphaForTao(bytes32 validatorHotkey, uint256 alphaAmount, uint16 alphaNetuid)
-        internal
-        returns (uint256 taoReceived)
-    {
+    function _unstakeAlphaForTao(
+        bytes32 validatorHotkey,
+        uint256 alphaAmount,
+        uint256 limitPrice,
+        bool allowPartial,
+        uint16 alphaNetuid
+    ) internal returns (uint256 taoReceived) {
         uint256 initialBalance = address(this).balance;
 
         bytes memory data = abi.encodeWithSelector(
-            STAKING_PRECOMPILE.removeStake.selector, validatorHotkey, alphaAmount, uint256(alphaNetuid)
+            STAKING_PRECOMPILE.removeStakeLimit.selector,
+            validatorHotkey,
+            alphaAmount,
+            limitPrice,
+            allowPartial,
+            uint256(alphaNetuid)
         );
         (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
         if (!success) revert TenexiumErrors.UnstakeFailed();

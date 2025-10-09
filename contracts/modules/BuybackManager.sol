@@ -32,7 +32,9 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         if (expectedAlpha == 0) revert TenexiumErrors.BuybackSimInvalid();
 
         // Execute buyback by staking TAO to get Tenexium alpha
-        uint256 actualAlphaReceived = _stakeTaoForAlpha(protocolValidatorHotkey, buybackAmount, TENEX_NETUID);
+        uint256 actualAlphaReceived = _stakeTaoForAlpha(protocolValidatorHotkey, buybackAmount, 0, false, TENEX_NETUID);
+
+        if (actualAlphaReceived == 0) revert TenexiumErrors.StakeFailed();
 
         // Calculate actual slippage for reporting
         uint256 actualSlippage =
