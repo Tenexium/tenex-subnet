@@ -40,16 +40,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         // Unstake alpha to get TAO using the validator hotkey used at open (fallback to protocolValidatorHotkey)
         bytes32 vHotkey = position.validatorHotkey == bytes32(0) ? protocolValidatorHotkey : position.validatorHotkey;
 
-        // Try to unstake alpha increasing the limit price gradually until successful
-        uint256 slippage = 100;
-        uint256 taoReceived = 0;
-        while (slippage <= 1000) {
-            uint256 minAcceptableTao = simulatedTaoValue.safeMul(10000 - slippage) / 10000;
-            uint256 limitPrice = minAcceptableTao / position.alphaAmount;
-            taoReceived = _unstakeAlphaForTao(vHotkey, position.alphaAmount, limitPrice, false, alphaNetuid);
-            if (taoReceived > 0) break;
-            slippage += 100;
-        }
+        uint256 taoReceived = _unstakeAlphaForTao(vHotkey, position.alphaAmount, 0, false, alphaNetuid);
 
         if (taoReceived == 0) revert TenexiumErrors.UnstakeFailed();
 
