@@ -37,10 +37,8 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         uint256 accruedFees = _calculatePositionFees(user, positionId);
         uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
 
-        // Unstake alpha to get TAO using the validator hotkey used at open (fallback to protocolValidatorHotkey)
-        bytes32 vHotkey = position.validatorHotkey == bytes32(0) ? protocolValidatorHotkey : position.validatorHotkey;
-
-        uint256 taoReceived = _unstakeAlphaForTao(vHotkey, position.alphaAmount, 0, false, alphaNetuid);
+        // Unstake alpha to get TAO using the validator hotkey used at open
+        uint256 taoReceived = _unstakeAlphaForTao(position.validatorHotkey, position.alphaAmount, 0, false, alphaNetuid);
 
         if (taoReceived == 0) revert TenexiumErrors.UnstakeFailed();
 
