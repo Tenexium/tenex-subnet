@@ -133,26 +133,4 @@ abstract contract PrecompileAdapter is TenexiumStorage {
 
         _transferStake(BURN_ADDRESS, BURN_ADDRESS, uint256(alphaNetuid), uint256(alphaNetuid), alphaAmount);
     }
-
-    /**
-     * @notice Select a validator hotkey (prefers protocol-level hotkey, fallback highest vTrust)
-     */
-    function _getAlphaValidatorHotkey(uint16 alphaNetuid) internal view returns (bytes32 validatorHotkey) {
-        if (protocolValidatorHotkey != bytes32(0)) {
-            return protocolValidatorHotkey;
-        }
-
-        uint16 uidCount = METAGRAPH_PRECOMPILE.getUidCount(alphaNetuid);
-        uint16 bestUid = 0;
-        uint16 bestV = 0;
-        for (uint16 i = 0; i < uidCount; i++) {
-            uint16 v = METAGRAPH_PRECOMPILE.getVtrust(alphaNetuid, i);
-            if (v > bestV) {
-                bestV = v;
-                bestUid = i;
-            }
-        }
-        bytes32 hotkey = METAGRAPH_PRECOMPILE.getHotkey(alphaNetuid, bestUid);
-        return hotkey == bytes32(0) ? protocolValidatorHotkey : hotkey;
-    }
 }

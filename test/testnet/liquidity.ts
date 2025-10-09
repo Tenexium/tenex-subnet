@@ -105,8 +105,8 @@ async function main() {
         
         // Additional liquidity information
         console.log(`\n📈 Additional Liquidity Information:`);
-        const liquidityStats = await TenexiumProtocol.totalLpFees();
-        console.log(`   Total LP Fees: ${ethers.formatEther(liquidityStats)} TAO`);
+        const liquidityStats = await TenexiumProtocol.totalPendingLpFees();
+        console.log(`   Total Pending LP Fees: ${ethers.formatEther(liquidityStats)} TAO`);
         const liquidityStats2 = await TenexiumProtocol.totalLpStakes();
         console.log(`   Total LP Stakes: ${ethers.formatEther(liquidityStats2)} TAO`);
         

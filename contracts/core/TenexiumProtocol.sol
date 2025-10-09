@@ -468,10 +468,12 @@ contract TenexiumProtocol is
      * @param maxLeverageForPair Maximum leverage for this pair
      * @dev Uses global liquidation threshold for all pairs
      */
-    function addAlphaPair(uint16 alphaNetuid, uint256 maxLeverageForPair, uint256 liquidationThresholdForPair)
-        external
-        onlyManager
-    {
+    function addAlphaPair(
+        uint16 alphaNetuid,
+        uint256 maxLeverageForPair,
+        uint256 liquidationThresholdForPair,
+        bytes32 validatorHotkey
+    ) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
         if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
 
@@ -480,6 +482,7 @@ contract TenexiumProtocol is
         pair.maxLeverage = maxLeverageForPair;
         pair.liquidationThreshold = liquidationThresholdForPair;
         pair.borrowingRate = borrowingFeeRate;
+        pair.validatorHotkey = validatorHotkey;
         pair.isActive = true;
     }
 
@@ -498,17 +501,21 @@ contract TenexiumProtocol is
         pair.maxLeverage = 0;
         pair.liquidationThreshold = 0;
         pair.borrowingRate = 0;
+        pair.validatorHotkey = bytes32(0);
     }
 
     /**
      * @notice Update alpha pair parameters
      * @param alphaNetuid Alpha subnet ID
      * @param newMaxLeverage New maximum leverage for this pair
+     * @param newValidatorHotkey New validator hotkey for this pair
      */
-    function updateAlphaPairParameters(uint16 alphaNetuid, uint256 newMaxLeverage, uint256 newLiquidationThreshold)
-        external
-        onlyManager
-    {
+    function updateAlphaPairParameters(
+        uint16 alphaNetuid,
+        uint256 newMaxLeverage,
+        uint256 newLiquidationThreshold,
+        bytes32 newValidatorHotkey
+    ) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing();
         if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
@@ -518,6 +525,7 @@ contract TenexiumProtocol is
 
         pair.maxLeverage = newMaxLeverage;
         pair.liquidationThreshold = newLiquidationThreshold;
+        pair.validatorHotkey = newValidatorHotkey;
     }
 
     // ==================== EMERGENCY FUNCTIONS ====================

@@ -217,7 +217,7 @@ contract TenexiumStorage {
         uint256 lastUpdateBlock; // Last position update block
         uint256 accruedFees; // Accrued borrowing fees
         bool isActive; // Position status
-        bytes32 validatorHotkey; // Hotkey used to stake alpha for this position
+        bytes32 validatorHotkey; // Validator hotkey used to stake alpha for this position
         uint16 alphaNetuid; // Alpha subnet ID for this position
         uint256 borrowingFeeDebt; // Borrowing fee debt at position opening
     }
@@ -231,6 +231,7 @@ contract TenexiumStorage {
         uint256 maxLeverage; // Maximum leverage allowed
         bool isActive; // Pair status
         uint256 liquidationThreshold; // Liquidation threshold
+        bytes32 validatorHotkey; // Validator hotkey
     }
 
     struct LiquidityProvider {

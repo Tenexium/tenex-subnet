@@ -59,8 +59,9 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Calculate limit price based on minimum acceptable alpha
         uint256 limitPrice = taoToStakeNet / minAcceptableAlpha;
 
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
         // Execute stake operation using net TAO
-        bytes32 validatorHotkey = _getAlphaValidatorHotkey(alphaNetuid);
+        bytes32 validatorHotkey = pair.validatorHotkey;
         uint256 actualAlphaReceived = _stakeTaoForAlpha(validatorHotkey, taoToStakeNet, limitPrice, false, alphaNetuid);
 
         // Verify slippage tolerance
@@ -91,7 +92,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         userCollateral[msg.sender] = userCollateral[msg.sender].safeAdd(collateralAmount);
         userTotalBorrowed[msg.sender] = userTotalBorrowed[msg.sender].safeAdd(borrowedAmount);
 
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalCollateral = pair.totalCollateral.safeAdd(collateralAmount);
         pair.totalBorrowed = pair.totalBorrowed.safeAdd(borrowedAmount);
 
