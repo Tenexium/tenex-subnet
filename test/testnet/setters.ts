@@ -22,10 +22,6 @@ interface OriginalValues {
     buybackIntervalBlocks: bigint;
     buybackExecutionThreshold: bigint;
 
-    // Vesting parameters
-    vestingDurationBlocks: bigint;
-    cliffDurationBlocks: bigint;
-
     // Fee parameters
     tradingFeeRate: bigint;
     borrowingFeeRate: bigint;
@@ -63,7 +59,6 @@ interface OriginalValues {
 
     // Protocol addresses
     protocolValidatorHotkey: string;
-    protocolSs58Address: string;
     treasury: string;
 
     // Emergency state
@@ -101,7 +96,6 @@ async function main() {
         await testLiquidityGuardrails(TenexiumProtocol, originalValues);
         await testActionCooldowns(TenexiumProtocol, originalValues);
         await testBuybackParameters(TenexiumProtocol, originalValues);
-        await testVestingParameters(TenexiumProtocol, originalValues);
         await testFeeParameters(TenexiumProtocol, originalValues);
         await testFeeDistributions(TenexiumProtocol, originalValues);
         await testTierParameters(TenexiumProtocol, originalValues);
@@ -140,10 +134,6 @@ async function getOriginalValues(contract: TenexiumProtocol): Promise<OriginalVa
         buybackIntervalBlocks: await contract.buybackIntervalBlocks(),
         buybackExecutionThreshold: await contract.buybackExecutionThreshold(),
 
-        // Vesting parameters
-        vestingDurationBlocks: await contract.vestingDurationBlocks(),
-        cliffDurationBlocks: await contract.cliffDurationBlocks(),
-
         // Fee parameters
         tradingFeeRate: await contract.tradingFeeRate(),
         borrowingFeeRate: await contract.borrowingFeeRate(),
@@ -181,7 +171,6 @@ async function getOriginalValues(contract: TenexiumProtocol): Promise<OriginalVa
 
         // Protocol addresses
         protocolValidatorHotkey: await contract.protocolValidatorHotkey(),
-        protocolSs58Address: await contract.protocolSs58Address(),
         treasury: await contract.treasury(),
 
         // Emergency state
@@ -219,9 +208,6 @@ async function restoreOriginalState(contract: TenexiumProtocol, original: Origin
             original.buybackExecutionThreshold
         );
         
-        // Restore vesting parameters
-        await contract.updateVestingParameters(original.vestingDurationBlocks, original.cliffDurationBlocks);
-        
         // Restore fee parameters
         await contract.updateFeeParameters(
             original.tradingFeeRate,
@@ -245,8 +231,6 @@ async function restoreOriginalState(contract: TenexiumProtocol, original: Origin
         
         // Restore protocol addresses
         await contract.updateProtocolValidatorHotkey(original.protocolValidatorHotkey);
-        await contract.updateProtocolSs58Address(original.protocolSs58Address);
-        await contract.updateTreasury(original.treasury);
         
         // Restore emergency state
         if (original.liquidityCircuitBreaker !== await contract.liquidityCircuitBreaker()) {
@@ -392,32 +376,6 @@ async function testBuybackParameters(contract: TenexiumProtocol, original: Origi
         original.buybackExecutionThreshold
     );
     console.log("🔄 Buyback parameters restored to original values");
-}
-
-async function testVestingParameters(contract: TenexiumProtocol, original: OriginalValues) {
-    console.log("\n🧪 Testing updateVestingParameters...");
-    
-    const newVestingDurationBlocks = 300000n; // ~1 year
-    const newCliffDurationBlocks = 50000n; // ~2 months
-    
-    // Update vesting parameters
-    const tx = await contract.updateVestingParameters(newVestingDurationBlocks, newCliffDurationBlocks);
-    await tx.wait();
-    
-    // Verify the update
-    const updatedVestingDurationBlocks = await contract.vestingDurationBlocks();
-    const updatedCliffDurationBlocks = await contract.cliffDurationBlocks();
-    
-    if (updatedVestingDurationBlocks !== newVestingDurationBlocks ||
-        updatedCliffDurationBlocks !== newCliffDurationBlocks) {
-        throw new Error("Vesting parameters update failed");
-    }
-    
-    console.log("✅ updateVestingParameters test passed");
-    
-    // Restore original values
-    await contract.updateVestingParameters(original.vestingDurationBlocks, original.cliffDurationBlocks);
-    console.log("🔄 Vesting parameters restored to original values");
 }
 
 async function testFeeParameters(contract: TenexiumProtocol, original: OriginalValues) {
@@ -582,20 +540,6 @@ async function testProtocolAddresses(contract: TenexiumProtocol, original: Origi
     
     // Restore original hotkey
     await contract.updateProtocolValidatorHotkey(original.protocolValidatorHotkey);
-    
-    // Test protocol SS58 address update
-    const newSs58Address = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
-    const tx2 = await contract.updateProtocolSs58Address(newSs58Address);
-    await tx2.wait();
-    
-    const updatedSs58Address = await contract.protocolSs58Address();
-    if (updatedSs58Address !== newSs58Address) {
-        throw new Error("Protocol SS58 address update failed");
-    }
-    console.log("✅ updateProtocolSs58Address test passed");
-    
-    // Restore original SS58 address
-    await contract.updateProtocolSs58Address(original.protocolSs58Address);
     
     // Test treasury update (use a different address)
     const newTreasury = "0x1111111111111111111111111111111111111111";
