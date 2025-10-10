@@ -27,16 +27,26 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
 
         uint256 buybackAmount = buybackPool;
 
-        // Burn 100% of received alpha tokens for avoiding selling pressure
-        uint256 actualAlphaBurned = _burnAlpha(buybackAmount, TENEX_NETUID);
+        // Buyback Alpha tokens
+        uint256 actualAlphaBought = _stakeTaoForAlpha(BURN_ADDRESS, buybackAmount, PRECISION, false, TENEX_NETUID);
+        if (actualAlphaBought == 0) revert TenexiumErrors.AmountZero();
 
         // Update accounting
         buybackPool -= buybackAmount;
         totalTaoUsedForBuybacks += buybackAmount;
-        totalAlphaBought += actualAlphaBurned;
+        totalAlphaBought += actualAlphaBought;
         lastBuybackBlock = block.number;
 
-        emit BuybackExecuted(buybackAmount, actualAlphaBurned, block.number);
+        emit BuybackExecuted(buybackAmount, actualAlphaBought, block.number);
+    }
+
+    function _burnBuybackedAlpha() internal {
+        // Burn Alpha tokens that were bought back
+        uint256 availableBurnedAlpha = STAKING_PRECOMPILE.getStake(
+            BURN_ADDRESS, ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this)), TENEX_NETUID
+        );
+        if (availableBurnedAlpha == 0) revert TenexiumErrors.AmountZero();
+        _burnAlpha(availableBurnedAlpha, TENEX_NETUID);
     }
 
     /**

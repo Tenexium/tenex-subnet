@@ -665,6 +665,13 @@ contract TenexiumProtocol is
     }
 
     /**
+     * @notice Execute burn of bought back Alpha tokens
+     */
+    function executeBurn() external whenNotPaused nonReentrant {
+        _burnBuybackedAlpha();
+    }
+
+    /**
      * @notice Withdraw protocol fees
      */
     function withdrawProtocolFees() external onlyManager nonReentrant {

@@ -32,11 +32,11 @@ library TenexiumErrors {
     error SwapSimInvalid();
     error InsufficientProceeds();
 
-    // Transfer / TransferStake / Stake / Unstake
+    // Transfer / Stake / Unstake
     error TransferFailed();
-    error TransferStakeFailed();
     error StakeFailed();
     error UnstakeFailed();
+    error BurnAlphaFailed();
 
     // Liquidation
     error NoAlpha();
