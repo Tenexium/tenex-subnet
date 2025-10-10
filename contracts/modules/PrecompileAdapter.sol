@@ -87,50 +87,34 @@ abstract contract PrecompileAdapter is TenexiumStorage {
     }
 
     /**
-     * @notice Transfer staked alpha to another coldkey via staking precompile
-     * @param destinationColdkey Destination coldkey
-     * @param hotkey Validator hotkey
-     * @param originNetuid Origin subnet id
-     * @param destinationNetuid Destination subnet id
-     * @param amount Alpha amount to transfer (alpha base units)
-     */
-    function _transferStake(
-        bytes32 destinationColdkey,
-        bytes32 hotkey,
-        uint256 originNetuid,
-        uint256 destinationNetuid,
-        uint256 amount
-    ) internal {
-        bytes memory data = abi.encodeWithSelector(
-            STAKING_PRECOMPILE.transferStake.selector,
-            destinationColdkey,
-            hotkey,
-            originNetuid,
-            destinationNetuid,
-            amount
-        );
-        (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
-        if (!success) revert TenexiumErrors.TransferStakeFailed();
-    }
-
-    /**
      * @notice Burn Alpha tokens for TAO using the staking precompile
-     * @param validatorHotkey Validator hotkey
-     * @param alphaAmount Alpha amount to burn (alpha base units)
+     * @param taoAmount TAO amount to burn (wei)
      * @param alphaNetuid Alpha subnet ID
      */
-    function _burnAlpha(bytes32 validatorHotkey, uint256 alphaAmount, uint16 alphaNetuid) internal {
+    function _burnAlpha(uint256 taoAmount, uint16 alphaNetuid) internal returns (uint256 alphaAmount) {
+        uint256 initialStaked = STAKING_PRECOMPILE.getStake(
+            BURN_ADDRESS, ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this)), uint256(alphaNetuid)
+        );
         bytes memory data = abi.encodeWithSelector(
-            STAKING_PRECOMPILE.moveStake.selector,
-            validatorHotkey,
+            STAKING_PRECOMPILE.addStake.selector, BURN_ADDRESS, taoAmount.weiToRao(), uint256(alphaNetuid)
+        );
+        (bool success,) = address(STAKING_PRECOMPILE).call{gas: 1000000}(data);
+        if (!success) revert TenexiumErrors.StakeFailed();
+
+        uint256 finalStaked = STAKING_PRECOMPILE.getStake(
+            BURN_ADDRESS, ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this)), uint256(alphaNetuid)
+        );
+        alphaAmount = finalStaked - initialStaked;
+        data = abi.encodeWithSelector(
+            STAKING_PRECOMPILE.transferStake.selector,
+            BURN_ADDRESS,
             BURN_ADDRESS,
             uint256(alphaNetuid),
             uint256(alphaNetuid),
             alphaAmount
         );
-        (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
-        if (!success) revert TenexiumErrors.MoveStakeFailed();
-
-        _transferStake(BURN_ADDRESS, BURN_ADDRESS, uint256(alphaNetuid), uint256(alphaNetuid), alphaAmount);
+        (success,) = address(STAKING_PRECOMPILE).call{gas: 1000000}(data);
+        if (!success) revert TenexiumErrors.TransferStakeFailed();
+        return alphaAmount;
     }
 }

@@ -134,7 +134,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Use simulation to get expected TAO amount from unstaking alpha
         uint256 expectedTaoAmount =
             AlphaMath.raoToWei(ALPHA_PRECOMPILE.simSwapAlphaForTao(alphaNetuid, uint64(alphaToClose)));
-        if (expectedTaoAmount == 0) revert TenexiumErrors.UnstakeSimInvalid();
+        if (expectedTaoAmount == 0) revert TenexiumErrors.SwapSimInvalid();
 
         // Calculate minimum acceptable TAO with slippage tolerance
         uint256 minAcceptableTao = expectedTaoAmount.safeMul(10000 - maxSlippage) / 10000;
@@ -154,7 +154,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 actualTaoReceived = _unstakeAlphaForTao(validatorHotkey, alphaToClose, limitPrice, false, alphaNetuid);
 
         // Verify slippage tolerance
-        if (actualTaoReceived < minAcceptableTao) revert TenexiumErrors.UnstakeSlippage();
+        if (actualTaoReceived < minAcceptableTao) revert TenexiumErrors.SlippageTooHigh();
 
         // Calculate net return after all costs
         uint256 totalCosts = borrowedToRepay.safeAdd(feesToPay).safeAdd(tradingFeeAmount);

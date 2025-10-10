@@ -27,29 +27,16 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
 
         uint256 buybackAmount = buybackPool;
 
-        // Use simulation to check expected alpha amount and slippage
-        uint256 expectedAlpha = ALPHA_PRECOMPILE.simSwapTaoForAlpha(TENEX_NETUID, uint64(buybackAmount.weiToRao()));
-        if (expectedAlpha == 0) revert TenexiumErrors.BuybackSimInvalid();
-
-        // Execute buyback by staking TAO to get Tenexium alpha
-        uint256 actualAlphaReceived = _stakeTaoForAlpha(protocolValidatorHotkey, buybackAmount, 0, false, TENEX_NETUID);
-
-        if (actualAlphaReceived == 0) revert TenexiumErrors.StakeFailed();
-
-        // Calculate actual slippage for reporting
-        uint256 actualSlippage =
-            expectedAlpha > actualAlphaReceived ? ((expectedAlpha - actualAlphaReceived) * 10000) / expectedAlpha : 0;
-
         // Burn 100% of received alpha tokens for avoiding selling pressure
-        _burnAlpha(protocolValidatorHotkey, actualAlphaReceived, TENEX_NETUID);
+        uint256 actualAlphaBurned = _burnAlpha(buybackAmount, TENEX_NETUID);
 
         // Update accounting
         buybackPool -= buybackAmount;
         totalTaoUsedForBuybacks += buybackAmount;
-        totalAlphaBought += actualAlphaReceived;
+        totalAlphaBought += actualAlphaBurned;
         lastBuybackBlock = block.number;
 
-        emit BuybackExecuted(buybackAmount, actualAlphaReceived, block.number, actualSlippage);
+        emit BuybackExecuted(buybackAmount, actualAlphaBurned, block.number);
     }
 
     /**

@@ -18,6 +18,9 @@ contract MultiSigWallet is ReentrancyGuard {
     event OwnerAddition(address indexed owner);
     event OwnerRemoval(address indexed owner);
     event LockPeriodChanged(uint256 oldLockPeriod, uint256 newLockPeriod);
+    event FeesDistributed(uint256 totalFees);
+
+    error DistributeFeesFailed();
 
     struct Transaction {
         address destination;
@@ -164,6 +167,18 @@ contract MultiSigWallet is ReentrancyGuard {
             txn.executed = false;
             emit ExecutionFailure(transactionId);
         }
+    }
+
+    function distributeFees() external onlyOwner {
+        // distribute fees to owners
+        uint256 totalFees = address(this).balance;
+        uint256 feePerOwner = totalFees / owners.length;
+        for (uint256 i = 0; i < owners.length; i++) {
+            address owner = owners[i];
+            (bool success,) = payable(owner).call{value: feePerOwner}("");
+            if (!success) revert DistributeFeesFailed();
+        }
+        emit FeesDistributed(totalFees);
     }
 
     function _addTransaction(address destination, uint256 value, bytes calldata data)
