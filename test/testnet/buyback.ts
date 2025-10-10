@@ -19,7 +19,7 @@ interface BuybackStats {
     totalAlphaBought: bigint;
     buybackIntervalBlocks: bigint;
     buybackExecutionThreshold: bigint;
-    protocolValidatorHotkey: string;
+    BURN_ADDRESS: string;
     contractBalance: bigint;
     totalBorrowed: bigint;
     totalLpStakes: bigint;
@@ -38,7 +38,7 @@ async function getBuybackStats(contract: any, stakingContract: any, netuid: numb
         totalAlphaBought,
         buybackIntervalBlocks,
         buybackExecutionThreshold,
-        protocolValidatorHotkey,
+        BURN_ADDRESS,
         contractBalance,
         totalBorrowed,
         totalLpStakes,
@@ -52,7 +52,7 @@ async function getBuybackStats(contract: any, stakingContract: any, netuid: numb
         contract.totalAlphaBought(),
         contract.buybackIntervalBlocks(),
         contract.buybackExecutionThreshold(),
-        contract.protocolValidatorHotkey(),
+        contract.BURN_ADDRESS(),
         provider.getBalance(contract.target),
         contract.totalBorrowed(),
         contract.totalLpStakes(),
@@ -63,7 +63,7 @@ async function getBuybackStats(contract: any, stakingContract: any, netuid: numb
 
     // Get burn address stake information
     const [burnAddressStake, burnAddressTotalStake] = await Promise.all([
-        stakingContract.getStake(protocolValidatorHotkey, BURN_ADDRESS, netuid),
+        stakingContract.getStake(BURN_ADDRESS, BURN_ADDRESS, netuid),
         stakingContract.getTotalColdkeyStake(BURN_ADDRESS)
     ]);
 
@@ -74,7 +74,7 @@ async function getBuybackStats(contract: any, stakingContract: any, netuid: numb
         totalAlphaBought,
         buybackIntervalBlocks,
         buybackExecutionThreshold,
-        protocolValidatorHotkey,
+        BURN_ADDRESS,
         contractBalance,
         totalBorrowed,
         totalLpStakes,
@@ -103,7 +103,7 @@ function printBuybackStats(stats: BuybackStats, label: string) {
     console.log(`Total Alpha Bought: ${formatRaoToTao(stats.totalAlphaBought)} TAO`);
     console.log(`Buyback Interval Blocks: ${stats.buybackIntervalBlocks}`);
     console.log(`Buyback Execution Threshold: ${formatWeiToTao(stats.buybackExecutionThreshold)} TAO`);
-    console.log(`Protocol Validator Hotkey: ${stats.protocolValidatorHotkey}`);
+    console.log(`BURN_ADDRESS: ${stats.BURN_ADDRESS}`);
     console.log(`Contract Balance: ${formatWeiToTao(stats.contractBalance)} TAO`);
     console.log(`Total Borrowed: ${formatWeiToTao(stats.totalBorrowed)} TAO`);
     console.log(`Total LP Stakes: ${formatWeiToTao(stats.totalLpStakes)} TAO`);
@@ -200,6 +200,12 @@ async function main() {
         const receipt = await tx.wait();
         console.log(`Transaction confirmed in block: ${receipt?.blockNumber}`);
         
+        const burnTx = await contract.executeBurn();
+        console.log(`Transaction hash: ${burnTx.hash}`);
+        console.log("Waiting for confirmation...");
+        const burnReceipt = await burnTx.wait();
+        console.log(`Transaction confirmed in block: ${burnReceipt?.blockNumber}`);
+        
         // Get final stats
         console.log("\n📊 Getting final buyback statistics...");
         const finalStats = await getBuybackStats(contract, stakingContract, Number(netuid), provider);
@@ -255,7 +261,7 @@ async function main() {
             // Note: We can't get the exact expected alpha from the simulation here,
             // but we can show the alpha that was actually received and burned
             console.log("\n=== ALPHA BURNING VERIFICATION ===");
-            console.log(`✅ SUCCESS: ${formatRaoToTao(alphaReceived)} TAO worth of alpha tokens were received and burned`);
+            console.log(`✅ SUCCESS: ${ethers.formatUnits(alphaReceived, 9)} Alpha tokens were received and burned`);
             console.log("✅ This creates buy pressure and removes tokens from circulation");
         }
         
