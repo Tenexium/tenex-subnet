@@ -58,5 +58,5 @@ contract TenexiumEvents {
 
     // ==================== BUYBACK & VESTING EVENTS ====================
 
-    event BuybackExecuted(uint256 taoAmount, uint256 alphaReceived, uint256 blockNumber, uint256 slippage);
+    event BuybackExecuted(uint256 taoAmount, uint256 alphaReceived, uint256 blockNumber);
 }

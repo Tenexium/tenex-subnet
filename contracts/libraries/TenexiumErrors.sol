@@ -14,8 +14,6 @@ library TenexiumErrors {
     error FeeTooHigh();
     error DistributionInvalid();
     error ThresholdTooLow();
-    error UserCooldownTooLarge();
-    error LpCooldownTooLarge();
 
     // Liquidity / LP
     error NotLiquidityProvider();
@@ -32,14 +30,11 @@ library TenexiumErrors {
     error MinDeposit();
     error InsufficientLiquidity();
     error SwapSimInvalid();
-    error UnstakeSimInvalid();
-    error UnstakeSlippage();
     error InsufficientProceeds();
 
-    // Transfer / TransferStake / MoveStake / Stake / Unstake
+    // Transfer / TransferStake / Stake / Unstake
     error TransferFailed();
     error TransferStakeFailed();
-    error MoveStakeFailed();
     error StakeFailed();
     error UnstakeFailed();
 
@@ -53,11 +48,9 @@ library TenexiumErrors {
     // Rewards
     error NoRewards();
 
-    // Buyback / vesting
-    error BuybackSimInvalid();
+    // Buyback
     error AmountZero();
     error PercentageTooHigh();
-    error IntervalTooShort();
     error BuybackConditionsNotMet();
 
     // Permission controls

@@ -16,7 +16,6 @@ import "../modules/FeeManager.sol";
 import "../modules/BuybackManager.sol";
 import "../libraries/AlphaMath.sol";
 import "../libraries/TenexiumErrors.sol";
-import "../interfaces/IMultiSigWallet.sol";
 
 /**
  * @title TenexiumProtocol
@@ -69,12 +68,6 @@ contract TenexiumProtocol is
      * @param _baseTradingFeeRate Base trading fee rate (scaled by PRECISION, e.g., 0.3% = 3 * PRECISION / 1000)
      * @param _baseBorrowingFeeRate Base borrowing fee rate per 360 blocks (scaled by PRECISION)
      * @param _baseLiquidationFeeRate Base liquidation fee rate (scaled by PRECISION, e.g., 2% = 2 * PRECISION / 100)
-     * @param _tradingFeeDistribution [LP, Liquidator, Protocol], sums to PRECISION
-     * @param _borrowingFeeDistribution [LP, Liquidator, Protocol], sums to PRECISION
-     * @param _liquidationFeeDistribution [LP, Liquidator, Protocol], sums to PRECISION
-     * @param _tierThresholds [t1..t5] token thresholds for each tier
-     * @param _tierFeeDiscounts [tier0..tier5] fee discounts for each tier
-     * @param _tierMaxLeverages [tier0..tier5] leverage caps for each tier
      * @param _protocolValidatorHotkey Protocol validator hotkey for staking operations
      * @param _functionPermissions [Open position, Close position, Add collateral]
      * @param _maxLiquidityProvidersPerHotkey Maximum number of liquidity providers per hotkey
@@ -97,12 +90,6 @@ contract TenexiumProtocol is
         uint256 _baseTradingFeeRate,
         uint256 _baseBorrowingFeeRate,
         uint256 _baseLiquidationFeeRate,
-        uint256[3] memory _tradingFeeDistribution,
-        uint256[3] memory _borrowingFeeDistribution,
-        uint256[3] memory _liquidationFeeDistribution,
-        uint256[5] memory _tierThresholds,
-        uint256[6] memory _tierFeeDiscounts,
-        uint256[6] memory _tierMaxLeverages,
         bytes32 _protocolValidatorHotkey,
         bool[3] memory _functionPermissions,
         uint256 _maxLiquidityProvidersPerHotkey
@@ -144,57 +131,16 @@ contract TenexiumProtocol is
         borrowingFeeRate = _baseBorrowingFeeRate;
         liquidationFeeRate = _baseLiquidationFeeRate;
 
-        // 8) Fee distributions
-        if (
-            _tradingFeeDistribution[0] + _tradingFeeDistribution[1] + _tradingFeeDistribution[2] != PRECISION
-                || _borrowingFeeDistribution[0] + _borrowingFeeDistribution[1] + _borrowingFeeDistribution[2] != PRECISION
-                || _liquidationFeeDistribution[0] + _liquidationFeeDistribution[1] + _liquidationFeeDistribution[2]
-                    != PRECISION
-        ) revert TenexiumErrors.DistributionInvalid();
-
-        tradingFeeLpShare = _tradingFeeDistribution[0];
-        tradingFeeLiquidatorShare = _tradingFeeDistribution[1];
-        tradingFeeProtocolShare = _tradingFeeDistribution[2];
-
-        borrowingFeeLpShare = _borrowingFeeDistribution[0];
-        borrowingFeeLiquidatorShare = _borrowingFeeDistribution[1];
-        borrowingFeeProtocolShare = _borrowingFeeDistribution[2];
-
-        liquidationFeeLpShare = _liquidationFeeDistribution[0];
-        liquidationFeeLiquidatorShare = _liquidationFeeDistribution[1];
-        liquidationFeeProtocolShare = _liquidationFeeDistribution[2];
-
-        // 9) Tier thresholds and parameters
-        tier1Threshold = _tierThresholds[0];
-        tier2Threshold = _tierThresholds[1];
-        tier3Threshold = _tierThresholds[2];
-        tier4Threshold = _tierThresholds[3];
-        tier5Threshold = _tierThresholds[4];
-
-        tier0FeeDiscount = _tierFeeDiscounts[0];
-        tier1FeeDiscount = _tierFeeDiscounts[1];
-        tier2FeeDiscount = _tierFeeDiscounts[2];
-        tier3FeeDiscount = _tierFeeDiscounts[3];
-        tier4FeeDiscount = _tierFeeDiscounts[4];
-        tier5FeeDiscount = _tierFeeDiscounts[5];
-
-        tier0MaxLeverage = _tierMaxLeverages[0];
-        tier1MaxLeverage = _tierMaxLeverages[1];
-        tier2MaxLeverage = _tierMaxLeverages[2];
-        tier3MaxLeverage = _tierMaxLeverages[3];
-        tier4MaxLeverage = _tierMaxLeverages[4];
-        tier5MaxLeverage = _tierMaxLeverages[5];
-
-        // 10) Protocol validator hotkey
+        // 8) Protocol validator hotkey
         protocolValidatorHotkey = _protocolValidatorHotkey;
 
-        // 11) Treasury default to owner at initialization
+        // 9) Treasury default to owner at initialization
         treasury = owner();
 
-        // 12) Function permissions
+        // 10) Function permissions
         functionPermissions = _functionPermissions;
 
-        // 13) Max liquidity providers per hotkey
+        // 11) Max liquidity providers per hotkey
         maxLiquidityProvidersPerHotkey = _maxLiquidityProvidersPerHotkey;
     }
 
@@ -245,9 +191,6 @@ contract TenexiumProtocol is
      * @param _lpCooldownBlocks New LP cooldown in blocks
      */
     function updateActionCooldowns(uint256 _userCooldownBlocks, uint256 _lpCooldownBlocks) external onlyOwner {
-        if (_userCooldownBlocks > 7_200) revert TenexiumErrors.UserCooldownTooLarge();
-        if (_lpCooldownBlocks > 7_200) revert TenexiumErrors.LpCooldownTooLarge();
-
         userActionCooldownBlocks = _userCooldownBlocks;
         lpActionCooldownBlocks = _lpCooldownBlocks;
     }
@@ -264,8 +207,6 @@ contract TenexiumProtocol is
         uint256 _buybackExecutionThreshold
     ) external onlyOwner {
         if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
-        if (_buybackIntervalBlocks < 360) revert TenexiumErrors.IntervalTooShort();
-
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
@@ -730,20 +671,11 @@ contract TenexiumProtocol is
         uint256 totalRewards = protocolFees;
         if (totalRewards == 0) revert TenexiumErrors.NoFees();
 
-        address[] memory owners = IMultiSigWallet(owner()).getOwners();
-        if (owners.length == 0) revert TenexiumErrors.InvalidValue();
-
         // governance fee for signers
         uint256 totalGovernanceFee = totalRewards.safeMul(protocolFeeGoveranceShare) / PRECISION;
-        uint256 governanceFee = totalGovernanceFee / owners.length;
-
-        // Transfer governance fee to owners
-        for (uint256 i = 0; i < owners.length; i++) {
-            address owner = owners[i];
-            if (owner == address(0)) revert TenexiumErrors.InvalidValue();
-            (bool __success,) = payable(owner).call{value: governanceFee}("");
-            if (!__success) revert TenexiumErrors.TransferFailed();
-        }
+        // Transfer governance fee to owner(MultiSigWallet)
+        (bool success,) = payable(owner()).call{value: totalGovernanceFee}("");
+        if (!success) revert TenexiumErrors.TransferFailed();
 
         // Reserve buyback fee for buyback pool
         uint256 buybackAmount = totalRewards.safeMul(buybackRate) / PRECISION;
@@ -752,8 +684,8 @@ contract TenexiumProtocol is
 
         // Reserve insurance fee for LP Recover
         uint256 insuranceAmount = totalRewards.safeMul(protocolFeeInsuranceShare) / PRECISION;
-        (bool _success,) = payable(insuranceManager).call{value: insuranceAmount}("");
-        if (!_success) revert TenexiumErrors.TransferFailed();
+        (success,) = payable(insuranceManager).call{value: insuranceAmount}("");
+        if (!success) revert TenexiumErrors.TransferFailed();
 
         // Reset protocol fees
         protocolFees = 0;
@@ -762,7 +694,7 @@ contract TenexiumProtocol is
             totalRewards.safeSub(totalGovernanceFee).safeSub(buybackAmount).safeSub(insuranceAmount);
 
         // Transfer remaining fees to treasury
-        (bool success,) = payable(treasury).call{value: withdrawAmount}("");
+        (success,) = payable(treasury).call{value: withdrawAmount}("");
         if (!success) revert TenexiumErrors.TransferFailed();
     }
 
