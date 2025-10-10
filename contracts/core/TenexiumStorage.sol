@@ -209,7 +209,7 @@ contract TenexiumStorage {
     // ==================== STRUCTS ====================
 
     struct Position {
-        uint256 collateral; // TAO collateral amount
+        uint256 initialCollateral; // TAO initial collateral amount
         uint256 borrowed; // TAO borrowed amount
         uint256 alphaAmount; // Alpha tokens held
         uint256 leverage; // Position leverage
@@ -220,6 +220,7 @@ contract TenexiumStorage {
         bytes32 validatorHotkey; // Validator hotkey used to stake alpha for this position
         uint16 alphaNetuid; // Alpha subnet ID for this position
         uint256 borrowingFeeDebt; // Borrowing fee debt at position opening
+        uint256 addedCollateral; // TAO added collateral amount
     }
 
     struct AlphaPair {

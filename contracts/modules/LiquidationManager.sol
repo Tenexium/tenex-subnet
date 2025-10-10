@@ -76,17 +76,18 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
 
         // Update global statistics before clearing position fields
         totalBorrowed = totalBorrowed.safeSub(position.borrowed);
-        totalCollateral = totalCollateral.safeSub(position.collateral);
+        totalCollateral = totalCollateral.safeSub(position.initialCollateral);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(position.borrowed);
-        pair.totalCollateral = pair.totalCollateral.safeSub(position.collateral);
+        pair.totalCollateral = pair.totalCollateral.safeSub(position.initialCollateral);
         _updateUtilizationRate(alphaNetuid);
 
         // Clear the liquidated position
         position.alphaAmount = 0;
         position.borrowed = 0;
-        position.collateral = 0;
+        position.initialCollateral = 0;
+        position.addedCollateral = 0;
         position.accruedFees = 0;
         position.isActive = false;
 
@@ -136,7 +137,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         if (totalDebt == 0) return false; // No debt means not liquidatable
 
         //health ratio check: currentValue / totalDebt < threshold
-        uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
+        uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei() + position.addedCollateral;
         uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
         return healthRatio < alphaPairs[position.alphaNetuid].liquidationThreshold;
     }

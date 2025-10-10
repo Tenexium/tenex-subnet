@@ -74,11 +74,11 @@ const deployConfig: DeployConfig = {
     buybackIntervalBlocks: "7200",                    // cadence blocks (default)
 
     // Governance Fee
-    protocolFeeGoveranceShare: "10000000",            // 1% of protocol fees (PRECISION=1e9)
+    protocolFeeGoveranceShare: "25000000",            // 2.5% of protocol fees (PRECISION=1e9)
 
     // Insurance Rates
-    protocolFeeInsuranceShare: "100000000",           // 10% of protocol fees (PRECISION=1e9)
-    lpFeeInsuranceShare: "100000000",                 // 10% of lp fees (PRECISION=1e9)
+    protocolFeeInsuranceShare: "80000000",           // 8% of protocol fees (PRECISION=1e9)
+    lpFeeInsuranceShare: "125000000",                 // 12.5% of lp fees (PRECISION=1e9)
     perfFeeInsuranceShare: "100000000",               // 10% of positive position profits (PRECISION=1e9)
 
     // Fee parameters (governable)

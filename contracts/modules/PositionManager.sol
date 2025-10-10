@@ -75,7 +75,8 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         nextPositionId[msg.sender] = positionId + 1;
         Position storage position = positions[msg.sender][positionId];
         position.alphaNetuid = alphaNetuid;
-        position.collateral = collateralAmount;
+        position.initialCollateral = collateralAmount;
+        position.addedCollateral = 0;
         position.borrowed = borrowedAmount;
         position.alphaAmount = actualAlphaReceived;
         position.leverage = leverage;
@@ -143,8 +144,9 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Calculate position components to repay
         uint256 borrowedToRepay = position.borrowed.safeMul(alphaToClose) / position.alphaAmount;
-        uint256 collateralToReturn = position.collateral.safeMul(alphaToClose) / position.alphaAmount;
+        uint256 initialCollateralToReturn = position.initialCollateral.safeMul(alphaToClose) / position.alphaAmount;
         uint256 feesToPay = position.accruedFees.safeMul(alphaToClose) / position.alphaAmount;
+        uint256 addedCollateralToReturn = position.addedCollateral.safeMul(alphaToClose) / position.alphaAmount;
 
         // Calculate trading fees using actual TAO value on close leg
         uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, expectedTaoAmount);
@@ -158,13 +160,15 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         // Calculate net return after all costs
         uint256 totalCosts = borrowedToRepay.safeAdd(feesToPay).safeAdd(tradingFeeAmount);
-        if (actualTaoReceived < totalCosts) revert TenexiumErrors.InsufficientProceeds();
+        if (actualTaoReceived.safeAdd(addedCollateralToReturn) < totalCosts) {
+            revert TenexiumErrors.InsufficientProceeds();
+        }
 
-        uint256 netReturn = actualTaoReceived.safeSub(totalCosts);
+        uint256 netReturn = actualTaoReceived.safeAdd(addedCollateralToReturn).safeSub(totalCosts);
         // If net return is greater than collateral to return, take a performance fee for insurance fund
-        if (netReturn > collateralToReturn) {
+        if (netReturn > initialCollateralToReturn) {
             uint256 perfFeeInsurance =
-                (netReturn.safeSub(collateralToReturn)).safeMul(perfFeeInsuranceShare) / PRECISION;
+                (netReturn.safeSub(initialCollateralToReturn)).safeMul(perfFeeInsuranceShare) / PRECISION;
             netReturn = netReturn.safeSub(perfFeeInsurance);
             (bool success,) = payable(insuranceManager).call{value: perfFeeInsurance}("");
             if (!success) revert TenexiumErrors.TransferFailed();
@@ -176,25 +180,28 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             position.isActive = false;
             position.alphaAmount = 0;
             position.borrowed = 0;
-            position.collateral = 0;
+            position.initialCollateral = 0;
+            position.addedCollateral = 0;
             position.accruedFees = 0;
         } else {
             // Partial close
             position.alphaAmount = position.alphaAmount.safeSub(alphaToClose);
             position.borrowed = position.borrowed.safeSub(borrowedToRepay);
-            position.collateral = position.collateral.safeSub(collateralToReturn);
+            position.initialCollateral = position.initialCollateral.safeSub(initialCollateralToReturn);
+            position.addedCollateral = position.addedCollateral.safeSub(addedCollateralToReturn);
             position.accruedFees = position.accruedFees.safeSub(feesToPay);
         }
 
         // Update global state
         totalBorrowed = totalBorrowed.safeSub(borrowedToRepay);
-        totalCollateral = totalCollateral.safeSub(collateralToReturn);
+        totalCollateral = totalCollateral.safeSub(initialCollateralToReturn).safeSub(addedCollateralToReturn);
         userTotalBorrowed[msg.sender] = userTotalBorrowed[msg.sender].safeSub(borrowedToRepay);
-        userCollateral[msg.sender] = userCollateral[msg.sender].safeSub(collateralToReturn);
+        userCollateral[msg.sender] =
+            userCollateral[msg.sender].safeSub(initialCollateralToReturn).safeSub(addedCollateralToReturn);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(borrowedToRepay);
-        pair.totalCollateral = pair.totalCollateral.safeSub(collateralToReturn);
+        pair.totalCollateral = pair.totalCollateral.safeSub(initialCollateralToReturn).safeSub(addedCollateralToReturn);
 
         _updateUtilizationRate(alphaNetuid);
 
@@ -209,13 +216,14 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         }
 
         // Calculate realized PnL (profit and loss)
-        int256 pnl = int256(actualTaoReceived) - int256(borrowedToRepay + feesToPay) - int256(collateralToReturn);
+        int256 pnl = int256(actualTaoReceived) - int256(borrowedToRepay + feesToPay) - int256(initialCollateralToReturn);
 
         emit PositionClosed(
             msg.sender,
             positionId,
             alphaNetuid,
-            collateralToReturn,
+            initialCollateralToReturn,
+            addedCollateralToReturn,
             borrowedToRepay,
             alphaToClose,
             pnl,
@@ -234,7 +242,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint16 alphaNetuid = position.alphaNetuid;
 
         // Add TAO to collateral
-        position.collateral = position.collateral.safeAdd(msg.value);
+        position.addedCollateral = position.addedCollateral.safeAdd(msg.value);
         position.lastUpdateBlock = block.number;
 
         // Update global state
