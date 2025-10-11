@@ -98,24 +98,6 @@ task("deploy:new_proxy", "Deploy Tenexium Protocol with upgradeable parameters")
                     deployConfig.baseTradingFee,
                     deployConfig.borrowingFeeRate,
                     deployConfig.baseLiquidationFee,
-                    [
-                        deployConfig.tradingFeeDistribution.lpShare,
-                        deployConfig.tradingFeeDistribution.liquidatorShare,
-                        deployConfig.tradingFeeDistribution.protocolShare
-                    ],
-                    [
-                        deployConfig.borrowingFeeDistribution.lpShare,
-                        deployConfig.borrowingFeeDistribution.liquidatorShare,
-                        deployConfig.borrowingFeeDistribution.protocolShare
-                    ],
-                    [
-                        deployConfig.liquidationFeeDistribution.lpShare,
-                        deployConfig.liquidationFeeDistribution.liquidatorShare,
-                        deployConfig.liquidationFeeDistribution.protocolShare
-                    ],
-                    deployConfig.tierThresholds,
-                    deployConfig.tierFeeDiscounts,
-                    deployConfig.tierMaxLeverages,
                     deployConfig.protocolValidatorHotkey,
                     deployConfig.functionPermissions,
                     deployConfig.maxLiquidityProvidersPerHotkey

@@ -29,7 +29,8 @@ contract TenexiumEvents {
         address indexed user,
         uint256 indexed positionId,
         uint16 alphaNetuid,
-        uint256 collateralReturned,
+        uint256 initialCollateralReturned,
+        uint256 addedCollateralReturned,
         uint256 borrowedRepaid,
         uint256 alphaAmount,
         int256 pnl,
@@ -56,7 +57,10 @@ contract TenexiumEvents {
 
     event LpFeeRewardsClaimed(address indexed lp, uint256 amount);
 
-    // ==================== BUYBACK & VESTING EVENTS ====================
+    // ==================== BUYBACK ====================
 
     event BuybackExecuted(uint256 taoAmount, uint256 alphaReceived, uint256 blockNumber);
+
+    // ==================== REWARD EVENTS ====================
+    event RewardsDistributed(uint256 totalRewardPool, uint256 selectedUsersLength, uint256 currentWeek);
 }

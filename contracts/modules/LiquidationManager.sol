@@ -49,7 +49,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         uint256 debtRepayment = remaining < totalDebt ? remaining : totalDebt;
         uint256 availableBorrowingFees =
             debtRepayment > position.borrowed ? debtRepayment.safeSub(position.borrowed) : 0;
-        _distributeBorrowingFees(availableBorrowingFees);
+        _distributeFees(availableBorrowingFees, false);
         remaining = remaining.safeSub(debtRepayment);
 
         // 2. Distribute liquidation fee on actual proceeds (post-debt)
@@ -76,17 +76,18 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
 
         // Update global statistics before clearing position fields
         totalBorrowed = totalBorrowed.safeSub(position.borrowed);
-        totalCollateral = totalCollateral.safeSub(position.collateral);
+        totalCollateral = totalCollateral.safeSub(position.initialCollateral);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(position.borrowed);
-        pair.totalCollateral = pair.totalCollateral.safeSub(position.collateral);
-        _updateUtilizationRate(alphaNetuid);
+        pair.totalCollateral = pair.totalCollateral.safeSub(position.initialCollateral);
+        pair.totalAlphaStaked = pair.totalAlphaStaked.safeSub(position.alphaAmount);
 
         // Clear the liquidated position
         position.alphaAmount = 0;
         position.borrowed = 0;
-        position.collateral = 0;
+        position.initialCollateral = 0;
+        position.addedCollateral = 0;
         position.accruedFees = 0;
         position.isActive = false;
 
@@ -136,7 +137,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         if (totalDebt == 0) return false; // No debt means not liquidatable
 
         //health ratio check: currentValue / totalDebt < threshold
-        uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei();
+        uint256 simulatedTaoWei = simulatedTaoValueRao.raoToWei() + position.addedCollateral;
         uint256 healthRatio = simulatedTaoWei.safeMul(PRECISION) / totalDebt;
         return healthRatio < alphaPairs[position.alphaNetuid].liquidationThreshold;
     }

@@ -417,12 +417,15 @@ contract TenexiumProtocol is
     ) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
         if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
+        if (validatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
+        if (liquidationThresholdForPair < (105 * PRECISION) / 100) {
+            revert TenexiumErrors.ThresholdTooLow();
+        }
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.netuid = alphaNetuid;
         pair.maxLeverage = maxLeverageForPair;
         pair.liquidationThreshold = liquidationThresholdForPair;
-        pair.borrowingRate = borrowingFeeRate;
         pair.validatorHotkey = validatorHotkey;
         pair.isActive = true;
     }
@@ -435,13 +438,14 @@ contract TenexiumProtocol is
     function removeAlphaPair(uint16 alphaNetuid) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing();
-        if (pair.totalCollateral != 0 || pair.totalBorrowed != 0) revert TenexiumErrors.InvalidValue();
+        if (pair.totalCollateral != 0 || pair.totalBorrowed != 0 || pair.totalAlphaStaked != 0) {
+            revert TenexiumErrors.InvalidValue();
+        }
 
         // Deactivate and clear parameters
         pair.isActive = false;
         pair.maxLeverage = 0;
         pair.liquidationThreshold = 0;
-        pair.borrowingRate = 0;
         pair.validatorHotkey = bytes32(0);
     }
 
@@ -463,6 +467,7 @@ contract TenexiumProtocol is
         if (newLiquidationThreshold < (105 * PRECISION) / 100) {
             revert TenexiumErrors.ThresholdTooLow();
         }
+        if (newValidatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
 
         pair.maxLeverage = newMaxLeverage;
         pair.liquidationThreshold = newLiquidationThreshold;
@@ -703,6 +708,76 @@ contract TenexiumProtocol is
         // Transfer remaining fees to treasury
         (success,) = payable(treasury).call{value: withdrawAmount}("");
         if (!success) revert TenexiumErrors.TransferFailed();
+    }
+
+    // ==================== REWARD DISTRIBUTION FUNCTIONS ====================
+
+    /**
+     * @notice Distribute rewards to selected users based on their weekly trading volume
+     * @param selectedUsers Array of user addresses to receive rewards
+     * @param netUids Array of net UIDs to unstake alpha tokens from
+     * @param totalWeeklyVolume Total weekly trading volume
+     * @dev This function unstakes all alpha tokens from the provided net UIDs and distributes
+     *      the resulting TAO to selected users based on their weekly trading volume
+     */
+    function distributeRewardsToUsers(
+        address[] calldata selectedUsers,
+        uint16[] calldata netUids,
+        uint256 totalWeeklyVolume
+    ) external onlyManager nonReentrant {
+        if (selectedUsers.length == 0 || netUids.length == 0 || totalWeeklyVolume == 0) {
+            revert TenexiumErrors.InvalidValue();
+        }
+
+        uint256 totalRewardPool = 0;
+
+        // Unstake alpha tokens from all provided net UIDs and accumulate TAO
+        for (uint256 i = 0; i < netUids.length; i++) {
+            uint16 netuid = netUids[i];
+            AlphaPair storage pair = alphaPairs[netuid];
+
+            if (!pair.isActive) revert TenexiumErrors.PairMissing();
+
+            // Get the total alpha staked for this netuid
+            bytes32 protocolSs58Address = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this));
+            uint256 totalAlphaStaked =
+                STAKING_PRECOMPILE.getStake(pair.validatorHotkey, protocolSs58Address, uint256(netuid));
+
+            uint256 availableAlphaStaked = totalAlphaStaked.safeSub(pair.totalAlphaStaked);
+
+            if (availableAlphaStaked > 0) {
+                // Unstake all alpha tokens for this netuid
+                uint256 taoReceived = _unstakeAlphaForTao(
+                    pair.validatorHotkey,
+                    availableAlphaStaked,
+                    0, // No price limit
+                    false, // Don't allow partial
+                    netuid
+                );
+
+                totalRewardPool = totalRewardPool.safeAdd(taoReceived);
+            }
+        }
+
+        if (totalRewardPool == 0) revert TenexiumErrors.InvalidValue();
+
+        // Distribute rewards based on weekly trading volume
+        for (uint256 i = 0; i < selectedUsers.length; i++) {
+            address user = selectedUsers[i];
+            uint256 userVolume = userWeeklyTradingVolume[user][currentWeek];
+
+            if (userVolume > 0) {
+                // Calculate user's share of the reward pool
+                uint256 userReward = totalRewardPool.safeMul(userVolume) / totalWeeklyVolume;
+                if (userReward > 0) {
+                    // Transfer reward to user
+                    (bool success,) = payable(user).call{value: userReward}("");
+                    if (!success) revert TenexiumErrors.TransferFailed();
+                }
+            }
+        }
+        currentWeek = currentWeek + 1;
+        emit RewardsDistributed(totalRewardPool, selectedUsers.length, currentWeek);
     }
 
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================
