@@ -417,6 +417,10 @@ contract TenexiumProtocol is
     ) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
         if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
+        if (validatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
+        if (liquidationThresholdForPair < (105 * PRECISION) / 100) {
+            revert TenexiumErrors.ThresholdTooLow();
+        }
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.netuid = alphaNetuid;
@@ -463,6 +467,7 @@ contract TenexiumProtocol is
         if (newLiquidationThreshold < (105 * PRECISION) / 100) {
             revert TenexiumErrors.ThresholdTooLow();
         }
+        if (newValidatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
 
         pair.maxLeverage = newMaxLeverage;
         pair.liquidationThreshold = newLiquidationThreshold;
@@ -711,6 +716,7 @@ contract TenexiumProtocol is
      * @notice Distribute rewards to selected users based on their weekly trading volume
      * @param selectedUsers Array of user addresses to receive rewards
      * @param netUids Array of net UIDs to unstake alpha tokens from
+     * @param totalWeeklyVolume Total weekly trading volume
      * @dev This function unstakes all alpha tokens from the provided net UIDs and distributes
      *      the resulting TAO to selected users based on their weekly trading volume
      */
