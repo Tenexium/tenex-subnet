@@ -81,7 +81,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(position.borrowed);
         pair.totalCollateral = pair.totalCollateral.safeSub(position.initialCollateral);
-        _updateUtilizationRate(alphaNetuid);
+        pair.totalAlphaStaked = pair.totalAlphaStaked.safeSub(position.alphaAmount);
 
         // Clear the liquidated position
         position.alphaAmount = 0;

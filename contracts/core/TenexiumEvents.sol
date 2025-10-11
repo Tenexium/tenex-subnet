@@ -57,7 +57,10 @@ contract TenexiumEvents {
 
     event LpFeeRewardsClaimed(address indexed lp, uint256 amount);
 
-    // ==================== BUYBACK & VESTING EVENTS ====================
+    // ==================== BUYBACK ====================
 
     event BuybackExecuted(uint256 taoAmount, uint256 alphaReceived, uint256 blockNumber);
+
+    // ==================== REWARD EVENTS ====================
+    event RewardsDistributed(uint256 totalRewardPool, uint256 selectedUsersLength, uint256 currentWeek);
 }

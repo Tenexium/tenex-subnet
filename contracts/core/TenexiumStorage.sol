@@ -152,7 +152,7 @@ contract TenexiumStorage {
     // User aggregates
     mapping(address => uint256) public userCollateral;
     mapping(address => uint256) public userTotalBorrowed;
-    mapping(address => uint256) public userTotalVolume;
+    mapping(address => mapping(uint256 => uint256)) public userWeeklyTradingVolume;
 
     // Liquidity providers
     mapping(address => LiquidityProvider) public liquidityProviders;
@@ -206,6 +206,9 @@ contract TenexiumStorage {
     // ==================== INSURANCE MANAGER ====================
     address public insuranceManager;
 
+    // ==================== CURRENT WEEK ====================
+    uint256 public currentWeek; // Current week
+
     // ==================== STRUCTS ====================
 
     struct Position {
@@ -227,11 +230,10 @@ contract TenexiumStorage {
         uint16 netuid; // Subnet ID
         uint256 totalCollateral; // Total collateral in pair
         uint256 totalBorrowed; // Total borrowed amount
-        uint256 utilizationRate; // Current utilization
-        uint256 borrowingRate; // Current borrowing rate
+        uint256 totalAlphaStaked; // Total alpha staked in pair
+        uint256 liquidationThreshold; // Liquidation threshold
         uint256 maxLeverage; // Maximum leverage allowed
         bool isActive; // Pair status
-        uint256 liquidationThreshold; // Liquidation threshold
         bytes32 validatorHotkey; // Validator hotkey
     }
 

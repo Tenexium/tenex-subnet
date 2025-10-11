@@ -135,22 +135,6 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
     }
 
     /**
-     * @notice Update utilization rates for alpha pairs
-     * @param alphaNetuid Alpha subnet ID
-     */
-    function _updateUtilizationRate(uint16 alphaNetuid) internal virtual validAlphaPair(alphaNetuid) {
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
-
-        if (totalBorrowed == 0) {
-            pair.utilizationRate = 0;
-            pair.borrowingRate = 0;
-        } else {
-            pair.utilizationRate = pair.totalBorrowed.safeMul(PRECISION) / totalBorrowed;
-            pair.borrowingRate = _dynamicBorrowRatePer360(totalBorrowed.safeMul(PRECISION) / totalLpStakes);
-        }
-    }
-
-    /**
      * @notice Unified dynamic borrow rate model per 360 blocks (utilization-kinked)
      * @param utilization Utilization in PRECISION (PRECISION = 100%)
      * @return ratePer360 Borrow rate accrued over 360 blocks

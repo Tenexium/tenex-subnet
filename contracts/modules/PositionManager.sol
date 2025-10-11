@@ -95,13 +95,13 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
 
         pair.totalCollateral = pair.totalCollateral.safeAdd(collateralAmount);
         pair.totalBorrowed = pair.totalBorrowed.safeAdd(borrowedAmount);
-
-        _updateUtilizationRate(alphaNetuid);
+        pair.totalAlphaStaked = pair.totalAlphaStaked.safeAdd(actualAlphaReceived);
 
         // Update metrics
-        totalVolume = totalVolume.safeAdd(totalTaoToStakeGross);
         totalTrades += 1;
-        userTotalVolume[msg.sender] += totalTaoToStakeGross;
+        totalVolume = totalVolume.safeAdd(totalTaoToStakeGross);
+        userWeeklyTradingVolume[msg.sender][currentWeek] =
+            userWeeklyTradingVolume[msg.sender][currentWeek].safeAdd(totalTaoToStakeGross);
 
         emit PositionOpened(
             msg.sender,
@@ -202,8 +202,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(borrowedToRepay);
         pair.totalCollateral = pair.totalCollateral.safeSub(initialCollateralToReturn).safeSub(addedCollateralToReturn);
-
-        _updateUtilizationRate(alphaNetuid);
+        pair.totalAlphaStaked = pair.totalAlphaStaked.safeSub(alphaToClose);
 
         // Distribute fees
         _distributeFees(tradingFeeAmount, true);
@@ -214,6 +213,12 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             (bool success,) = payable(msg.sender).call{value: netReturn}("");
             if (!success) revert TenexiumErrors.TransferFailed();
         }
+
+        // Update metrics
+        totalTrades += 1;
+        totalVolume = totalVolume.safeAdd(actualTaoReceived);
+        userWeeklyTradingVolume[msg.sender][currentWeek] =
+            userWeeklyTradingVolume[msg.sender][currentWeek].safeAdd(actualTaoReceived);
 
         // Calculate realized PnL (profit and loss)
         int256 pnl = int256(actualTaoReceived) - int256(borrowedToRepay + feesToPay) - int256(initialCollateralToReturn);
