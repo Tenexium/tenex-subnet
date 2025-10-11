@@ -43,7 +43,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Calculate and distribute trading fee on gross notional BEFORE staking
         uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, totalTaoToStakeGross);
         // Distribute trading fees
-        _distributeTradingFees(tradingFeeAmount);
+        _distributeFees(tradingFeeAmount, true);
 
         // Net TAO to stake after fee withholding
         uint256 taoToStakeNet = totalTaoToStakeGross.safeSub(tradingFeeAmount);
@@ -206,8 +206,8 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         _updateUtilizationRate(alphaNetuid);
 
         // Distribute fees
-        _distributeTradingFees(tradingFeeAmount);
-        _distributeBorrowingFees(feesToPay);
+        _distributeFees(tradingFeeAmount, true);
+        _distributeFees(feesToPay, false);
 
         // Return net proceeds to user
         if (netReturn > 0) {

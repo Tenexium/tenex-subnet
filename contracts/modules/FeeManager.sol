@@ -21,12 +21,13 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
      * @notice Distribute trading fees according to trading shares
      * @param feeAmount Total trading fee amount to distribute
      */
-    function _distributeTradingFees(uint256 feeAmount) internal {
+    function _distributeFees(uint256 feeAmount, bool isTrading) internal {
         if (feeAmount == 0) return;
 
         // Calculate distribution amounts using trading fee shares
-        uint256 protocolFeeAmount = feeAmount.safeMul(tradingFeeProtocolShare) / PRECISION;
-        uint256 lpFeeAmount = feeAmount.safeMul(tradingFeeLpShare) / PRECISION;
+        uint256 protocolFeeAmount =
+            feeAmount.safeMul(isTrading ? tradingFeeProtocolShare : borrowingFeeProtocolShare) / PRECISION;
+        uint256 lpFeeAmount = feeAmount.safeMul(isTrading ? tradingFeeLpShare : borrowingFeeLpShare) / PRECISION;
 
         // Reserve insurance fee for LP Recover
         uint256 insuranceFeeAmount = lpFeeAmount.safeMul(lpFeeInsuranceShare) / PRECISION;
@@ -45,37 +46,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         }
 
         // Update distribution tracking
-        totalTradingFees = totalTradingFees.safeAdd(feeAmount);
-
-        emit FeesDistributed(protocolFeeAmount, lpFeeAmount);
-    }
-
-    /**
-     * @notice Distribute borrowing fees according to borrowing shares
-     * @param feeAmount Total borrowing fee amount to distribute
-     */
-    function _distributeBorrowingFees(uint256 feeAmount) internal {
-        if (feeAmount == 0) return;
-
-        uint256 protocolFeeAmount = feeAmount.safeMul(borrowingFeeProtocolShare) / PRECISION;
-        uint256 lpFeeAmount = feeAmount.safeMul(borrowingFeeLpShare) / PRECISION;
-
-        // Reserve insurance fee for LP Recover
-        uint256 insuranceFeeAmount = lpFeeAmount.safeMul(lpFeeInsuranceShare) / PRECISION;
-        (bool _success,) = payable(insuranceManager).call{value: insuranceFeeAmount}("");
-        if (!_success) revert TenexiumErrors.TransferFailed();
-        lpFeeAmount = lpFeeAmount.safeSub(insuranceFeeAmount);
-
-        if (protocolFeeAmount > 0) {
-            protocolFees = protocolFees.safeAdd(protocolFeeAmount);
-        }
-
-        if (lpFeeAmount > 0 && totalLpStakes > 0) {
-            accLpFeesPerShare = accLpFeesPerShare.safeAdd((lpFeeAmount * ACC_PRECISION) / totalLpStakes);
-            totalPendingLpFees = totalPendingLpFees.safeAdd(lpFeeAmount);
-        }
-
-        totalBorrowingFees = totalBorrowingFees.safeAdd(feeAmount);
+        totalTradingFees = isTrading ? totalTradingFees.safeAdd(feeAmount) : totalBorrowingFees.safeAdd(feeAmount);
 
         emit FeesDistributed(protocolFeeAmount, lpFeeAmount);
     }

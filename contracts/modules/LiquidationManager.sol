@@ -49,7 +49,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         uint256 debtRepayment = remaining < totalDebt ? remaining : totalDebt;
         uint256 availableBorrowingFees =
             debtRepayment > position.borrowed ? debtRepayment.safeSub(position.borrowed) : 0;
-        _distributeBorrowingFees(availableBorrowingFees);
+        _distributeFees(availableBorrowingFees, false);
         remaining = remaining.safeSub(debtRepayment);
 
         // 2. Distribute liquidation fee on actual proceeds (post-debt)
