@@ -128,6 +128,16 @@ class TenexUtils:
                     "type": "function"
                 }
             ]
+        elif function_name == "claimLpFeeRewards":
+            return [
+                {
+                    "inputs": [],
+                    "name": "claimLpFeeRewards",
+                    "outputs": [{"type": "uint256", "name": ""}],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                }
+            ]
         elif function_name == "liquidityProviders":
             return [
                 {
