@@ -177,12 +177,12 @@ async function main() {
         console.log("\n🔍 Governance & Insurance Rates:");
         console.log("-".repeat(40));
         
-        const protocolFeeGoveranceShare = await TenexiumProtocol.protocolFeeGoveranceShare();
+        const protocolFeeGovernanceShare = await TenexiumProtocol.protocolFeeGovernanceShare();
         const protocolFeeInsuranceShare = await TenexiumProtocol.protocolFeeInsuranceShare();
         const lpFeeInsuranceShare = await TenexiumProtocol.lpFeeInsuranceShare();
         const perfFeeInsuranceShare = await TenexiumProtocol.perfFeeInsuranceShare();
         
-        console.log("Protocol Fee Goverance Share:", protocolFeeGoveranceShare.toString());
+        console.log("Protocol Fee Governance Share:", protocolFeeGovernanceShare.toString());
         console.log("Protocol Fee Insurance Share:", protocolFeeInsuranceShare.toString());
         console.log("LP Fee Insurance Share:", lpFeeInsuranceShare.toString());
         console.log("Perf Fee Insurance Share:", perfFeeInsuranceShare.toString());
@@ -321,7 +321,9 @@ async function main() {
         console.log("User Stats for", signer.address, ":");
         console.log("  - Total Collateral User:", ethers.formatEther(await TenexiumProtocol.userCollateral(signer.address)), "TAO");
         console.log("  - Total Borrowed User:", ethers.formatEther(await TenexiumProtocol.userTotalBorrowed(signer.address)), "TAO");
-        console.log("  - Total Volume User:", ethers.formatEther(await TenexiumProtocol.userTotalVolume(signer.address)), "TAO");
+        const currentWeek = await TenexiumProtocol.currentWeek();
+        console.log("  - Current Week:", (currentWeek).toString());
+        console.log("  - Total Volume User in Current Week:", ethers.formatEther(await TenexiumProtocol.userWeeklyTradingVolume(signer.address, currentWeek)), "TAO");
         console.log("  - Is Liquidity Provider:", (await TenexiumProtocol.liquidityProviders(signer.address)).isActive);
         console.log("  - LP Stake:", ethers.formatEther((await TenexiumProtocol.liquidityProviders(signer.address)).stake), "TAO");
         console.log("  - LP Shares:", ethers.formatEther((await TenexiumProtocol.liquidityProviders(signer.address)).shares), "x");
@@ -329,7 +331,8 @@ async function main() {
         // Get user position (should be empty for new user)
         const userPosition = await TenexiumProtocol.positions(signer.address, tenexNetuid);
         console.log("User Position for netuid " + tenexNetuid.toString() + ":");
-        console.log("  - Collateral:", ethers.formatEther(userPosition.collateral), "TAO");
+        console.log("  - Initial Collateral:", ethers.formatEther(userPosition.initialCollateral), "TAO");
+        console.log("  - Added Collateral:", ethers.formatEther(userPosition.addedCollateral), "TAO");
         console.log("  - Borrowed:", ethers.formatEther(userPosition.borrowed), "TAO");
         console.log("  - Alpha Amount:", ethers.formatEther(userPosition.alphaAmount), "Alpha");
         console.log("  - Leverage:", ethers.formatUnits(userPosition.leverage, 9), "x");

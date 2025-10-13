@@ -128,23 +128,6 @@ class TenexUtils:
                     "type": "function"
                 }
             ]
-        elif function_name == "getProtocolStats":
-            return [
-                {
-                    "inputs": [],
-                    "name": "getProtocolStats",
-                    "outputs": [
-                        {"type": "uint256", "name": "totalCollateralAmount"},
-                        {"type": "uint256", "name": "totalBorrowedAmount"},
-                        {"type": "uint256", "name": "totalVolumeAmount"},
-                        {"type": "uint256", "name": "totalTradesCount"},
-                        {"type": "uint256", "name": "protocolFeesAmount"},
-                        {"type": "uint256", "name": "totalLpStakesAmount"},
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                }
-            ]
         elif function_name == "liquidityProviders":
             return [
                 {
@@ -164,11 +147,11 @@ class TenexUtils:
                     "type": "function",
                 }
             ]
-        elif function_name == "totalLpFees":
+        elif function_name == "totalPendingLpFees":
             return [
                 {
                     "inputs": [],
-                    "name": "totalLpFees",
+                    "name": "totalPendingLpFees",
                     "outputs": [
                         {"type": "uint256", "name": ""},
                     ],

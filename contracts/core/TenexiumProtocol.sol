@@ -61,7 +61,7 @@ contract TenexiumProtocol is
      * @param _buybackRate Fraction of pool to spend per buyback (scaled by PRECISION)
      * @param _buybackIntervalBlocks Minimum interval between buybacks, in blocks
      * @param _buybackExecutionThreshold Minimum balance required to execute a buyback
-     * @param _protocolFeeGoveranceShare Protocol fee goverance share
+     * @param _protocolFeeGovernanceShare Protocol fee governance share
      * @param _protocolFeeInsuranceShare Protocol fee insurance share
      * @param _lpFeeInsuranceShare LP fee insurance share
      * @param _perfFeeInsuranceShare Performance fee insurance share
@@ -83,7 +83,7 @@ contract TenexiumProtocol is
         uint256 _buybackRate,
         uint256 _buybackIntervalBlocks,
         uint256 _buybackExecutionThreshold,
-        uint256 _protocolFeeGoveranceShare,
+        uint256 _protocolFeeGovernanceShare,
         uint256 _protocolFeeInsuranceShare,
         uint256 _lpFeeInsuranceShare,
         uint256 _perfFeeInsuranceShare,
@@ -118,8 +118,8 @@ contract TenexiumProtocol is
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
 
-        // 5) Protocol fee goverance share
-        protocolFeeGoveranceShare = _protocolFeeGoveranceShare;
+        // 5) Protocol fee governance share
+        protocolFeeGovernanceShare = _protocolFeeGovernanceShare;
 
         // 6) Insurance Rates
         protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
@@ -214,23 +214,23 @@ contract TenexiumProtocol is
 
     /**
      * @notice Update Insurance Rates parameters
-     * @param _protocolFeeGoveranceShare Protocol fee goverance share
+     * @param _protocolFeeGovernanceShare Protocol fee governance share
      * @param _protocolFeeInsuranceShare Protocol fee insurance share
      * @param _lpFeeInsuranceShare LP fee insurance share
      * @param _perfFeeInsuranceShare Performance fee insurance share
      */
     function updateInsuranceRates(
-        uint256 _protocolFeeGoveranceShare,
+        uint256 _protocolFeeGovernanceShare,
         uint256 _protocolFeeInsuranceShare,
         uint256 _lpFeeInsuranceShare,
         uint256 _perfFeeInsuranceShare
     ) external onlyOwner {
         if (
-            _protocolFeeGoveranceShare > PRECISION || _protocolFeeInsuranceShare > PRECISION
+            _protocolFeeGovernanceShare > PRECISION || _protocolFeeInsuranceShare > PRECISION
                 || _lpFeeInsuranceShare > PRECISION || _perfFeeInsuranceShare > PRECISION
         ) revert TenexiumErrors.PercentageTooHigh();
 
-        protocolFeeGoveranceShare = _protocolFeeGoveranceShare;
+        protocolFeeGovernanceShare = _protocolFeeGovernanceShare;
         protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
         lpFeeInsuranceShare = _lpFeeInsuranceShare;
         perfFeeInsuranceShare = _perfFeeInsuranceShare;
@@ -423,7 +423,7 @@ contract TenexiumProtocol is
         }
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        pair.netuid = alphaNetuid;
+        pair.alphaNetuid = alphaNetuid;
         pair.maxLeverage = maxLeverageForPair;
         pair.liquidationThreshold = liquidationThresholdForPair;
         pair.validatorHotkey = validatorHotkey;
@@ -614,23 +614,20 @@ contract TenexiumProtocol is
     {
         // Prevent multiple calls in the same block
         if (lastLiquidationBlock[msg.sender][user][positionId] == block.number) {
-            return;
+            revert TenexiumErrors.LiquidationCooldownActive();
         }
 
         // Update the last liquidation block
         lastLiquidationBlock[msg.sender][user][positionId] = block.number;
 
         if (!_isPositionLiquidatable(user, positionId)) {
-            // Reset counters when position is not liquidatable
-            firstLiquidatableBlock[msg.sender][user][positionId] = 0;
-            consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 0;
-            return;
+            revert TenexiumErrors.NotLiquidatable();
         }
 
         // If this is the first time this liquidator sees position as liquidatable, record the block
         if (
             firstLiquidatableBlock[msg.sender][user][positionId] == 0
-                || block.number - firstLiquidatableBlock[msg.sender][user][positionId] > maxLiquidationCount
+                || block.number - firstLiquidatableBlock[msg.sender][user][positionId] >= maxLiquidationCount
         ) {
             firstLiquidatableBlock[msg.sender][user][positionId] = block.number;
             consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 1;
@@ -684,7 +681,7 @@ contract TenexiumProtocol is
         if (totalRewards == 0) revert TenexiumErrors.NoFees();
 
         // governance fee for signers
-        uint256 totalGovernanceFee = totalRewards.safeMul(protocolFeeGoveranceShare) / PRECISION;
+        uint256 totalGovernanceFee = totalRewards.safeMul(protocolFeeGovernanceShare) / PRECISION;
         // Transfer governance fee to owner(MultiSigWallet)
         (bool success,) = payable(owner()).call{value: totalGovernanceFee}("");
         if (!success) revert TenexiumErrors.TransferFailed();

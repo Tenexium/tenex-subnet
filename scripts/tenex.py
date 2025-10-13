@@ -198,13 +198,13 @@ class TenexCLI:
         """Show updated liquidity statistics"""
         try:
             total_lp_stakes = w3.from_wei(TenexUtils.get_contract("totalLpStakes", w3, network, "tenexiumProtocol").functions.totalLpStakes().call(), 'ether')
-            total_lp_fees = w3.from_wei(TenexUtils.get_contract("totalLpFees", w3, network, "tenexiumProtocol").functions.totalLpFees().call(), 'ether')
+            total_lp_fees = w3.from_wei(TenexUtils.get_contract("totalPendingLpFees", w3, network, "tenexiumProtocol").functions.totalPendingLpFees().call(), 'ether')
             lp_info = TenexUtils.get_contract("liquidityProviders", w3, network, "tenexiumProtocol").functions.liquidityProviders(address).call()
             liquidity_circuit_breaker = TenexUtils.get_contract("liquidityCircuitBreaker", w3, network, "tenexiumProtocol").functions.liquidityCircuitBreaker().call()
             
             print(f"\n📊 Updated Protocol Stats:")
             print(f"   Total LP Stakes: {total_lp_stakes} TAO")  # totalLpStakesAmount
-            print(f"   Total LP Fees: {total_lp_fees} TAO")   # totalLpFeesAmount
+            print(f"   Total PendingLP Fees: {total_lp_fees} TAO")   # totalLpFeesAmount
             print(f"   Liquidity Circuit Breaker: {liquidity_circuit_breaker}")
             
             print(f"\n👤 Your LP Info:")

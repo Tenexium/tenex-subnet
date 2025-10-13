@@ -19,7 +19,7 @@ export interface DeployConfig {
     buybackIntervalBlocks: string;    // cadence blocks (default)
     
     // Governance Fee
-    protocolFeeGoveranceShare: string; // 1% of protocol fees (PRECISION=1e9)
+    protocolFeeGovernanceShare: string; // 1% of protocol fees (PRECISION=1e9)
 
     // Insurance Rates
     protocolFeeInsuranceShare: string; // 10% of protocol fees (PRECISION=1e9)
@@ -74,7 +74,7 @@ const deployConfig: DeployConfig = {
     buybackIntervalBlocks: "7200",                    // cadence blocks (default)
 
     // Governance Fee
-    protocolFeeGoveranceShare: "25000000",            // 2.5% of protocol fees (PRECISION=1e9)
+    protocolFeeGovernanceShare: "25000000",            // 2.5% of protocol fees (PRECISION=1e9)
 
     // Insurance Rates
     protocolFeeInsuranceShare: "80000000",           // 8% of protocol fees (PRECISION=1e9)
@@ -107,11 +107,11 @@ const deployConfig: DeployConfig = {
 
     // Tier thresholds (token amounts)
     tierThresholds: [
-        "100000000000000000000",    // Tier 1: 100 tokens (100e18)
-        "1000000000000000000000",   // Tier 2: 1,000 tokens (1000e18)
-        "5000000000000000000000",   // Tier 3: 5,000 tokens (5000e18)
-        "20000000000000000000000",  // Tier 4: 20,000 tokens (20000e18)
-        "100000000000000000000000"  // Tier 5: 100,000 tokens (100000e18)
+        "100000000000",    // Tier 1: 100 tokens (100e18)
+        "1000000000000",   // Tier 2: 1,000 tokens (1000e18)
+        "5000000000000",   // Tier 3: 5,000 tokens (5000e18)
+        "20000000000000",  // Tier 4: 20,000 tokens (20000e18)
+        "100000000000000",  // Tier 5: 100,000 tokens (100000e18)
     ],
 
     // Tier fee discounts (PRECISION=1e9)

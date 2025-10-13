@@ -27,9 +27,13 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (maxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
         if (msg.value < 1e17) revert TenexiumErrors.MinDeposit();
 
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
+
         // Check tier-based leverage limit
         uint256 userMaxLeverage = _getUserMaxLeverage(msg.sender);
-        if (!(leverage >= PRECISION && leverage <= userMaxLeverage)) revert TenexiumErrors.LeverageTooHigh();
+        if (!(leverage >= PRECISION && leverage <= userMaxLeverage && leverage <= pair.maxLeverage)) {
+            revert TenexiumErrors.LeverageTooHigh();
+        }
 
         uint256 collateralAmount = msg.value;
         uint256 borrowedAmount = collateralAmount.safeMul(leverage - PRECISION) / PRECISION;
@@ -59,7 +63,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Calculate limit price based on minimum acceptable alpha
         uint256 limitPrice = taoToStakeNet / minAcceptableAlpha;
 
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
         // Execute stake operation using net TAO
         bytes32 validatorHotkey = pair.validatorHotkey;
         uint256 actualAlphaReceived = _stakeTaoForAlpha(validatorHotkey, taoToStakeNet, limitPrice, false, alphaNetuid);
