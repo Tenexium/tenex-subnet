@@ -194,6 +194,67 @@ class TenexCLI:
             print(f"❌ Failed to remove liquidity: {error}")
             sys.exit(1)
     
+    def claim_rewards(self):
+        """Claim accrued LP fee rewards"""
+        try:
+            w3, network, account, hotkey = TenexUtils.get_signer_for_miner()
+            contract_address = TenexUtils.get_proxy_address(network, "tenexiumProtocol")
+            contract = TenexUtils.get_contract("claimLpFeeRewards", w3, network, "tenexiumProtocol")
+            
+            print(f" Claiming LP fee rewards from {network}...")
+            print(f"📝 Transaction details:")
+            print(f"   Network: {network}")
+            print(f"   From: {account.address}")
+            print(f"   To: {contract_address}")
+            
+            # Check current balance before claiming
+            balance_before = w3.eth.get_balance(account.address)
+            balance_tao_before = w3.from_wei(balance_before, 'ether')
+            print(f"   Balance before: {balance_tao_before} TAO")
+            
+            # Build transaction
+            nonce = w3.eth.get_transaction_count(account.address)
+            gas_price = w3.eth.gas_price
+            estimated_gas = contract.functions.claimLpFeeRewards().estimate_gas(
+                {
+                    'from': account.address,
+                    'value': 0,
+                }
+            )
+
+            transaction = contract.functions.claimLpFeeRewards().build_transaction({
+                'from': account.address,
+                'gas': estimated_gas,
+                'gasPrice': gas_price,
+                'nonce': nonce,
+                'chainId': w3.eth.chain_id,
+            })
+            
+            # Sign and send transaction
+            signed_txn = w3.eth.account.sign_transaction(transaction, account.key)
+            tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
+            
+            print(f"   Transaction hash: {tx_hash.hex()}")
+            print(f"⏳ Waiting for confirmation...")
+            
+            # Wait for transaction receipt
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+            
+            # Check balance after claiming
+            balance_after = w3.eth.get_balance(account.address)
+            balance_tao_after = w3.from_wei(balance_after, 'ether')
+            claimed_amount = balance_tao_after - balance_tao_before
+            
+            print(f"✅ Rewards claimed successfully!")
+            print(f"   Block: {receipt.blockNumber}")
+            print(f"   Gas used: {receipt.gasUsed}")
+            print(f"   Claimed amount: {claimed_amount} TAO")
+            print(f"   Balance after: {balance_tao_after} TAO")
+            
+        except Exception as error:
+            print(f"❌ Failed to claim rewards: {error}")
+            sys.exit(1)
+
     def show_liquidity_stats(self, address, w3: Web3, network: str):
         """Show updated liquidity statistics"""
         try:
@@ -233,13 +294,14 @@ Examples:
   python3 tenex.py associate
   python3 tenex.py addliq --amount <amount>
   python3 tenex.py removeliq --amount <amount>
+  python3 tenex.py claim
   python3 tenex.py showstats
         """
     )
     
     parser.add_argument(
         "command",
-        choices=["associate", "addliq", "removeliq", "showstats"],
+        choices=["associate", "addliq", "removeliq", "claim", "showstats"],
         help="Command to execute"
     )
     
@@ -268,6 +330,8 @@ Examples:
     elif args.command == "removeliq":
         validate_amount(args.amount)
         cli.remove_liquidity(args.amount)
+    elif args.command == "claim":
+        cli.claim_rewards()
     elif args.command == "showstats":
         w3, network, account, hotkey = TenexUtils.get_signer_for_miner()
         cli.show_liquidity_stats(account.address, w3, network)
