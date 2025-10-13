@@ -104,20 +104,16 @@ class TenexUtils:
         return Web3(Web3.HTTPProvider(rpc_url))
 
     @staticmethod
-    def get_contract_abi(function_name: str) -> list:
+    def get_contract_abi() -> list:
         """Get contract ABI for the specified network"""
-        if function_name == "addLiquidity":
-            return [
+        return [
                 {
                     "inputs": [],
                     "name": "addLiquidity",
                     "outputs": [],
                     "stateMutability": "payable",
                     "type": "function"
-                }
-            ]
-        elif function_name == "removeLiquidity":
-            return [
+                },
                 {
                     "inputs": [
                         {"type": "uint256", "name": "amount"},
@@ -126,39 +122,14 @@ class TenexUtils:
                     "outputs": [],
                     "stateMutability": "nonpayable",
                     "type": "function"
-                }
-            ]
-        elif function_name == "claimLpFeeRewards":
-            return [
+                },
                 {
                     "inputs": [],
                     "name": "claimLpFeeRewards",
                     "outputs": [{"type": "uint256", "name": ""}],
                     "stateMutability": "nonpayable",
                     "type": "function",
-                }
-            ]
-        elif function_name == "liquidityProviders":
-            return [
-                {
-                    "inputs": [
-                        {"type": "address", "name": ""},
-                    ],
-                    "name": "liquidityProviders",
-                    "outputs": [
-                        {"type": "uint256", "name": "stake"},
-                        {"type": "uint256", "name": "rewards"},
-                        {"type": "uint256", "name": "lastRewardBlock"},
-                        {"type": "uint256", "name": "shares"},
-                        {"type": "uint256", "name": "rewardDebt"},
-                        {"type": "bool", "name": "isActive"},
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                }
-            ]
-        elif function_name == "totalPendingLpFees":
-            return [
+                },
                 {
                     "inputs": [],
                     "name": "totalPendingLpFees",
@@ -167,50 +138,35 @@ class TenexUtils:
                     ],
                     "stateMutability": "view",
                     "type": "function",
-                }
-            ]
-        elif function_name == "totalLpStakes":
-            return [
+                },
                 {
                     "inputs": [],
                     "name": "totalLpStakes",
                     "outputs": [{"type": "uint256", "name": ""}],
                     "stateMutability": "view",
                     "type": "function",
-                }
-            ]
-        elif function_name == "liquidityCircuitBreaker":
-            return [
+                },
                 {
                     "inputs": [],
                     "name": "liquidityCircuitBreaker",
                     "outputs": [{"type": "bool", "name": ""}],
                     "stateMutability": "view",
                     "type": "function",
-                }
-            ]
-        elif function_name == "setAssociate":
-            return [
+                },
                 {
                     "inputs": [{"type": "bytes32", "name": "hotkey"}],
                     "name": "setAssociate",
                     "outputs": [{"type": "bool", "name": ""}],
                     "stateMutability": "nonpayable",
                     "type": "function",
-                }
-            ]
-        elif function_name == "setWeights":
-            return [
+                },
                 {
                     "inputs": [],
                     "name": "setWeights",
                     "outputs": [],
                     "stateMutability": "nonpayable",
                     "type": "function",
-                }
-            ]
-        elif function_name == "NormalValidationFunctions":
-            return [
+                },
                 {
                     "inputs": [],
                     "name": "maxLiquidityProvidersPerHotkey",
@@ -268,17 +224,122 @@ class TenexUtils:
                         }],
                     "stateMutability": "view",
                     "type": "function",
+                },
+                {
+                    "inputs": [
+                        {"type": "uint16", "name": "alphaNetuid"},
+                        {"type": "uint256", "name": "leverage"},
+                        {"type": "uint256", "name": "maxSlippage"}
+                    ],
+                    "name": "openPosition",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {"type": "uint256", "name": "positionId"},
+                        {"type": "uint256", "name": "amountToClose"},
+                        {"type": "uint256", "name": "maxSlippage"}
+                    ],
+                    "name": "closePosition",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [{"type": "uint256", "name": "positionId"}],
+                    "name": "addCollateral",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {"type": "address", "name": "user"},
+                        {"type": "uint256", "name": "positionId"}
+                    ],
+                    "name": "positions",
+                    "outputs": [
+                        {
+                            "internalType": "uint16",
+                            "name": "alphaNetuid",
+                            "type": "uint16"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "initialCollateral",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "addedCollateral",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "borrowed",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "alphaAmount",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "leverage",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "entryPrice",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "lastUpdateBlock",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "accruedFees",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "borrowingFeeDebt",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "bytes32",
+                            "name": "validatorHotkey",
+                            "type": "bytes32"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "isActive",
+                            "type": "bool"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [{"type": "address", "name": "user"}],
+                    "name": "nextPositionId",
+                    "outputs": [{"type": "uint256", "name": ""}],
+                    "stateMutability": "view",
+                    "type": "function"
                 }
             ]
-        else:
-            raise ValueError(f"Unsupported function: {function_name}")
 
     @staticmethod
-    def get_contract(function_name:str, w3: Web3, network: str, contract_name: str) -> Any:
+    def get_contract(w3: Web3, network: str, contract_name: str) -> Any:
         """Get contract for the specified function"""
         return w3.eth.contract(
             address=TenexUtils.get_proxy_address(network, contract_name),
-            abi=TenexUtils.get_contract_abi(function_name)
+            abi=TenexUtils.get_contract_abi()
         )
 
     @staticmethod
