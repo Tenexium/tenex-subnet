@@ -91,7 +91,7 @@ task("deploy:new_proxy", "Deploy Tenexium Protocol with upgradeable parameters")
                     deployConfig.buybackRate,
                     deployConfig.buybackIntervalBlocks,
                     deployConfig.buybackExecutionThreshold,
-                    deployConfig.protocolFeeGoveranceShare,
+                    deployConfig.protocolFeeGovernanceShare,
                     deployConfig.protocolFeeInsuranceShare,
                     deployConfig.lpFeeInsuranceShare,
                     deployConfig.perfFeeInsuranceShare,

@@ -44,6 +44,7 @@ library TenexiumErrors {
     error LiquiFeeTransferFailed();
     error CollateralReturnFailed();
     error PositionNotFound();
+    error LiquidationCooldownActive();
 
     // Rewards
     error NoRewards();

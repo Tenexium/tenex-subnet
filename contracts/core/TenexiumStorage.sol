@@ -48,7 +48,7 @@ contract TenexiumStorage {
     uint256 public buybackExecutionThreshold; // Min balance to execute buyback
 
     // Share parameters
-    uint256 public protocolFeeGoveranceShare; // Protocol fee goverance share
+    uint256 public protocolFeeGovernanceShare; // Protocol fee governance share
     uint256 public protocolFeeInsuranceShare; // Protocol fee insurance share
 
     // Fee parameters
@@ -212,29 +212,29 @@ contract TenexiumStorage {
     // ==================== STRUCTS ====================
 
     struct Position {
+        uint16 alphaNetuid; // Alpha subnet ID for this position
         uint256 initialCollateral; // TAO initial collateral amount
+        uint256 addedCollateral; // TAO added collateral amount
         uint256 borrowed; // TAO borrowed amount
         uint256 alphaAmount; // Alpha tokens held
         uint256 leverage; // Position leverage
         uint256 entryPrice; // Alpha price at entry
         uint256 lastUpdateBlock; // Last position update block
         uint256 accruedFees; // Accrued borrowing fees
-        bool isActive; // Position status
-        bytes32 validatorHotkey; // Validator hotkey used to stake alpha for this position
-        uint16 alphaNetuid; // Alpha subnet ID for this position
         uint256 borrowingFeeDebt; // Borrowing fee debt at position opening
-        uint256 addedCollateral; // TAO added collateral amount
+        bytes32 validatorHotkey; // Validator hotkey used to stake alpha for this position
+        bool isActive; // Position status
     }
 
     struct AlphaPair {
-        uint16 netuid; // Subnet ID
+        uint16 alphaNetuid; // Subnet ID
         uint256 totalCollateral; // Total collateral in pair
         uint256 totalBorrowed; // Total borrowed amount
         uint256 totalAlphaStaked; // Total alpha staked in pair
         uint256 liquidationThreshold; // Liquidation threshold
         uint256 maxLeverage; // Maximum leverage allowed
-        bool isActive; // Pair status
         bytes32 validatorHotkey; // Validator hotkey
+        bool isActive; // Pair status
     }
 
     struct LiquidityProvider {
