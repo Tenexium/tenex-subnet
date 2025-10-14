@@ -17,7 +17,7 @@ class TenexiumValidator:
             block=self.subtensor.get_current_block(),
         )
         self.last_weight_update_block = self.subtensor.get_current_block()
-        self.tenexium_contract = TenexUtils.get_contract("NormalValidationFunctions", self.w3, self.network, "tenexiumProtocol")
+        self.tenexium_contract = TenexUtils.get_contract(self.w3, self.network, "tenexiumProtocol")
         # Check if the hotkey is registered
         self.check_registered()
         bt.logging.setLevel(self.logging_level)

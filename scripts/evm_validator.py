@@ -16,7 +16,7 @@ class TenexiumValidator:
     def __init__(self):
         """Initializes the Tenexium Validator"""
         self.w3, self.network, self.account, self.weight_update_interval_blocks = TenexUtils.get_signer_for_evm_validator()
-        self.contract = TenexUtils.get_contract("setWeights", self.w3, self.network, "subnetManager")
+        self.contract = TenexUtils.get_contract(self.w3, self.network, "subnetManager")
         self.contract_hotkey = TenexUtils.h160_to_ss58(self.contract.address)
         self.last_weight_update_block = self.w3.eth.get_block_number()
         self.signer_hotkey = TenexUtils.h160_to_ss58(self.account.address)
