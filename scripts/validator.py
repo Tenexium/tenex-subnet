@@ -116,12 +116,21 @@ class TenexiumValidator:
         bt.logging.debug(f"Unnormalized weights: {uint_weights}")
 
         total_weight = sum(uint_weights)
-        
+
+        miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
+        total_liquidity = float(total_weight / 10**18)
+        miner_apy = 0.5
+        if miner_daily_emission > 0:
+            burn_percentage = max(0, 1 - total_liquidity * ((1 + miner_apy)**(1/365) - 1) / miner_daily_emission)
+        else:
+            burn_percentage = 0
+
         if total_weight == 0:
             uint_weights[0] = U16_MAX
         else:
+            uint_weights[0] = U16_MAX * burn_percentage
             for i in range(1, len(uint_weights)):
-                uint_weights[i] = (uint_weights[i] * U16_MAX) / total_weight
+                uint_weights[i] = (uint_weights[i] * U16_MAX * (1 - burn_percentage)) / total_weight
         return uint_uids, uint_weights
     
     def get_unnormalized_weights(self):
