@@ -267,8 +267,8 @@ class TenexCLI:
             alpha_amount = position_data[4]
             leverage = position_data[5]
             entry_price = position_data[6]
-            validator_hotkey = position_data[10]
-            is_active = position_data[11]
+            validator_hotkey = position_data[9]
+            is_active = position_data[10]
             
             # Convert wei to TAO
             initial_collateral_tao = self.w3.from_wei(initial_collateral, 'ether')

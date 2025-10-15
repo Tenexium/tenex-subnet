@@ -18,7 +18,6 @@ interface PositionStats {
     alphaAmount: bigint;
     leverage: bigint;
     entryPrice: bigint;
-    accruedFees: bigint;
     isActive: boolean;
     alphaNetuid: number;
     borrowingFeeDebt: bigint;
@@ -27,7 +26,6 @@ interface PositionStats {
 interface UserStats {
     totalCollateral: bigint;
     totalBorrowed: bigint;
-    totalVolume: bigint;
     nextPositionId: bigint;
 }
 
@@ -47,12 +45,11 @@ async function getFeeStats(contract: any): Promise<FeeStats> {
 async function getPositionStats(contract: any, userAddress: string, positionId: bigint): Promise<PositionStats> {
     const position = await contract.positions(userAddress, positionId);
     return {
-        collateral: position.collateral,
+        collateral: position.initialCollateral + position.addedCollateral,
         borrowed: position.borrowed,
         alphaAmount: position.alphaAmount,
         leverage: position.leverage,
         entryPrice: position.entryPrice,
-        accruedFees: position.accruedFees,
         isActive: position.isActive,
         alphaNetuid: position.alphaNetuid,
         borrowingFeeDebt: position.borrowingFeeDebt
@@ -63,7 +60,6 @@ async function getUserStats(contract: any, userAddress: string): Promise<UserSta
     return {
         totalCollateral: await contract.userCollateral(userAddress),
         totalBorrowed: await contract.userTotalBorrowed(userAddress),
-        totalVolume: await contract.userTotalVolume(userAddress),
         nextPositionId: await contract.nextPositionId(userAddress)
     };
 }
@@ -87,7 +83,6 @@ function formatPositionStats(stats: PositionStats, positionId: bigint): void {
     console.log(`   Alpha Amount: ${ethers.formatUnits(stats.alphaAmount, 9)} Alpha`);
     console.log(`   Leverage: ${ethers.formatUnits(stats.leverage, 9)}x`);
     console.log(`   Entry Price: ${ethers.formatEther(stats.entryPrice)} TAO/Alpha`);
-    console.log(`   Accrued Fees: ${ethers.formatEther(stats.accruedFees)} TAO`);
     console.log(`   Is Active: ${stats.isActive}`);
     console.log(`   Alpha Netuid: ${stats.alphaNetuid}`);
     console.log(`   Borrowing Fee Debt: ${ethers.formatEther(stats.borrowingFeeDebt)} TAO`);
@@ -97,7 +92,6 @@ function formatUserStats(stats: UserStats): void {
     console.log("👤 User Statistics:");
     console.log(`   Total Collateral: ${ethers.formatEther(stats.totalCollateral)} TAO`);
     console.log(`   Total Borrowed: ${ethers.formatEther(stats.totalBorrowed)} TAO`);
-    console.log(`   Total Volume: ${ethers.formatEther(stats.totalVolume)} TAO`);
     console.log(`   Next Position ID: ${stats.nextPositionId.toString()}`);
 }
 
@@ -215,17 +209,8 @@ async function main() {
         console.log("\n⏳ Waiting 30 seconds to simulate time passing...");
         await new Promise(resolve => setTimeout(resolve, 30000));
         
-        // Step 3: Check position after time has passed
-        console.log("\n🔄 Step 3: Checking Position After Time Passed...");
-        const updatedPositionStats = await getPositionStats(TenexiumProtocol, userAddress, nextPositionId);
-        formatPositionStats(updatedPositionStats, nextPositionId);
-        
-        // Calculate borrowing fees accrued
-        const borrowingFeesAccrued = updatedPositionStats.accruedFees - positionStats.accruedFees;
-        console.log(`\n💸 Borrowing Fees Accrued: ${ethers.formatEther(borrowingFeesAccrued)} TAO`);
-        
-        // Step 4: Close Position (partial close)
-        console.log("\n🔒 Step 4: Closing Position (Full Close)...");
+        // Step 3: Close Position (partial close)
+        console.log("\n🔒 Step 3: Closing Position (Full Close)...");
         const closeTx = await TenexiumProtocol.closePosition(nextPositionId, 0, maxSlippage);
         console.log(`   Transaction Hash: ${closeTx.hash}`);
         await closeTx.wait();

@@ -303,11 +303,6 @@ class TenexUtils:
                         },
                         {
                             "internalType": "uint256",
-                            "name": "accruedFees",
-                            "type": "uint256"
-                        },
-                        {
-                            "internalType": "uint256",
                             "name": "borrowingFeeDebt",
                             "type": "uint256"
                         },

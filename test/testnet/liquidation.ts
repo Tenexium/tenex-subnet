@@ -102,10 +102,19 @@ async function main() {
         const p = await TenexiumProtocol.positions(signer.address, nextPositionId);
         const pairAfter = await TenexiumProtocol.alphaPairs(alphaNetuid);
         const simRao: bigint = await alpha.simSwapAlphaForTao(alphaNetuid, p.alphaAmount);
+        
+        // Convert rao to wei: 1 rao = 1e9 wei (WEI_PER_RAO = 1e9)
         const valueWei = simRao * 10n ** 9n + p.addedCollateral;
-        const debt = p.borrowed + p.accruedFees; // approximation; actual liquidation uses dynamic fee calc
-        const ratio = debt === 0n ? 0n : (valueWei * (10n ** 9n)) / debt; // use PRECISION=1e9 scale
-        return { ratio, threshold: pairAfter.liquidationThreshold, valueWei, debt };
+        
+        // Calculate dynamic fees using the same logic as smart contract
+        // Fee = (currentAccruedBorrowingFees - positionBorrowingFeeDebt) * positionBorrowedAmount / PRECISION
+        const accruedBorrowingFees = await TenexiumProtocol.accruedBorrowingFees();
+        const feeAccumulator = accruedBorrowingFees - p.borrowingFeeDebt;
+        const dynamicFees = (p.borrowed * feeAccumulator) / (10n ** 9n); // PRECISION = 1e9
+        
+        const totalDebt = p.borrowed + dynamicFees;
+        const ratio = totalDebt === 0n ? 0n : (valueWei * (10n ** 9n)) / totalDebt; // use PRECISION=1e9 scale
+        return { ratio, threshold: pairAfter.liquidationThreshold, valueWei, debt: totalDebt };
     }
 
     const health0 = await computeHealth();

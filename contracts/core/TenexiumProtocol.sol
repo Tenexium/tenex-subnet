@@ -266,7 +266,9 @@ contract TenexiumProtocol is
         uint256[3] calldata _borrowing,
         uint256[3] calldata _liquidation
     ) external onlyOwner {
-        if (_trading[0] + _trading[1] + _trading[2] != PRECISION) revert TenexiumErrors.DistributionInvalid();
+        if (_trading[0] + _trading[1] + _trading[2] != PRECISION) {
+            revert TenexiumErrors.DistributionInvalid();
+        }
         if (_borrowing[0] + _borrowing[1] + _borrowing[2] != PRECISION) revert TenexiumErrors.DistributionInvalid();
         if (_liquidation[0] + _liquidation[1] + _liquidation[2] != PRECISION) {
             revert TenexiumErrors.DistributionInvalid();
@@ -607,11 +609,7 @@ contract TenexiumProtocol is
      * @param user Address of the position owner
      * @param positionId User's position identifier
      */
-    function liquidatePosition(address user, uint256 positionId)
-        external
-        validPosition(user, positionId)
-        nonReentrant
-    {
+    function liquidatePosition(address user, uint256 positionId) external validPosition(user, positionId) nonReentrant {
         // Prevent multiple calls in the same block
         if (lastLiquidationBlock[msg.sender][user][positionId] == block.number) {
             revert TenexiumErrors.LiquidationCooldownActive();
