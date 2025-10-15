@@ -103,9 +103,8 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200] =
             dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200].safeAdd(simulatedTaoValue);
 
-        uint256 insuranceAmountRequired = totalLpStakes.safeSub(totalBorrowed).safeAdd(totalPendingLpFees).safeAdd(
-            protocolFees
-        ).safeAdd(buybackPool).safeSub(address(this).balance);
+        uint256 insuranceAmountRequired = totalLpStakes.safeSub(totalBorrowed).safeAdd(totalPendingLpFees)
+            .safeAdd(protocolFees).safeAdd(buybackPool).safeSub(address(this).balance);
         uint256 availableInsurance = IInsuranceManager(insuranceManager).getNetBalance();
         if (insuranceAmountRequired < availableInsurance && insuranceAmountRequired > 0) {
             IInsuranceManager(insuranceManager).fund(insuranceAmountRequired);

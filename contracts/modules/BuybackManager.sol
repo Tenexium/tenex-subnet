@@ -57,9 +57,8 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         if (block.number < lastBuybackBlock + buybackIntervalBlocks) return false;
         // Enforce minimum pool threshold before executing to avoid dust buybacks
         if (buybackPool < buybackExecutionThreshold) return false;
-        uint256 availableBalance = address(this).balance.safeAdd(totalBorrowed).safeSub(totalLpStakes).safeSub(
-            totalPendingLpFees
-        ).safeSub(protocolFees);
+        uint256 availableBalance = address(this).balance.safeAdd(totalBorrowed).safeSub(totalLpStakes)
+            .safeSub(totalPendingLpFees).safeSub(protocolFees);
         return availableBalance >= buybackPool;
     }
 }
