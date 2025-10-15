@@ -39,6 +39,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
 
         // Unstake alpha to get TAO using the validator hotkey used at open
         uint256 taoReceived = _unstakeAlphaForTao(position.validatorHotkey, position.alphaAmount, 0, false, alphaNetuid);
+        taoReceived = taoReceived.safeAdd(position.addedCollateral);
 
         if (taoReceived == 0) revert TenexiumErrors.UnstakeFailed();
 
@@ -53,7 +54,8 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         remaining = remaining.safeSub(debtRepayment);
 
         // 2. Distribute liquidation fee on actual proceeds (post-debt)
-        uint256 liquidationFeeAmount = remaining.safeMul(liquidationFeeRate) / PRECISION;
+        uint256 liquidationFeeAmount = taoReceived.safeMul(liquidationFeeRate) / PRECISION;
+        liquidationFeeAmount = liquidationFeeAmount > remaining ? remaining : liquidationFeeAmount;
         uint256 liquidatorFeeShare = liquidationFeeAmount.safeMul(liquidationFeeLiquidatorShare) / PRECISION;
         // Liquidator gets 100% of the liquidator share directly
         if (liquidatorFeeShare > 0) {
