@@ -88,7 +88,6 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         position.borrowed = 0;
         position.initialCollateral = 0;
         position.addedCollateral = 0;
-        position.accruedFees = 0;
         position.isActive = false;
 
         // Update liquidation statistics
@@ -111,7 +110,14 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         }
 
         emit PositionLiquidated(
-            user, msg.sender, positionId, alphaNetuid, simulatedTaoValue, liquidationFeeAmount, liquidatorFeeShare
+            user,
+            msg.sender,
+            positionId,
+            alphaNetuid,
+            simulatedTaoValue,
+            accruedFees,
+            liquidationFeeAmount,
+            liquidatorFeeShare
         );
     }
 

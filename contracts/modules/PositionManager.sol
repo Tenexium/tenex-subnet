@@ -85,7 +85,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         position.leverage = leverage;
         position.entryPrice = entryPrice;
         position.lastUpdateBlock = block.number;
-        position.accruedFees = 0;
         position.borrowingFeeDebt = accruedBorrowingFees;
         position.isActive = true;
         position.validatorHotkey = validatorHotkey;
@@ -112,9 +111,9 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             alphaNetuid,
             collateralAmount,
             borrowedAmount,
+            taoToStakeNet,
             actualAlphaReceived,
-            leverage,
-            entryPrice
+            tradingFeeAmount
         );
     }
 
@@ -130,7 +129,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint16 alphaNetuid = position.alphaNetuid;
 
         // Calculate accrued borrowing fees
-        position.accruedFees = _calculatePositionFees(msg.sender, positionId);
+        uint256 accruedFees = _calculatePositionFees(msg.sender, positionId);
 
         uint256 alphaToClose = amountToClose == 0 ? position.alphaAmount : amountToClose;
         if (alphaToClose > position.alphaAmount) revert TenexiumErrors.InvalidValue();
@@ -148,7 +147,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         // Calculate position components to repay
         uint256 borrowedToRepay = position.borrowed.safeMul(alphaToClose) / position.alphaAmount;
         uint256 initialCollateralToReturn = position.initialCollateral.safeMul(alphaToClose) / position.alphaAmount;
-        uint256 feesToPay = position.accruedFees.safeMul(alphaToClose) / position.alphaAmount;
+        uint256 feesToPay = accruedFees.safeMul(alphaToClose) / position.alphaAmount;
         uint256 addedCollateralToReturn = position.addedCollateral.safeMul(alphaToClose) / position.alphaAmount;
 
         // Calculate trading fees using actual TAO value on close leg
@@ -185,14 +184,12 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             position.borrowed = 0;
             position.initialCollateral = 0;
             position.addedCollateral = 0;
-            position.accruedFees = 0;
         } else {
             // Partial close
             position.alphaAmount = position.alphaAmount.safeSub(alphaToClose);
             position.borrowed = position.borrowed.safeSub(borrowedToRepay);
             position.initialCollateral = position.initialCollateral.safeSub(initialCollateralToReturn);
             position.addedCollateral = position.addedCollateral.safeSub(addedCollateralToReturn);
-            position.accruedFees = position.accruedFees.safeSub(feesToPay);
         }
 
         // Update global state
@@ -223,19 +220,15 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         userWeeklyTradingVolume[msg.sender][currentWeek] =
             userWeeklyTradingVolume[msg.sender][currentWeek].safeAdd(actualTaoReceived);
 
-        // Calculate realized PnL (profit and loss)
-        int256 pnl = int256(actualTaoReceived) - int256(borrowedToRepay + feesToPay) - int256(initialCollateralToReturn);
-
         emit PositionClosed(
             msg.sender,
             positionId,
             alphaNetuid,
-            initialCollateralToReturn,
-            addedCollateralToReturn,
+            initialCollateralToReturn + addedCollateralToReturn,
             borrowedToRepay,
             alphaToClose,
-            pnl,
-            tradingFeeAmount
+            actualTaoReceived,
+            feesToPay
         );
     }
 

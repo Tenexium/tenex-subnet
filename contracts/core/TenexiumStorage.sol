@@ -220,7 +220,6 @@ contract TenexiumStorage {
         uint256 leverage; // Position leverage
         uint256 entryPrice; // Alpha price at entry
         uint256 lastUpdateBlock; // Last position update block
-        uint256 accruedFees; // Accrued borrowing fees
         uint256 borrowingFeeDebt; // Borrowing fee debt at position opening
         bytes32 validatorHotkey; // Validator hotkey used to stake alpha for this position
         bool isActive; // Position status

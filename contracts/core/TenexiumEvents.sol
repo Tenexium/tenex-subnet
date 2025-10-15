@@ -20,21 +20,20 @@ contract TenexiumEvents {
         uint16 alphaNetuid,
         uint256 collateral,
         uint256 borrowed,
-        uint256 alphaAmount,
-        uint256 leverage,
-        uint256 entryPrice
+        uint256 taoAmountStaked,
+        uint256 actualAlphaReceived,
+        uint256 feesPaid
     );
 
     event PositionClosed(
         address indexed user,
         uint256 indexed positionId,
         uint16 alphaNetuid,
-        uint256 initialCollateralReturned,
-        uint256 addedCollateralReturned,
+        uint256 collateralReturned,
         uint256 borrowedRepaid,
-        uint256 alphaAmount,
-        int256 pnl,
-        uint256 fees
+        uint256 alphaAmountClosed,
+        uint256 actualTaoReceived,
+        uint256 feesPaid
     );
 
     event CollateralAdded(address indexed user, uint256 indexed positionId, uint16 alphaNetuid, uint256 amount);
@@ -47,8 +46,9 @@ contract TenexiumEvents {
         uint256 indexed positionId,
         uint16 alphaNetuid,
         uint256 positionValue,
-        uint256 liquidationFee,
-        uint256 liquidatorBonus
+        uint256 borrowingFeesPaid,
+        uint256 liquidationFeePaid,
+        uint256 liquidatorBonusPaid
     );
 
     // ==================== FEE EVENTS ====================
