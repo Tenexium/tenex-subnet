@@ -167,9 +167,9 @@ Eligible Tenex alpha holders receive tier-based fee discounts and higher maximum
 | 0    | 0               | 2×           | 0%           |
 | 1    | 100             | 3×           | 10%          |
 | 2    | 1,000           | 4×           | 20%          |
-| 3    | 5,000           | 5×           | 30%          |
-| 4    | 20,000          | 7×           | 40%          |
-| 5    | 100,000         | 10×          | 50%          |
+| 3    | 2,000           | 5×           | 30%          |
+| 4    | 5,000           | 7×           | 40%          |
+| 5    | 10,000          | 10×          | 50%          |
 
 > **Note**: Maximum leverage is enforced at position open and cannot exceed the user's tier cap.
 
