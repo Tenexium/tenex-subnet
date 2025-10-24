@@ -766,7 +766,9 @@ contract TenexiumProtocol is
                 if (userReward > 0) {
                     // Transfer reward to user
                     (bool success,) = payable(user).call{value: userReward}("");
-                    if (!success) revert TenexiumErrors.TransferFailed();
+                    if (!success) {
+                        continue;
+                    }
                 }
             }
         }
