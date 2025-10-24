@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.28;
 
 import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";
@@ -59,8 +59,12 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         uint256 liquidatorFeeShare = liquidationFeeAmount.safeMul(liquidationFeeLiquidatorShare) / PRECISION;
         // Liquidator gets 100% of the liquidator share directly
         if (liquidatorFeeShare > 0) {
-            (bool success,) = msg.sender.call{value: liquidatorFeeShare}("");
-            if (!success) revert TenexiumErrors.LiquiFeeTransferFailed();
+            liquidatorReward[liquidators[user][positionId][0]] =
+                liquidatorReward[liquidators[user][positionId][0]].safeAdd(liquidatorFeeShare / 2);
+            for (uint256 i = 1; i < maxLiquidationCount; i++) {
+                liquidatorReward[liquidators[user][positionId][i]] =
+                    liquidatorReward[liquidators[user][positionId][i]].safeAdd(liquidatorFeeShare / 8);
+            }
         }
         uint256 protocolFeeShare = liquidationFeeAmount.safeMul(liquidationFeeProtocolShare) / PRECISION;
         if (protocolFeeShare > 0) {
@@ -78,11 +82,12 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
 
         // Update global statistics before clearing position fields
         totalBorrowed = totalBorrowed.safeSub(position.borrowed);
-        totalCollateral = totalCollateral.safeSub(position.initialCollateral);
+        totalCollateral = totalCollateral.safeSub(position.initialCollateral).safeSub(position.addedCollateral);
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(position.borrowed);
-        pair.totalCollateral = pair.totalCollateral.safeSub(position.initialCollateral);
+        pair.totalCollateral =
+            pair.totalCollateral.safeSub(position.initialCollateral).safeSub(position.addedCollateral);
         pair.totalAlphaStaked = pair.totalAlphaStaked.safeSub(position.alphaAmount);
 
         // Clear the liquidated position
@@ -95,13 +100,16 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         // Update liquidation statistics
         totalLiquidations = totalLiquidations + 1;
         totalLiquidationValue = totalLiquidationValue.safeAdd(simulatedTaoValue);
-        totalLiquidatorLiquidations[msg.sender] = totalLiquidatorLiquidations[msg.sender] + 1;
-        totalLiquidatorLiquidationValue[msg.sender] =
-            totalLiquidatorLiquidationValue[msg.sender].safeAdd(simulatedTaoValue);
-        dailyLiquidatorLiquidations[msg.sender][block.number / 7200] =
-            dailyLiquidatorLiquidations[msg.sender][block.number / 7200] + 1;
-        dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200] =
-            dailyLiquidatorLiquidationValue[msg.sender][block.number / 7200].safeAdd(simulatedTaoValue);
+        for (uint256 i = 0; i < maxLiquidationCount; i++) {
+            address liquidator = liquidators[user][positionId][i];
+            totalLiquidatorLiquidations[liquidator] = totalLiquidatorLiquidations[liquidator] + 1;
+            totalLiquidatorLiquidationValue[liquidator] =
+                totalLiquidatorLiquidationValue[liquidator].safeAdd(simulatedTaoValue);
+            dailyLiquidatorLiquidations[liquidator][block.number / 7200] =
+                dailyLiquidatorLiquidations[liquidator][block.number / 7200] + 1;
+            dailyLiquidatorLiquidationValue[liquidator][block.number / 7200] =
+                dailyLiquidatorLiquidationValue[liquidator][block.number / 7200].safeAdd(simulatedTaoValue);
+        }
 
         uint256 insuranceAmountRequired = totalLpStakes.safeSub(totalBorrowed).safeAdd(totalPendingLpFees)
             .safeAdd(protocolFees).safeAdd(buybackPool).safeSub(address(this).balance);
