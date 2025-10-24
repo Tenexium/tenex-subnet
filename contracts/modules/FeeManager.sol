@@ -46,7 +46,11 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         }
 
         // Update distribution tracking
-        totalTradingFees = isTrading ? totalTradingFees.safeAdd(feeAmount) : totalBorrowingFees.safeAdd(feeAmount);
+        if (isTrading) {
+            totalTradingFees = totalTradingFees.safeAdd(feeAmount);
+        } else {
+            totalBorrowingFees = totalBorrowingFees.safeAdd(feeAmount);
+        }
 
         emit FeesDistributed(protocolFeeAmount, lpFeeAmount);
     }
