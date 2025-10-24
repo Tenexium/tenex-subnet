@@ -409,13 +409,16 @@ contract TenexiumProtocol is
      * @notice Add a new alpha pair for trading
      * @param alphaNetuid Alpha subnet ID
      * @param maxLeverageForPair Maximum leverage for this pair
-     * @dev Uses global liquidation threshold for all pairs
+     * @param liquidationThresholdForPair Liquidation threshold for this pair
+     * @param validatorHotkey Validator hotkey for this pair
+     * @param maxSlippageForPair Maximum slippage for this pair
      */
     function addAlphaPair(
         uint16 alphaNetuid,
         uint256 maxLeverageForPair,
         uint256 liquidationThresholdForPair,
-        bytes32 validatorHotkey
+        bytes32 validatorHotkey,
+        uint256 maxSlippageForPair
     ) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
         if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
@@ -423,12 +426,14 @@ contract TenexiumProtocol is
         if (liquidationThresholdForPair < (105 * PRECISION) / 100) {
             revert TenexiumErrors.ThresholdTooLow();
         }
+        if (maxSlippageForPair > 1000) revert TenexiumErrors.SlippageTooHigh();
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.alphaNetuid = alphaNetuid;
         pair.maxLeverage = maxLeverageForPair;
         pair.liquidationThreshold = liquidationThresholdForPair;
         pair.validatorHotkey = validatorHotkey;
+        pair.maxSlippage = maxSlippageForPair;
         pair.isActive = true;
     }
 
@@ -449,19 +454,23 @@ contract TenexiumProtocol is
         pair.maxLeverage = 0;
         pair.liquidationThreshold = 0;
         pair.validatorHotkey = bytes32(0);
+        pair.maxSlippage = 0;
     }
 
     /**
      * @notice Update alpha pair parameters
      * @param alphaNetuid Alpha subnet ID
      * @param newMaxLeverage New maximum leverage for this pair
+     * @param newLiquidationThreshold New liquidation threshold for this pair
      * @param newValidatorHotkey New validator hotkey for this pair
+     * @param newMaxSlippage New maximum slippage for this pair
      */
     function updateAlphaPairParameters(
         uint16 alphaNetuid,
         uint256 newMaxLeverage,
         uint256 newLiquidationThreshold,
-        bytes32 newValidatorHotkey
+        bytes32 newValidatorHotkey,
+        uint256 newMaxSlippage
     ) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing();
@@ -470,10 +479,12 @@ contract TenexiumProtocol is
             revert TenexiumErrors.ThresholdTooLow();
         }
         if (newValidatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
+        if (newMaxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
 
         pair.maxLeverage = newMaxLeverage;
         pair.liquidationThreshold = newLiquidationThreshold;
         pair.validatorHotkey = newValidatorHotkey;
+        pair.maxSlippage = newMaxSlippage;
     }
 
     // ==================== EMERGENCY FUNCTIONS ====================

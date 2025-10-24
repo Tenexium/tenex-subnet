@@ -24,10 +24,9 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
      * @param maxSlippage Maximum acceptable slippage (in basis points)
      */
     function _openPosition(uint16 alphaNetuid, uint256 leverage, uint256 maxSlippage) internal {
-        if (maxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
-        if (msg.value < 1e17) revert TenexiumErrors.MinDeposit();
-
         AlphaPair storage pair = alphaPairs[alphaNetuid];
+        if (maxSlippage > pair.maxSlippage) revert TenexiumErrors.SlippageTooHigh();
+        if (msg.value < 1e17) revert TenexiumErrors.MinDeposit();
 
         // Check tier-based leverage limit
         uint256 userMaxLeverage = _getUserMaxLeverage(msg.sender);
@@ -124,9 +123,10 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
      * @param maxSlippage Maximum acceptable slippage (in basis points)
      */
     function _closePosition(uint256 positionId, uint256 amountToClose, uint256 maxSlippage) internal {
-        if (maxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
         Position storage position = positions[msg.sender][positionId];
         uint16 alphaNetuid = position.alphaNetuid;
+        AlphaPair storage pair = alphaPairs[alphaNetuid];
+        if (maxSlippage > pair.maxSlippage) revert TenexiumErrors.SlippageTooHigh();
 
         // Calculate accrued borrowing fees
         uint256 accruedFees = _calculatePositionFees(msg.sender, positionId);
@@ -199,7 +199,6 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         userCollateral[msg.sender] =
             userCollateral[msg.sender].safeSub(initialCollateralToReturn).safeSub(addedCollateralToReturn);
 
-        AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.totalBorrowed = pair.totalBorrowed.safeSub(borrowedToRepay);
         pair.totalCollateral = pair.totalCollateral.safeSub(initialCollateralToReturn).safeSub(addedCollateralToReturn);
         pair.totalAlphaStaked = pair.totalAlphaStaked.safeSub(alphaToClose);

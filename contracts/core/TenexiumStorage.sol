@@ -237,6 +237,7 @@ contract TenexiumStorage {
         uint256 liquidationThreshold; // Liquidation threshold
         uint256 maxLeverage; // Maximum leverage allowed
         bytes32 validatorHotkey; // Validator hotkey
+        uint256 maxSlippage; // Maximum slippage allowed
         bool isActive; // Pair status
     }
 
