@@ -25,10 +25,11 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
     function _executeBuyback() internal {
         if (!_canExecuteBuyback()) revert TenexiumErrors.BuybackConditionsNotMet();
 
-        uint256 buybackAmount = buybackPool;
+        uint256 buybackAmountRao = buybackPool.weiToRao();
+        uint256 buybackAmount = buybackAmountRao.raoToWei();
 
         // Buyback Alpha tokens
-        uint256 expectedAlpha = ALPHA_PRECOMPILE.simSwapTaoForAlpha(TENEX_NETUID, uint64(buybackAmount.weiToRao()));
+        uint256 expectedAlpha = ALPHA_PRECOMPILE.simSwapTaoForAlpha(TENEX_NETUID, uint64(buybackAmountRao));
         if (expectedAlpha == 0) revert TenexiumErrors.SwapSimInvalid();
 
         expectedAlpha = expectedAlpha.safeMul(9500) / 10000; // 5% slippage buffer

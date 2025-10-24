@@ -71,7 +71,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (actualAlphaReceived < minAcceptableAlpha) revert TenexiumErrors.SlippageTooHigh();
 
         // Get current alpha price for entry tracking
-        uint256 entryPrice = (taoToStakeNet / expectedAlphaAmount).raoToWei();
+        uint256 entryPrice = (taoToStakeNet / actualAlphaReceived).raoToWei();
 
         // Create new position with a unique per-user positionId
         uint256 positionId = nextPositionId[msg.sender];
