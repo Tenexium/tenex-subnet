@@ -22,5 +22,7 @@ exclude_lints = [
   "mixed-case-variable", 
   "mixed-case-function", 
   "pascal-case-struct", 
-  "screaming-snake-case-immutable"
+  "screaming-snake-case-immutable",
+  "unwrapped-modifier-logic",
+  "unsafe-typecast"
 ]
