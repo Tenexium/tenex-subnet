@@ -276,7 +276,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
      * @notice Get user's maximum leverage based on tier thresholds
      */
     function _getUserMaxLeverage(address user) internal view returns (uint256 maxLeverageOut) {
-        bytes32 user_ss58Pubkey = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(user);
+        bytes32 user_ss58Pubkey = addressConversionContract.addressToSS58Pub(user);
         uint256 balance = STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, user_ss58Pubkey, TENEX_NETUID);
         if (balance >= tier5Threshold) return tier5MaxLeverage;
         if (balance >= tier4Threshold) return tier4MaxLeverage;

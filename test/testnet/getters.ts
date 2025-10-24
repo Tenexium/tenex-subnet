@@ -204,7 +204,7 @@ async function main() {
         const insuranceManager = await TenexiumProtocol.insuranceManager();
         console.log("Insurance Manager Address:", insuranceManager);
 
-        const addressConversionContract = await TenexiumProtocol.ADDRESS_CONVERSION_CONTRACT();
+        const addressConversionContract = await TenexiumProtocol.addressConversionContract();
         console.log("Address Conversion Contract:", addressConversionContract);
 
         // ==================== PROTOCOL CONFIGURATION ====================
@@ -338,7 +338,6 @@ async function main() {
         console.log("  - Leverage:", ethers.formatUnits(userPosition.leverage, 9), "x");
         console.log("  - Entry Price:", ethers.formatEther(userPosition.entryPrice), "TAO");
         console.log("  - Last Update Block:", userPosition.lastUpdateBlock.toString());
-        console.log("  - Accrued Fees:", ethers.formatEther(userPosition.accruedFees), "TAO");
         console.log("  - Is Active:", userPosition.isActive);
         console.log("  - Validator Hotkey:", userPosition.validatorHotkey);
 

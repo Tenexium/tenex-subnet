@@ -353,7 +353,7 @@ contract TenexiumProtocol is
      */
     function updateAddressConversionContract(address newAddressConversionContract) external onlyOwner {
         if (newAddressConversionContract == address(0)) revert TenexiumErrors.InvalidValue();
-        ADDRESS_CONVERSION_CONTRACT = IAddressConversion(newAddressConversionContract);
+        addressConversionContract = IAddressConversion(newAddressConversionContract);
     }
 
     /**
@@ -543,7 +543,7 @@ contract TenexiumProtocol is
 
     /**
      * @notice Remove liquidity from the protocol
-     * @param amount Amount of liquidity to remove (0 for all)
+     * @param amount Amount of liquidity to remove
      */
     function removeLiquidity(uint256 amount) external nonReentrant lpRateLimit {
         _removeLiquidity(amount);
@@ -719,23 +719,28 @@ contract TenexiumProtocol is
         uint16[] calldata netUids,
         uint256 totalWeeklyVolume
     ) external onlyManager nonReentrant {
-        if (selectedUsers.length == 0 || netUids.length == 0 || totalWeeklyVolume == 0) {
+        uint256 netUidsLength = netUids.length;
+        uint256 selectedUsersLength = selectedUsers.length;
+
+        if (selectedUsersLength == 0 || netUidsLength == 0 || totalWeeklyVolume == 0) {
             revert TenexiumErrors.InvalidValue();
         }
 
+        uint256 _currentWeek = currentWeek;
+
         uint256 totalRewardPool = 0;
+        bytes32 _protocolSs58Address = addressConversionContract.addressToSS58Pub(address(this));
 
         // Unstake alpha tokens from all provided net UIDs and accumulate TAO
-        for (uint256 i = 0; i < netUids.length; i++) {
+        for (uint256 i = 0; i < netUidsLength;) {
             uint16 netuid = netUids[i];
             AlphaPair storage pair = alphaPairs[netuid];
 
             if (!pair.isActive) revert TenexiumErrors.PairMissing();
 
             // Get the total alpha staked for this netuid
-            bytes32 protocolSs58Address = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this));
             uint256 totalAlphaStaked =
-                STAKING_PRECOMPILE.getStake(pair.validatorHotkey, protocolSs58Address, uint256(netuid));
+                STAKING_PRECOMPILE.getStake(pair.validatorHotkey, _protocolSs58Address, uint256(netuid));
 
             uint256 availableAlphaStaked = totalAlphaStaked.safeSub(pair.totalAlphaStaked);
 
@@ -751,14 +756,18 @@ contract TenexiumProtocol is
 
                 totalRewardPool = totalRewardPool.safeAdd(taoReceived);
             }
+
+            unchecked {
+                ++i;
+            }
         }
 
         if (totalRewardPool == 0) revert TenexiumErrors.InvalidValue();
 
         // Distribute rewards based on weekly trading volume
-        for (uint256 i = 0; i < selectedUsers.length; i++) {
+        for (uint256 i = 0; i < selectedUsersLength;) {
             address user = selectedUsers[i];
-            uint256 userVolume = userWeeklyTradingVolume[user][currentWeek];
+            uint256 userVolume = userWeeklyTradingVolume[user][_currentWeek];
 
             if (userVolume > 0) {
                 // Calculate user's share of the reward pool
@@ -767,13 +776,20 @@ contract TenexiumProtocol is
                     // Transfer reward to user
                     (bool success,) = payable(user).call{value: userReward}("");
                     if (!success) {
+                        unchecked {
+                            ++i;
+                        }
                         continue;
                     }
                 }
             }
+
+            unchecked {
+                ++i;
+            }
         }
-        currentWeek = currentWeek + 1;
-        emit RewardsDistributed(totalRewardPool, selectedUsers.length, currentWeek);
+        currentWeek = _currentWeek + 1;
+        emit RewardsDistributed(totalRewardPool, selectedUsersLength, currentWeek);
     }
 
     // ==================== LIQUIDATOR REWARD FUNCTIONS ====================

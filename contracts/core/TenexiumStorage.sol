@@ -198,7 +198,7 @@ contract TenexiumStorage {
     mapping(address => mapping(uint256 => uint256)) public consecutiveLiquidatableBlocks; // Consecutive blocks position has been liquidatable
 
     // ==================== ADDRESS CONVERSION ====================
-    IAddressConversion public ADDRESS_CONVERSION_CONTRACT;
+    IAddressConversion public addressConversionContract;
 
     // ==================== MANAGER ====================
     address public manager;

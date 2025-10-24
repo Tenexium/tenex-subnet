@@ -69,7 +69,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
             uint256 pending = accumulated.safeSub(provider.rewardDebt);
             lpFeeRewards[lp] = lpFeeRewards[lp].safeAdd(pending);
         }
-        provider.rewardDebt = provider.shares.safeMul(accLpFeesPerShare) / ACC_PRECISION;
+        provider.rewardDebt = accumulated;
     }
 
     /**
@@ -102,7 +102,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         returns (uint256 discountedFee)
     {
         uint256 baseFee = positionValue.safeMul(tradingFeeRate) / PRECISION;
-        bytes32 user_ss58Pubkey = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(user);
+        bytes32 user_ss58Pubkey = addressConversionContract.addressToSS58Pub(user);
         uint256 balance = STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, user_ss58Pubkey, TENEX_NETUID);
         uint256 discount;
         if (balance >= tier5Threshold) discount = tier5FeeDiscount;
