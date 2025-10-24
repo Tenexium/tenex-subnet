@@ -49,7 +49,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
     function _burnBuybackedAlpha() internal {
         // Burn Alpha tokens that were bought back
         uint256 availableBurnedAlpha = STAKING_PRECOMPILE.getStake(
-            BURN_ADDRESS, ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this)), TENEX_NETUID
+            BURN_ADDRESS, addressConversionContract.addressToSS58Pub(address(this)), TENEX_NETUID
         );
         if (availableBurnedAlpha == 0) revert TenexiumErrors.AmountZero();
         _burnAlpha(availableBurnedAlpha, TENEX_NETUID);

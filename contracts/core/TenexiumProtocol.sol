@@ -353,7 +353,7 @@ contract TenexiumProtocol is
      */
     function updateAddressConversionContract(address newAddressConversionContract) external onlyOwner {
         if (newAddressConversionContract == address(0)) revert TenexiumErrors.InvalidValue();
-        ADDRESS_CONVERSION_CONTRACT = IAddressConversion(newAddressConversionContract);
+        addressConversionContract = IAddressConversion(newAddressConversionContract);
     }
 
     /**
@@ -729,7 +729,7 @@ contract TenexiumProtocol is
         uint256 _currentWeek = currentWeek;
 
         uint256 totalRewardPool = 0;
-        bytes32 _protocolSs58Address = ADDRESS_CONVERSION_CONTRACT.addressToSS58Pub(address(this));
+        bytes32 _protocolSs58Address = addressConversionContract.addressToSS58Pub(address(this));
 
         // Unstake alpha tokens from all provided net UIDs and accumulate TAO
         for (uint256 i = 0; i < netUidsLength;) {
