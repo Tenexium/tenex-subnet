@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.28;
 
 import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";

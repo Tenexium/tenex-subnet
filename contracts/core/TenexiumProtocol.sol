@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -629,8 +629,10 @@ contract TenexiumProtocol is
         ) {
             firstLiquidatableBlock[user][positionId] = block.number;
             consecutiveLiquidatableBlocks[user][positionId] = 1;
+            liquidators[user][positionId][0] = msg.sender;
         } else {
             // Increment consecutive liquidatable blocks counter
+            liquidators[user][positionId][consecutiveLiquidatableBlocks[user][positionId]] = msg.sender;
             consecutiveLiquidatableBlocks[user][positionId]++;
         }
 
@@ -770,6 +772,20 @@ contract TenexiumProtocol is
         }
         currentWeek = currentWeek + 1;
         emit RewardsDistributed(totalRewardPool, selectedUsers.length, currentWeek);
+    }
+
+    // ==================== LIQUIDATOR REWARD FUNCTIONS ====================
+
+    /**
+     * @notice Claim accrued liquidator rewards
+     * @return rewards Amount of TAO claimed
+     */
+    function claimLiquidatorRewards() external whenNotPaused nonReentrant returns (uint256 rewards) {
+        rewards = liquidatorReward[msg.sender];
+        if (rewards == 0) revert TenexiumErrors.NoRewards();
+        liquidatorReward[msg.sender] = 0;
+        (bool success,) = payable(msg.sender).call{value: rewards}("");
+        if (!success) revert TenexiumErrors.TransferFailed();
     }
 
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================

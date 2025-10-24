@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.28;
 
 import "../interfaces/IAlpha.sol";
 import "../interfaces/IStaking.sol";
@@ -208,6 +208,10 @@ contract TenexiumStorage {
 
     // ==================== CURRENT WEEK ====================
     uint256 public currentWeek; // Current week
+
+    // ==================== LIQUIDATOR COUNT ====================
+    mapping(address => mapping(uint256 => mapping(uint256 => address))) public liquidators; // Liquidator list by position
+    mapping(address => uint256) public liquidatorReward; // Liquidator Reward Accumulator
 
     // ==================== STRUCTS ====================
 
