@@ -69,7 +69,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
             uint256 pending = accumulated.safeSub(provider.rewardDebt);
             lpFeeRewards[lp] = lpFeeRewards[lp].safeAdd(pending);
         }
-        provider.rewardDebt = provider.shares.safeMul(accLpFeesPerShare) / ACC_PRECISION;
+        provider.rewardDebt = accumulated;
     }
 
     /**
