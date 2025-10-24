@@ -611,12 +611,12 @@ contract TenexiumProtocol is
      */
     function liquidatePosition(address user, uint256 positionId) external validPosition(user, positionId) nonReentrant {
         // Prevent multiple calls in the same block
-        if (lastLiquidationBlock[msg.sender][user][positionId] == block.number) {
+        if (lastLiquidationBlock[user][positionId] == block.number) {
             revert TenexiumErrors.LiquidationCooldownActive();
         }
 
         // Update the last liquidation block
-        lastLiquidationBlock[msg.sender][user][positionId] = block.number;
+        lastLiquidationBlock[user][positionId] = block.number;
 
         if (!_isPositionLiquidatable(user, positionId)) {
             revert TenexiumErrors.NotLiquidatable();
@@ -624,23 +624,20 @@ contract TenexiumProtocol is
 
         // If this is the first time this liquidator sees position as liquidatable, record the block
         if (
-            firstLiquidatableBlock[msg.sender][user][positionId] == 0
-                || block.number - firstLiquidatableBlock[msg.sender][user][positionId] >= maxLiquidationCount
+            firstLiquidatableBlock[user][positionId] == 0
+                || block.number - firstLiquidatableBlock[user][positionId] >= maxLiquidationCount
         ) {
-            firstLiquidatableBlock[msg.sender][user][positionId] = block.number;
-            consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 1;
+            firstLiquidatableBlock[user][positionId] = block.number;
+            consecutiveLiquidatableBlocks[user][positionId] = 1;
         } else {
             // Increment consecutive liquidatable blocks counter
-            consecutiveLiquidatableBlocks[msg.sender][user][positionId]++;
+            consecutiveLiquidatableBlocks[user][positionId]++;
         }
 
         // Check if position has been liquidatable for maxLiquidationCount consecutive blocks for this liquidator
-        if (consecutiveLiquidatableBlocks[msg.sender][user][positionId] >= maxLiquidationCount) {
+        if (consecutiveLiquidatableBlocks[user][positionId] >= maxLiquidationCount) {
             _liquidatePosition(user, positionId);
             _updateLiquidityCircuitBreaker();
-            // Reset counters after liquidation
-            firstLiquidatableBlock[msg.sender][user][positionId] = 0;
-            consecutiveLiquidatableBlocks[msg.sender][user][positionId] = 0;
             return;
         }
     }
