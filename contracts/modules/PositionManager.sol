@@ -277,11 +277,14 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
     function _getUserMaxLeverage(address user) internal view returns (uint256 maxLeverageOut) {
         bytes32 user_ss58Pubkey = addressConversionContract.addressToSS58Pub(user);
         uint256 balance = STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, user_ss58Pubkey, TENEX_NETUID);
-        if (balance >= tier5Threshold) return tier5MaxLeverage;
-        if (balance >= tier4Threshold) return tier4MaxLeverage;
-        if (balance >= tier3Threshold) return tier3MaxLeverage;
-        if (balance >= tier2Threshold) return tier2MaxLeverage;
-        if (balance >= tier1Threshold) return tier1MaxLeverage;
+
+        uint256 crowdloanBalance = crowdloanContribution[user].weiToRao();
+
+        if (balance >= tier5Threshold || crowdloanBalance >= tier5MaxLeverage) return tier5MaxLeverage;
+        if (balance >= tier4Threshold || crowdloanBalance >= tier4MaxLeverage) return tier4MaxLeverage;
+        if (balance >= tier3Threshold || crowdloanBalance >= tier3MaxLeverage) return tier3MaxLeverage;
+        if (balance >= tier2Threshold || crowdloanBalance >= tier2MaxLeverage) return tier2MaxLeverage;
+        if (balance >= tier1Threshold || crowdloanBalance >= tier1MaxLeverage) return tier1MaxLeverage;
         return tier0MaxLeverage;
     }
 }

@@ -6,6 +6,7 @@ import "../interfaces/IStaking.sol";
 import "../interfaces/IMetagraph.sol";
 import "../interfaces/INeuron.sol";
 import "../interfaces/IAddressConversion.sol";
+import "../interfaces/ICrowdloan.sol";
 import "../libraries/TenexiumErrors.sol";
 
 /**
@@ -26,6 +27,7 @@ contract TenexiumStorage {
     INeuron public constant NEURON_PRECOMPILE = INeuron(0x0000000000000000000000000000000000000804);
     IStaking public constant STAKING_PRECOMPILE = IStaking(0x0000000000000000000000000000000000000805);
     IAlpha public constant ALPHA_PRECOMPILE = IAlpha(0x0000000000000000000000000000000000000808);
+    ICrowdloan public constant CROWDLOAN_PRECOMPILE = ICrowdloan(0x0000000000000000000000000000000000000809);
 
     // ==================== PROTOCOL PARAMETERS ====================
 
@@ -169,8 +171,8 @@ contract TenexiumStorage {
     // Per-user position id counter (next id to assign)
     mapping(address => uint256) public nextPositionId;
 
-    // Vesting schedules
-    mapping(address => uint256) public vestingSchedules;
+    // Crowdloan contribution tracking
+    mapping(address => uint256) public crowdloanContribution;
 
     // Alpha pairs
     mapping(uint16 => AlphaPair) public alphaPairs;
