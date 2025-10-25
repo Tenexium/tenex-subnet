@@ -51,97 +51,12 @@ contract TenexiumProtocol is
 
     /**
      * @notice Initialize protocol parameters
-     * @param _maxLeverage Global maximum leverage (scaled by PRECISION, e.g., 10 * PRECISION for 10x)
-     * @param _liquidationThreshold Global liquidation threshold (e.g., 110% = 110 * PRECISION / 100)
-     * @param _minLiquidityThreshold Minimum TAO liquidity in pool
-     * @param _maxUtilizationRate Max utilization rate
-     * @param _liquidityBufferRatio Buffer ratio for new positions
-     * @param _userCooldownBlocks User action cooldown in blocks
-     * @param _lpCooldownBlocks LP action cooldown in blocks
-     * @param _buybackRate Fraction of pool to spend per buyback (scaled by PRECISION)
-     * @param _buybackIntervalBlocks Minimum interval between buybacks, in blocks
-     * @param _buybackExecutionThreshold Minimum balance required to execute a buyback
-     * @param _protocolFeeGovernanceShare Protocol fee governance share
-     * @param _protocolFeeInsuranceShare Protocol fee insurance share
-     * @param _lpFeeInsuranceShare LP fee insurance share
-     * @param _perfFeeInsuranceShare Performance fee insurance share
-     * @param _baseTradingFeeRate Base trading fee rate (scaled by PRECISION, e.g., 0.3% = 3 * PRECISION / 1000)
-     * @param _baseBorrowingFeeRate Base borrowing fee rate per 360 blocks (scaled by PRECISION)
-     * @param _baseLiquidationFeeRate Base liquidation fee rate (scaled by PRECISION, e.g., 2% = 2 * PRECISION / 100)
-     * @param _protocolValidatorHotkey Protocol validator hotkey for staking operations
-     * @param _functionPermissions [Open position, Close position, Add collateral]
-     * @param _maxLiquidityProvidersPerHotkey Maximum number of liquidity providers per hotkey
      */
-    function initialize(
-        uint256 _maxLeverage,
-        uint256 _liquidationThreshold,
-        uint256 _minLiquidityThreshold,
-        uint256 _maxUtilizationRate,
-        uint256 _liquidityBufferRatio,
-        uint256 _userCooldownBlocks,
-        uint256 _lpCooldownBlocks,
-        uint256 _buybackRate,
-        uint256 _buybackIntervalBlocks,
-        uint256 _buybackExecutionThreshold,
-        uint256 _protocolFeeGovernanceShare,
-        uint256 _protocolFeeInsuranceShare,
-        uint256 _lpFeeInsuranceShare,
-        uint256 _perfFeeInsuranceShare,
-        uint256 _baseTradingFeeRate,
-        uint256 _baseBorrowingFeeRate,
-        uint256 _baseLiquidationFeeRate,
-        bytes32 _protocolValidatorHotkey,
-        bool[3] memory _functionPermissions,
-        uint256 _maxLiquidityProvidersPerHotkey
-    ) public initializer {
+    function initialize() public initializer {
         __Pausable_init();
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
-
-        // 1) Core leverage and liquidation threshold
-        maxLeverage = _maxLeverage;
-        liquidationThreshold = _liquidationThreshold;
-
-        // 2) Liquidity guardrails
-        minLiquidityThreshold = _minLiquidityThreshold;
-        maxUtilizationRate = _maxUtilizationRate;
-        liquidityBufferRatio = _liquidityBufferRatio;
-        liquidityCircuitBreaker = false;
-
-        // 3) Action cooldowns
-        userActionCooldownBlocks = _userCooldownBlocks;
-        lpActionCooldownBlocks = _lpCooldownBlocks;
-
-        // 4) Buyback parameters
-        buybackRate = _buybackRate;
-        buybackIntervalBlocks = _buybackIntervalBlocks;
-        buybackExecutionThreshold = _buybackExecutionThreshold;
-
-        // 5) Protocol fee governance share
-        protocolFeeGovernanceShare = _protocolFeeGovernanceShare;
-
-        // 6) Insurance Rates
-        protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
-        lpFeeInsuranceShare = _lpFeeInsuranceShare;
-        perfFeeInsuranceShare = _perfFeeInsuranceShare;
-
-        // 7) Fee parameters
-        tradingFeeRate = _baseTradingFeeRate;
-        borrowingFeeRate = _baseBorrowingFeeRate;
-        liquidationFeeRate = _baseLiquidationFeeRate;
-
-        // 8) Protocol validator hotkey
-        protocolValidatorHotkey = _protocolValidatorHotkey;
-
-        // 9) Treasury default to owner at initialization
-        treasury = owner();
-
-        // 10) Function permissions
-        functionPermissions = _functionPermissions;
-
-        // 11) Max liquidity providers per hotkey
-        maxLiquidityProvidersPerHotkey = _maxLiquidityProvidersPerHotkey;
     }
 
     // ==================== PROTOCOL UPDATE FUNCTIONS ====================
@@ -295,13 +210,6 @@ contract TenexiumProtocol is
         uint256[6] calldata _tierFeeDiscounts,
         uint256[6] calldata _tierMaxLeverages
     ) external onlyOwner {
-        for (uint256 i = 0; i < 6; i++) {
-            if (_tierFeeDiscounts[i] > PRECISION) revert TenexiumErrors.FeeTooHigh();
-        }
-        for (uint256 i = 0; i < 6; i++) {
-            if (_tierMaxLeverages[i] > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
-        }
-
         tier1Threshold = _tierThresholds[0];
         tier2Threshold = _tierThresholds[1];
         tier3Threshold = _tierThresholds[2];
@@ -815,6 +723,37 @@ contract TenexiumProtocol is
         liquidatorReward[msg.sender] = 0;
         (bool success,) = payable(msg.sender).call{value: rewards}("");
         if (!success) revert TenexiumErrors.TransferFailed();
+    }
+
+    // ==================== CROWDLOAN FUNCTIONS ====================
+
+    /**
+     * @notice Contribute to a crowdloan
+     * @param crowdloanId The id of the crowdloan to contribute to
+     * @param amount The amount of TAO to contribute
+     */
+    function contributeToCrowdloan(uint32 crowdloanId, uint256 amount) external payable nonReentrant {
+        bytes memory data =
+            abi.encodeWithSelector(CROWDLOAN_PRECOMPILE.contribute.selector, crowdloanId, amount.weiToRao());
+        (bool success,) = address(CROWDLOAN_PRECOMPILE).delegatecall{gas: gasleft()}(data);
+        if (!success) revert TenexiumErrors.CrowdloanContributionFailed();
+        crowdloanContribution[msg.sender] = crowdloanContribution[msg.sender].safeAdd(amount);
+    }
+
+    /**
+     * @notice Withdraw from a crowdloan
+     * @param crowdloanId The id of the crowdloan to withdraw from
+     */
+    function withdrawFromCrowdloan(uint32 crowdloanId) external payable nonReentrant {
+        uint256 amount = AlphaMath.raoToWei(
+            CROWDLOAN_PRECOMPILE.getContribution(crowdloanId, addressConversionContract.addressToSS58Pub(msg.sender))
+        );
+        if (amount == 0) revert TenexiumErrors.InvalidValue();
+
+        crowdloanContribution[msg.sender] = crowdloanContribution[msg.sender].safeSub(amount);
+        bytes memory data = abi.encodeWithSelector(CROWDLOAN_PRECOMPILE.withdraw.selector, crowdloanId);
+        (bool success,) = address(CROWDLOAN_PRECOMPILE).delegatecall{gas: gasleft()}(data);
+        if (!success) revert TenexiumErrors.CrowdloanWithdrawalFailed();
     }
 
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================
