@@ -75,10 +75,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         totalLiquidationFees = totalLiquidationFees.safeAdd(liquidationFeeAmount);
         remaining = remaining.safeSub(liquidationFeeAmount);
         // 3. Return any remaining collateral to user
-        if (remaining > 0) {
-            (bool success,) = user.call{value: remaining}("");
-            if (!success) revert TenexiumErrors.CollateralReturnFailed();
-        }
+        positionDebt[user] = positionDebt[user].safeAdd(remaining);
 
         // Update global statistics before clearing position fields
         totalBorrowed = totalBorrowed.safeSub(position.borrowed);

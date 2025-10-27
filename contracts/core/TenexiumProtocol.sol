@@ -727,6 +727,14 @@ contract TenexiumProtocol is
         if (!success) revert TenexiumErrors.TransferFailed();
     }
 
+    function claimPositionDebt() external whenNotPaused nonReentrant returns (uint256 debt) {
+        debt = positionDebt[msg.sender];
+        if (debt == 0) revert TenexiumErrors.InvalidValue();
+        positionDebt[msg.sender] = 0;
+        (bool success,) = payable(msg.sender).call{value: debt}("");
+        if (!success) revert TenexiumErrors.TransferFailed();
+    }
+
     // ==================== CROWDLOAN FUNCTIONS ====================
 
     /**

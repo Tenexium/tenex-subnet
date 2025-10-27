@@ -218,6 +218,9 @@ contract TenexiumStorage {
     // ==================== REWARD POOL ====================
     mapping(address => uint256) public rewardPool; // Reward pool by user
 
+    // ==================== POSITION DEBT ====================
+    mapping(address => uint256) public positionDebt; // Position debt by user
+
     // ==================== STRUCTS ====================
 
     struct Position {
