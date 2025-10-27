@@ -33,7 +33,7 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
         if (expectedAlpha == 0) revert TenexiumErrors.SwapSimInvalid();
 
         expectedAlpha = expectedAlpha.safeMul(9500) / 10000; // 5% slippage buffer
-        uint256 limitPrice = buybackAmount.safeMul(PRECISION) / expectedAlpha;
+        uint256 limitPrice = buybackAmount / expectedAlpha;
         uint256 actualAlphaBought = _stakeTaoForAlpha(BURN_ADDRESS, buybackAmount, limitPrice, true, TENEX_NETUID);
         if (actualAlphaBought == 0) revert TenexiumErrors.AmountZero();
 
