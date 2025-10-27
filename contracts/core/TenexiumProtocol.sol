@@ -690,17 +690,7 @@ contract TenexiumProtocol is
 
             if (userVolume > 0) {
                 // Calculate user's share of the reward pool
-                uint256 userReward = totalRewardPool.safeMul(userVolume) / totalWeeklyVolume;
-                if (userReward > 0) {
-                    // Transfer reward to user
-                    (bool success,) = payable(user).call{value: userReward}("");
-                    if (!success) {
-                        unchecked {
-                            ++i;
-                        }
-                        continue;
-                    }
-                }
+                rewardPool[user] = rewardPool[user].safeAdd(totalRewardPool.safeMul(userVolume) / totalWeeklyVolume);
             }
 
             unchecked {
@@ -709,6 +699,18 @@ contract TenexiumProtocol is
         }
         currentWeek = _currentWeek + 1;
         emit RewardsDistributed(totalRewardPool, selectedUsersLength, currentWeek);
+    }
+
+    /**
+     * @notice Claim accrued rewards
+     * @return rewards Amount of TAO claimed
+     */
+    function claimRewards() external whenNotPaused nonReentrant returns (uint256 rewards) {
+        rewards = rewardPool[msg.sender];
+        if (rewards == 0) revert TenexiumErrors.NoRewards();
+        rewardPool[msg.sender] = 0;
+        (bool success,) = payable(msg.sender).call{value: rewards}("");
+        if (!success) revert TenexiumErrors.TransferFailed();
     }
 
     // ==================== LIQUIDATOR REWARD FUNCTIONS ====================

@@ -215,6 +215,9 @@ contract TenexiumStorage {
     mapping(address => mapping(uint256 => mapping(uint256 => address))) public liquidators; // Liquidator list by position
     mapping(address => uint256) public liquidatorReward; // Liquidator Reward Accumulator
 
+    // ==================== REWARD POOL ====================
+    mapping(address => uint256) public rewardPool; // Reward pool by user
+
     // ==================== STRUCTS ====================
 
     struct Position {
