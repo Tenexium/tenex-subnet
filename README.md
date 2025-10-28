@@ -61,19 +61,25 @@ contracts/
 │   ├── PositionManager.sol      # Position lifecycle management
 │   ├── LiquidityManager.sol     # LP operations & rewards
 │   ├── FeeManager.sol           # Fee collection & distribution
-│   ├── BuybackManager.sol       # Automated buybacks & vesting
-│   ├── LiquidationManager.sol   # Liquidation execution
-│   ├── SubnetManager.sol        # Subnet Manager
-│   └── PrecompileAdapter.sol    # Bittensor Precompile Adapter
+│   ├── BuybackManager.sol       # Automated buybacks → burn
+│   ├── LiquidationManager.sol   # Liquidation manager
+│   ├── InsuranceManager.sol     # LP loss insurance manager
+│   ├── SubnetManager.sol        # EVM validator manager
+│   └── PrecompileAdapter.sol    # Bittensor precompile adapter
 ├── interfaces/
 │   ├── IAlpha.sol               # Alpha token interface
-│   ├── IStaking.sol             # Staking precompile
-│   ├── INeuron.sol              # Neuron precompile
-│   └── IMetagraph.sol           # Metagraph precompile
-└── libraries/
-    ├── AlphaMath.sol            # Mathematical operations for alpha calculations
-    ├── RiskCalculator.sol       # Risk assessment and position health calculations
-    └── TenexiumErrors.sol       # Custom error definitions
+│   ├── IStaking.sol             # Staking interface
+│   ├── INeuron.sol              # Neuron interface
+│   ├── IMetagraph.sol           # Metagraph interface
+│   ├── ICrowdloan.sol           # Crowdloan interface
+│   ├── IInsuranceManager        # Insurance interface
+│   └── IAddressConversion       # Address conversion interface
+├── libraries/
+│   ├── AlphaMath.sol            # Mathematical operations for alpha calculations
+│   ├── AddressConversion.sol    # H160 → SS58 address conversion
+│   └── TenexiumErrors.sol       # Custom error definitions
+└── governance/
+    └── MultiSigWallet.sol       # Multisig governance
 ```
 
 ### Key Components
@@ -102,7 +108,6 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 ```
 
 - **Maintenance Margin**: 110% (positions liquidated below this threshold)
-- **Initial Margin**: 120% (minimum ratio required to open positions)
 - **Liquidation Penalty**: Additional 2% fee on liquidated collateral
 
 #### Circuit Breakers
@@ -126,7 +131,6 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 
 #### Liquidator Incentives
 - **Fee Share**: 40% of liquidation penalty
-- **Priority Access**: Front-running protection for registered liquidators
 - **Reward Pool**: Separate reward mechanism for active liquidators
 
 ### Fee Structure
@@ -173,20 +177,34 @@ Eligible Tenex alpha holders receive tier-based fee discounts and higher maximum
 
 > **Note**: Maximum leverage is enforced at position open and cannot exceed the user's tier cap.
 
+### Crowdloan Participant Benefits
+
+Crowdloans will be offered only occasionally, and early participants receive permanent benefits.
+
+| Contributed TAO | Max Leverage | Fee Discount |
+|----------------:|-------------:|-------------:|
+|        1        | 2×           | 2%           |
+|        2        | 2×           | 4%           |
+|        3        | 3×           | 6%           |
+|        4        | 4×           | 8%           |
+|        5        | 5×           | 10%          |
+|        6        | 5×           | 12%          |
+|        7        | 7×           | 14%          |
+|        8        | 7×           | 16%          |
+|        9        | 7×           | 18%          |
+|        10       | 10×          | 20%          |
+
+> **Note:** Fee discounts are cumulative; they stack instead of replacing each other.
+
 ### Buyback Program
 
 #### Revenue Sources
-- **90% of total protocol revenue** (comes from protocol fees)
+- **60% of total protocol revenue** (comes from protocol fees)
 
 #### Buyback Mechanics
 - **Execution Threshold**: Buybacks trigger when buyback pool > `buybackExecutionThreshold`
 - **Execution Interval**: Automated execution every `buybackIntervalBlocks`
-- **Staking**: Purchased tokens staked to protocol validator hotkey
-
-#### Vesting Schedule
-- **Cliff Period**: 3 months (no claims allowed)
-- **Vesting Period**: 12 months (linear vesting after cliff)
-- **Forfeiture**: Unclaimed tokens remain in vesting pool
+- **Burning**: Purchased tokens are immediately 100% burned
 
 ---
 
@@ -209,11 +227,16 @@ Eligible Tenex alpha holders receive tier-based fee discounts and higher maximum
 ### Reward Distribution
 - **LP Rewards**: Allocated pro rata to TAO liquidity provided
 - **Liquidator Rewards**: Performance-based with minimum activity thresholds
-- **Buyback Allocation**: 90% of protocol fees directed to token purchases
+- **Buyback Allocation**: 60% of protocol fees directed to token purchases and burn
 
 ---
 
 ## 🔒Security
+
+### Audit Status
+The Hashlock audit is complete.
+
+Audit link: https://hashlock.com/audits/tenexium
 
 ### Architecture Security
 
@@ -229,13 +252,20 @@ Eligible Tenex alpha holders receive tier-based fee discounts and higher maximum
 - **Slippage Controls**: Maximum slippage limits on interactions
 - **Conservative Parameters**: Initial deployment with conservative risk settings
 
-### Audit Status
+### Multisig Governance
 
-| Component | Status | Auditor |
-|-----------|--------|---------|
-| Core Contracts | 🔄 In Progress | Internal |
-| Taostats Verification | 🔄 Planned | Taostats |
-| External Audit | 🔄 Planned | CertiK/Zellic |
+Protocol upgrades and parameter changes are controlled by a multisig, not by a single key.
+
+#### How it works
+- The core contracts are owned by a multisig wallet.
+- The multisig requires N-of-M approvals (e.g. 3 of 5 signers) before any action can execute.
+- No single signer can upgrade logic or change parameters alone.
+- Multisig actions have a 48-hour timelock.
+
+#### What the multisig can do
+- Approve contract upgrades / deployments.
+- Update protocol config (fees, LTV thresholds, liquidation settings, etc.).
+- Execute governance actions after the timelock expires.
 
 ### Known Risk Factors
 
@@ -246,13 +276,6 @@ Eligible Tenex alpha holders receive tier-based fee discounts and higher maximum
 #### Protocol Risks
 - **Liquidity Risk**: Insufficient TAO liquidity could impact borrowing
 - **Volatility Risk**: Extreme alpha price movements could trigger liquidations
-- **Governance Risk**: Centralized control of critical parameters
-
-#### Mitigation Strategies
-- **Multi-sig Governance**: Critical parameter updates require multi-signature approval
-- **Gradual Rollout**: Conservative initial parameters with gradual expansion
-- **Insurance Fund**: Protocol reserves for covering extreme scenarios
-- **Emergency Controls**: Multiple emergency pause mechanisms
 
 ---
 
@@ -369,13 +392,13 @@ function openPosition(
 
 // Close a position
 function closePosition(
-    uint16 alphaNetuid,
+    uint256 positionId,
     uint256 amountToClose,
     uint256 maxSlippage
 ) external
 
 // Add collateral to position
-function addCollateral(uint16 alphaNetuid) external payable
+function addCollateral(uint256 positionId) external payable
 ```
 
 #### Liquidity Management
@@ -388,32 +411,6 @@ function removeLiquidity(uint256 amount) external
 
 // Claim LP rewards
 function claimLpFeeRewards() external returns (uint256 rewards)
-
-// Claim liquidator rewards
-function claimLiquidatorFeeRewards() external returns (uint256 rewards)
-```
-
-### View Functions
-
-```solidity
-// Get protocol statistics
-function getProtocolStats() external view returns (
-    uint256 totalCollateralAmount,
-    uint256 totalBorrowedAmount,
-    uint256 totalVolumeAmount,
-    uint256 totalTradesCount,
-    uint256 protocolFeesAmount,
-    uint256 totalLpStakesAmount
-)
-
-// Get user statistics
-function getUserStats(address user) external view returns (
-    uint256 totalCollateralUser,
-    uint256 totalBorrowedUser,
-    uint256 totalVolumeUser,
-    bool isLiquidityProvider
-)
-
 ```
 
 ---
