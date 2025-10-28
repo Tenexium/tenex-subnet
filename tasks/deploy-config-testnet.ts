@@ -109,9 +109,9 @@ const deployConfig: DeployConfig = {
     tierThresholds: [
         "100000000000",    // Tier 1: 100 tokens (100e18)
         "1000000000000",   // Tier 2: 1,000 tokens (1000e18)
-        "5000000000000",   // Tier 3: 5,000 tokens (5000e18)
-        "20000000000000",  // Tier 4: 20,000 tokens (20000e18)
-        "100000000000000",  // Tier 5: 100,000 tokens (100000e18)
+        "2000000000000",   // Tier 3: 5,000 tokens (5000e18)
+        "5000000000000",  // Tier 4: 20,000 tokens (20000e18)
+        "10000000000000",  // Tier 5: 100,000 tokens (100000e18)
     ],
 
     // Tier fee discounts (PRECISION=1e9)
