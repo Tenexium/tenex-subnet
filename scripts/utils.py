@@ -27,10 +27,11 @@ class TenexUtils:
     @staticmethod
     def get_rpc_url(network_name: str) -> str:
         """Get RPC URL for the specified network"""
+        evm_rpc_url = os.getenv("EVM_RPC_URL")
         if network_name == "testnet":
-            return "https://test.chain.opentensor.ai"
+            return evm_rpc_url | "https://test.chain.opentensor.ai"
         elif network_name == "mainnet":
-            return "https://lite.chain.opentensor.ai"
+            return evm_rpc_url | "https://lite.chain.opentensor.ai"
         else:
             raise ValueError(f"Unsupported network: {network_name}")
     
@@ -324,6 +325,88 @@ class TenexUtils:
                     "inputs": [{"type": "address", "name": "user"}],
                     "name": "nextPositionId",
                     "outputs": [{"type": "uint256", "name": ""}],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "totalTradingFees",
+                    "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "totalBorrowingFees",
+                    "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                    ],
+                    "name": "totalLiquidatorLiquidationValue",
+                    "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                    ],
+                    "name": "dailyLiquidatorLiquidationValue",
+                    "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "totalLiquidationValue",
+                    "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                    ],
                     "stateMutability": "view",
                     "type": "function"
                 }

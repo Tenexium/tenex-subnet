@@ -18,6 +18,10 @@ class TenexiumValidator:
         )
         self.last_weight_update_block = self.subtensor.get_current_block()
         self.tenexium_contract = TenexUtils.get_contract(self.w3, self.network, "tenexiumProtocol")
+        self.daily_lp_reward = 0
+        self.last_total_trading_fees = 0
+        self.last_total_borrowing_fees = 0
+        self.last_fetched_block = 0
         # Check if the hotkey is registered
         self.check_registered()
         bt.logging.setLevel(self.logging_level)
@@ -112,48 +116,51 @@ class TenexiumValidator:
         """
         bt.logging.info("Preparing weights...")
         U16_MAX = 65535
-        uint_uids, uint_weights = self.get_unnormalized_weights()
-        bt.logging.debug(f"Unnormalized weights: {uint_weights}")
+        uint_uids, weights = self.get_unnormalized_weights()
+        bt.logging.debug(f"Unnormalized weights: {weights}")
+        uint_weights = [0] * len(weights)
+        total_weight = sum(weights)
 
-        total_weight = sum(uint_weights)
-
-        miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
-        total_liquidity = float(total_weight / 10**18)
-        miner_apy = 0.5
-        if miner_daily_emission > 0:
-            burn_percentage = max(0, 1 - total_liquidity * ((1 + miner_apy)**(1/365) - 1) / miner_daily_emission)
-        else:
-            burn_percentage = 0
 
         if total_weight == 0:
             uint_weights[0] = U16_MAX
         else:
-            uint_weights[0] = U16_MAX * burn_percentage
-            for i in range(1, len(uint_weights)):
-                uint_weights[i] = (uint_weights[i] * U16_MAX * (1 - burn_percentage)) / total_weight
+            for i in range(1, len(weights)):
+                uint_weights[i] = (weights[i] * U16_MAX) / total_weight
         return uint_uids, uint_weights
     
     def get_unnormalized_weights(self):
         """
         Get unnormalized weights
         """
+
+        current_block = self.w3.eth.get_block_number()
+        if current_block >= self.last_fetched_block + 7200:
+            multiplier = float(current_block - self.last_fetched_block) / 7200.0;
+            self.last_fetched_block = current_block
+            total_trading_fees = self.tenexium_contract.functions.totalTradingFees().call()
+            total_borrowing_fees = self.tenexium_contract.functions.totalBorrowingFees().call()
+            self.daily_lp_reward = ((total_trading_fees - self.last_total_trading_fees) * 0.2625 + (total_borrowing_fees - self.last_total_borrowing_fees) * 0.30625) * multiplier
+            self.last_total_trading_fees = total_trading_fees
+            self.last_total_borrowing_fees = total_borrowing_fees
+
+        total_liquidity = float(self.tenexium_contract.functions.totalLpStakes().call()) / 10**18
+        total_liquidation_value = float(self.tenexium_contract.functions.totalLiquidationValue().call())
+
+        miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
+        miner_apy = 1
+        if miner_daily_emission + self.daily_lp_reward > 0:
+            lp_emission_percentage = min(1, total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + self.daily_lp_reward))
+        else:
+            lp_emission_percentage = 0
+
+        liquidator_emission_percentage = 1 - lp_emission_percentage
+
         bt.logging.info("Getting unnormalized weights...")
         uint_uids = self.metagraph.uids
         max_liquidity_providers_per_hotkey = self.tenexium_contract.functions.maxLiquidityProvidersPerHotkey().call()
         bt.logging.debug(f"Max liquidity providers per hotkey: {max_liquidity_providers_per_hotkey}")
-        uint_weights = [0] * len(uint_uids)
-
-        def _call_with_retries(callable_fn, error_msg_prefix, max_retries, *args, **kwargs):
-            for attempt in range(max_retries):
-                try:
-                    return callable_fn(*args, **kwargs)
-                except Exception as e:
-                    if attempt < max_retries - 1:
-                        bt.logging.warning(f"{error_msg_prefix} Retry {attempt+1}/{max_retries}: {e}")
-                        time.sleep(20 * (attempt + 1))
-                    else:
-                        bt.logging.error(f"{error_msg_prefix} after {max_retries} attempts: {e}")
-            return None
+        weights = [0.0] * len(uint_uids)
 
         for uid in uint_uids:
             if uid == 0:
@@ -161,41 +168,36 @@ class TenexiumValidator:
             hotkey_ss58_address = self.metagraph.hotkeys[uid]
             bt.logging.info(f"Computing weight for uid {uid} (hotkey {hotkey_ss58_address})")
             hotkey_bytes32 = TenexUtils.ss58_to_bytes(hotkey_ss58_address)
-            max_retries = 10
             # Get liquidity provider count with retries
-            liquidity_provider_count = None
-            
-            liquidity_provider_count = _call_with_retries(
-                lambda: self.tenexium_contract.functions.liquidityProviderSetLength(hotkey_bytes32).call(),
-                f"getting liquidity provider count for uid {uid} (hotkey {hotkey_ss58_address})",
-                max_retries
-            )
+            liquidity_provider_count = self.tenexium_contract.functions.liquidityProviderSetLength(hotkey_bytes32).call()
             if liquidity_provider_count is None:
                 continue
 
             max_liquidity_providers = min(liquidity_provider_count, max_liquidity_providers_per_hotkey)
             for i in range(max_liquidity_providers):
-                liquidity_provider = _call_with_retries(
-                    lambda: self.tenexium_contract.functions.groupLiquidityProviders(hotkey_bytes32, i).call(),
-                    f"getting liquidity provider for uid {uid} (hotkey {hotkey_ss58_address})",
-                    max_retries
-                )
+                liquidity_provider = self.tenexium_contract.functions.groupLiquidityProviders(hotkey_bytes32, i).call()
                 if liquidity_provider is None:
                     continue
 
-                liquidity_provider_balance = _call_with_retries(
-                    lambda: self.tenexium_contract.functions.liquidityProviders(liquidity_provider).call()[0],
-                    f"getting liquidity provider balance for uid {uid} (hotkey {hotkey_ss58_address})",
-                    max_retries
-                )
+                liquidity_provider_balance = (float) (self.tenexium_contract.functions.liquidityProviders(liquidity_provider).call()[0]) / 10**18
                 if liquidity_provider_balance is None:
                     continue
-                bt.logging.debug(f"Liquidity provider balance: {liquidity_provider_balance / 10**18}τ")
-                uint_weights[uid] += liquidity_provider_balance
+                bt.logging.debug(f"Liquidity provider balance: {liquidity_provider_balance}τ")
+                weights[uid] += lp_emission_percentage * liquidity_provider_balance / total_liquidity
+
+                totalLiquidatorLiquidationValue = self.tenexium_contract.functions.totalLiquidatorLiquidationValue(liquidity_provider).call()
+                current_day = (int)(current_block / 7200)
+                weeklyLiquidatorLiquidationValue = 0
+                for j in range(current_day - 7, current_day):
+                    weeklyLiquidatorLiquidationValue += self.tenexium_contract.functions.dailyLiquidatorLiquidationValue(liquidity_provider, j).call()
+                dailyLiquidatorLiquidationValue = self.tenexium_contract.functions.dailyLiquidatorLiquidationValue(liquidity_provider, current_day).call()
+
+                weights[uid] += liquidator_emission_percentage * (totalLiquidatorLiquidationValue * 0.2 + weeklyLiquidatorLiquidationValue * 0.3 + dailyLiquidatorLiquidationValue * 0.5) / total_liquidation_value
+
             bt.logging.info(f"Derived weight for uid {uid} (hotkey {hotkey_ss58_address})")
-            bt.logging.debug(f"Weight for uid {uid}: {uint_weights[uid]}")
-            time.sleep(5)
-        return uint_uids, uint_weights
+            bt.logging.debug(f"Weight for uid {uid}: {weights[uid]}")
+
+        return uint_uids, weights
 
 
 def main():
