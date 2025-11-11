@@ -220,7 +220,6 @@ class TenexiumValidator:
 
         return uint_uids, weights
 
-
 def main():
     validator = TenexiumValidator()
     try:
