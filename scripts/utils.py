@@ -29,9 +29,9 @@ class TenexUtils:
         """Get RPC URL for the specified network"""
         evm_rpc_url = os.getenv("EVM_RPC_URL")
         if network_name == "testnet":
-            return evm_rpc_url | "https://test.chain.opentensor.ai"
+            return evm_rpc_url or "https://test.chain.opentensor.ai"
         elif network_name == "mainnet":
-            return evm_rpc_url | "https://lite.chain.opentensor.ai"
+            return evm_rpc_url or "https://lite.chain.opentensor.ai"
         else:
             raise ValueError(f"Unsupported network: {network_name}")
     

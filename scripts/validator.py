@@ -121,11 +121,10 @@ class TenexiumValidator:
         uint_weights = [0] * len(weights)
         total_weight = sum(weights)
 
-
         if total_weight == 0:
             uint_weights[0] = U16_MAX
         else:
-            for i in range(1, len(weights)):
+            for i in range(0, len(weights)):
                 uint_weights[i] = (weights[i] * U16_MAX) / total_weight
         return uint_uids, uint_weights
     
@@ -136,25 +135,23 @@ class TenexiumValidator:
 
         current_block = self.w3.eth.get_block_number()
         if current_block >= self.last_fetched_block + 7200:
-            multiplier = float(current_block - self.last_fetched_block) / 7200.0;
             self.last_fetched_block = current_block
-            total_trading_fees = self.tenexium_contract.functions.totalTradingFees().call()
-            total_borrowing_fees = self.tenexium_contract.functions.totalBorrowingFees().call()
-            self.daily_lp_reward = ((total_trading_fees - self.last_total_trading_fees) * 0.2625 + (total_borrowing_fees - self.last_total_borrowing_fees) * 0.30625) * multiplier
+            total_trading_fees = self.tenexium_contract.functions.totalTradingFees().call() / 10**18
+            total_borrowing_fees = self.tenexium_contract.functions.totalBorrowingFees().call() / 10**18
+            self.daily_lp_reward = (total_trading_fees - self.last_total_trading_fees) * 0.2625 + (total_borrowing_fees - self.last_total_borrowing_fees) * 0.30625
             self.last_total_trading_fees = total_trading_fees
             self.last_total_borrowing_fees = total_borrowing_fees
 
         total_liquidity = float(self.tenexium_contract.functions.totalLpStakes().call()) / 10**18
-        total_liquidation_value = float(self.tenexium_contract.functions.totalLiquidationValue().call())
 
         miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
-        miner_apy = 1
+        miner_apy = 1.0
         if miner_daily_emission + self.daily_lp_reward > 0:
-            lp_emission_percentage = min(1, total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + self.daily_lp_reward))
+            lp_emission_percentage = min(1.0, total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + self.daily_lp_reward))
         else:
-            lp_emission_percentage = 0
+            lp_emission_percentage = 0.0
 
-        liquidator_emission_percentage = 1 - lp_emission_percentage
+        liquidator_emission_percentage = 1.0 - lp_emission_percentage
 
         bt.logging.info("Getting unnormalized weights...")
         uint_uids = self.metagraph.uids
@@ -185,6 +182,25 @@ class TenexiumValidator:
                 bt.logging.debug(f"Liquidity provider balance: {liquidity_provider_balance}τ")
                 weights[uid] += lp_emission_percentage * liquidity_provider_balance / total_liquidity
 
+        liq_weights = [0.0] * len(uint_uids)
+        total_liq_weights = 0.0
+        for uid in uint_uids:
+            if uid == 0:
+                continue
+            hotkey_ss58_address = self.metagraph.hotkeys[uid]
+            bt.logging.info(f"Computing weight for uid {uid} (hotkey {hotkey_ss58_address})")
+            hotkey_bytes32 = TenexUtils.ss58_to_bytes(hotkey_ss58_address)
+            # Get liquidity provider count with retries
+            liquidity_provider_count = self.tenexium_contract.functions.liquidityProviderSetLength(hotkey_bytes32).call()
+            if liquidity_provider_count is None:
+                continue
+
+            max_liquidity_providers = min(liquidity_provider_count, max_liquidity_providers_per_hotkey)
+            for i in range(max_liquidity_providers):
+                liquidity_provider = self.tenexium_contract.functions.groupLiquidityProviders(hotkey_bytes32, i).call()
+                if liquidity_provider is None:
+                    continue
+
                 totalLiquidatorLiquidationValue = self.tenexium_contract.functions.totalLiquidatorLiquidationValue(liquidity_provider).call()
                 current_day = (int)(current_block / 7200)
                 weeklyLiquidatorLiquidationValue = 0
@@ -192,10 +208,15 @@ class TenexiumValidator:
                     weeklyLiquidatorLiquidationValue += self.tenexium_contract.functions.dailyLiquidatorLiquidationValue(liquidity_provider, j).call()
                 dailyLiquidatorLiquidationValue = self.tenexium_contract.functions.dailyLiquidatorLiquidationValue(liquidity_provider, current_day).call()
 
-                weights[uid] += liquidator_emission_percentage * (totalLiquidatorLiquidationValue * 0.2 + weeklyLiquidatorLiquidationValue * 0.3 + dailyLiquidatorLiquidationValue * 0.5) / total_liquidation_value
+                liq_weights[uid] += totalLiquidatorLiquidationValue * 0.2 + weeklyLiquidatorLiquidationValue * 0.3 + dailyLiquidatorLiquidationValue * 0.5
 
-            bt.logging.info(f"Derived weight for uid {uid} (hotkey {hotkey_ss58_address})")
-            bt.logging.debug(f"Weight for uid {uid}: {weights[uid]}")
+            total_liq_weights += liq_weights[uid]
+
+        if total_liq_weights <= 0.0:
+            weights[0] = liquidator_emission_percentage
+        else:
+            for uid in uint_uids:
+                weights[uid] += liquidator_emission_percentage * liq_weights[uid] / total_liq_weights
 
         return uint_uids, weights
 
