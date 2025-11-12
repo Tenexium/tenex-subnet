@@ -120,7 +120,7 @@ contract TenexiumProtocol is
         uint256 _buybackRate,
         uint256 _buybackIntervalBlocks,
         uint256 _buybackExecutionThreshold
-    ) external onlyOwner {
+    ) external onlyManager {
         if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
@@ -138,17 +138,14 @@ contract TenexiumProtocol is
         uint256 _protocolFeeGovernanceShare,
         uint256 _protocolFeeInsuranceShare,
         uint256 _lpFeeInsuranceShare,
-        uint256 _perfFeeInsuranceShare
-    ) external onlyOwner {
-        if (
-            _protocolFeeGovernanceShare > PRECISION || _protocolFeeInsuranceShare > PRECISION
-                || _lpFeeInsuranceShare > PRECISION || _perfFeeInsuranceShare > PRECISION
-        ) revert TenexiumErrors.PercentageTooHigh();
-
+        uint256 _perfFeeInsuranceShare,
+        uint256 _perfFeeProtocolShare
+    ) external onlyManager {
         protocolFeeGovernanceShare = _protocolFeeGovernanceShare;
         protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
         lpFeeInsuranceShare = _lpFeeInsuranceShare;
         perfFeeInsuranceShare = _perfFeeInsuranceShare;
+        perfFeeProtocolShare = _perfFeeProtocolShare;
     }
 
     /**
@@ -159,7 +156,7 @@ contract TenexiumProtocol is
      */
     function updateFeeParameters(uint256 _tradingFeeRate, uint256 _borrowingFeeRate, uint256 _liquidationFeeRate)
         external
-        onlyOwner
+        onlyManager
     {
         if (_tradingFeeRate > PRECISION / 100) revert TenexiumErrors.FeeTooHigh();
         if (_borrowingFeeRate > (1 * PRECISION) / 1000) revert TenexiumErrors.FeeTooHigh();
@@ -180,14 +177,7 @@ contract TenexiumProtocol is
         uint256[3] calldata _trading,
         uint256[3] calldata _borrowing,
         uint256[3] calldata _liquidation
-    ) external onlyOwner {
-        if (_trading[0] + _trading[1] + _trading[2] != PRECISION) {
-            revert TenexiumErrors.DistributionInvalid();
-        }
-        if (_borrowing[0] + _borrowing[1] + _borrowing[2] != PRECISION) revert TenexiumErrors.DistributionInvalid();
-        if (_liquidation[0] + _liquidation[1] + _liquidation[2] != PRECISION) {
-            revert TenexiumErrors.DistributionInvalid();
-        }
+    ) external onlyManager {
         tradingFeeLpShare = _trading[0];
         tradingFeeLiquidatorShare = _trading[1];
         tradingFeeProtocolShare = _trading[2];
@@ -209,7 +199,7 @@ contract TenexiumProtocol is
         uint256[5] calldata _tierThresholds,
         uint256[6] calldata _tierFeeDiscounts,
         uint256[6] calldata _tierMaxLeverages
-    ) external onlyOwner {
+    ) external onlyManager {
         tier1Threshold = _tierThresholds[0];
         tier2Threshold = _tierThresholds[1];
         tier3Threshold = _tierThresholds[2];
@@ -569,7 +559,7 @@ contract TenexiumProtocol is
      * @notice Claim accrued LP fee rewards
      * @return rewards Amount of TAO claimed
      */
-    function claimLpFeeRewards() external whenNotPaused nonReentrant lpRateLimit returns (uint256 rewards) {
+    function claimLpFeeRewards() external whenNotPaused nonReentrant returns (uint256 rewards) {
         rewards = _claimLpFeeRewards(msg.sender);
     }
 

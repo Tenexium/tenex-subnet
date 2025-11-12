@@ -23,6 +23,8 @@ abstract contract LiquidityManager is FeeManager {
     function _addLiquidity() internal {
         if (msg.value < 1e17) revert TenexiumErrors.LpMinDeposit();
 
+        lastLpActionBlock[msg.sender] = block.number;
+
         LiquidityProvider storage lp = liquidityProviders[msg.sender];
 
         // Settle pending rewards before changing shares
