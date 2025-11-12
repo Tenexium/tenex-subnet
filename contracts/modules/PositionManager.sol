@@ -169,10 +169,13 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 netReturn = actualTaoReceived.safeAdd(addedCollateralToReturn).safeSub(totalCosts);
         // If net return is greater than collateral to return, take a performance fee for insurance fund
         if (netReturn > initialCollateralToReturn) {
-            uint256 perfFeeInsurance =
-                (netReturn.safeSub(initialCollateralToReturn)).safeMul(perfFeeInsuranceShare) / PRECISION;
-            netReturn = netReturn.safeSub(perfFeeInsurance);
-            (bool success,) = payable(insuranceManager).call{value: perfFeeInsurance}("");
+            uint256 benefited = netReturn.safeSub(initialCollateralToReturn);
+            uint256 perfFeeInsurance = benefited.safeMul(perfFeeInsuranceShare) / PRECISION;
+            uint256 perfFeeProtocol = benefited.safeMul(perfFeeProtocolShare) / PRECISION;
+            netReturn = netReturn.safeSub(perfFeeInsurance).safeSub(perfFeeProtocol);
+            (bool success,) = payable(treasury).call{value: perfFeeProtocol}("");
+            if (!success) revert TenexiumErrors.TransferFailed();
+            (success,) = payable(insuranceManager).call{value: perfFeeInsurance}("");
             if (!success) revert TenexiumErrors.TransferFailed();
         }
 

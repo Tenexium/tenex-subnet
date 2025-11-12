@@ -221,6 +221,8 @@ contract TenexiumStorage {
     // ==================== POSITION DEBT ====================
     mapping(address => uint256) public positionDebt; // Position debt by user
 
+    uint256 public perfFeeProtocolShare; // Performance fee protocol share
+
     // ==================== STRUCTS ====================
 
     struct Position {
