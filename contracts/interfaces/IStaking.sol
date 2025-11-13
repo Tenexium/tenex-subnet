@@ -252,4 +252,22 @@ interface IStaking {
      * @param limitPrice The limit price for alpha token (uint256).
      */
     function removeStakeFullLimit(bytes32 hotkey, uint256 netuid, uint256 limitPrice) external;
+
+    /**
+     * @dev Burns alpha tokens from the specified hotkey's stake on a subnet.
+     *
+     * This function allows external accounts and contracts to permanently burn (destroy) alpha tokens
+     * from their stake on a specified hotkey and subnet. The burned tokens are removed from circulation
+     * and cannot be recovered.
+     *
+     * @param hotkey The hotkey public key (32 bytes).
+     * @param amount The amount of alpha to burn (uint256).
+     * @param netuid The subnet to burn from (uint256).
+     *
+     * Requirements:
+     * - `hotkey` must be a valid hotkey registered on the network.
+     * - The caller must have sufficient alpha staked to the specified hotkey on the subnet.
+     * - `amount` must be greater than zero and not exceed the staked amount.
+     */
+    function burnAlpha(bytes32 hotkey, uint256 amount, uint256 netuid) external payable;
 }

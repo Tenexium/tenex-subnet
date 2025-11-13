@@ -34,7 +34,8 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
 
         expectedAlpha = expectedAlpha.safeMul(9500) / 10000; // 5% slippage buffer
         uint256 limitPrice = buybackAmount / expectedAlpha;
-        uint256 actualAlphaBought = _stakeTaoForAlpha(BURN_ADDRESS, buybackAmount, limitPrice, true, TENEX_NETUID);
+        uint256 actualAlphaBought =
+            _stakeTaoForAlpha(protocolValidatorHotkey, buybackAmount, limitPrice, true, TENEX_NETUID);
         if (actualAlphaBought == 0) revert TenexiumErrors.AmountZero();
 
         // Update accounting
@@ -49,10 +50,10 @@ abstract contract BuybackManager is TenexiumStorage, TenexiumEvents, PrecompileA
     function _burnBuybackedAlpha() internal {
         // Burn Alpha tokens that were bought back
         uint256 availableBurnedAlpha = STAKING_PRECOMPILE.getStake(
-            BURN_ADDRESS, addressConversionContract.addressToSS58Pub(address(this)), TENEX_NETUID
+            protocolValidatorHotkey, addressConversionContract.addressToSS58Pub(address(this)), TENEX_NETUID
         );
         if (availableBurnedAlpha == 0) revert TenexiumErrors.AmountZero();
-        _burnAlpha(availableBurnedAlpha, TENEX_NETUID);
+        _burnAlpha(protocolValidatorHotkey, availableBurnedAlpha, TENEX_NETUID);
     }
 
     /**

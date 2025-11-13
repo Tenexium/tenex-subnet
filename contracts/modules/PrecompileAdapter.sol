@@ -12,9 +12,6 @@ import "../libraries/AlphaMath.sol";
 abstract contract PrecompileAdapter is TenexiumStorage {
     using AlphaMath for uint256;
 
-    // Mapping address of ZERO h160 address(0x0000000000000000000000000000000000000000)
-    bytes32 public constant BURN_ADDRESS = 0xc2cdcf01af7163d2d99b2ec87954e4c1b735e9e9ea80f8775bf29dd9457eaca1;
-
     /**
      * @notice Stake TAO for Alpha tokens using the staking precompile with price limit
      * @param validatorHotkey Validator hotkey
@@ -91,15 +88,9 @@ abstract contract PrecompileAdapter is TenexiumStorage {
      * @param burnAmount Alpha amount to burn (alpha base units)
      * @param alphaNetuid Alpha subnet ID
      */
-    function _burnAlpha(uint256 burnAmount, uint16 alphaNetuid) internal {
-        bytes memory data = abi.encodeWithSelector(
-            STAKING_PRECOMPILE.transferStake.selector,
-            BURN_ADDRESS,
-            BURN_ADDRESS,
-            uint256(alphaNetuid),
-            uint256(alphaNetuid),
-            burnAmount
-        );
+    function _burnAlpha(bytes32 hotkey, uint256 burnAmount, uint16 alphaNetuid) internal {
+        bytes memory data =
+            abi.encodeWithSelector(STAKING_PRECOMPILE.burnAlpha.selector, hotkey, burnAmount, uint256(alphaNetuid));
         (bool success,) = address(STAKING_PRECOMPILE).call{gas: gasleft()}(data);
         if (!success) revert TenexiumErrors.BurnAlphaFailed();
     }
