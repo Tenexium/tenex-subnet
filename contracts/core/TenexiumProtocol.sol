@@ -192,31 +192,13 @@ contract TenexiumProtocol is
     /**
      * @notice Update tier thresholds, fee discounts, and max leverages (owner only)
      * @param _tierThresholds [t1..t5] token thresholds for each tier
-     * @param _tierFeeDiscounts [tier0..tier5] fee discounts for each tier
-     * @param _tierMaxLeverages [tier0..tier5] leverage caps for each tier
      */
-    function updateTierParameters(
-        uint256[5] calldata _tierThresholds,
-        uint256[6] calldata _tierFeeDiscounts,
-        uint256[6] calldata _tierMaxLeverages
-    ) external onlyManager {
+    function updateTierParameters(uint256[5] calldata _tierThresholds) external onlyManager {
         tier1Threshold = _tierThresholds[0];
         tier2Threshold = _tierThresholds[1];
         tier3Threshold = _tierThresholds[2];
         tier4Threshold = _tierThresholds[3];
         tier5Threshold = _tierThresholds[4];
-        tier0FeeDiscount = _tierFeeDiscounts[0];
-        tier1FeeDiscount = _tierFeeDiscounts[1];
-        tier2FeeDiscount = _tierFeeDiscounts[2];
-        tier3FeeDiscount = _tierFeeDiscounts[3];
-        tier4FeeDiscount = _tierFeeDiscounts[4];
-        tier5FeeDiscount = _tierFeeDiscounts[5];
-        tier0MaxLeverage = _tierMaxLeverages[0];
-        tier1MaxLeverage = _tierMaxLeverages[1];
-        tier2MaxLeverage = _tierMaxLeverages[2];
-        tier3MaxLeverage = _tierMaxLeverages[3];
-        tier4MaxLeverage = _tierMaxLeverages[4];
-        tier5MaxLeverage = _tierMaxLeverages[5];
     }
 
     /**
@@ -809,6 +791,20 @@ contract TenexiumProtocol is
 
         // The TAO is automatically added to the contract's balance
         // No additional processing needed as this is just a funding mechanism
+    }
+
+    /**
+     * @notice Manually request insurance fund from InsuranceManager
+     * @dev Only callable by the manager
+     * @param amount Amount of TAO to request from insurance fund
+     */
+    function requestInsuranceFund(uint256 amount) external onlyManager nonReentrant {
+        if (amount == 0) revert TenexiumErrors.InvalidValue();
+
+        uint256 availableInsurance = IInsuranceManager(insuranceManager).getNetBalance();
+        if (amount > availableInsurance) revert TenexiumErrors.InsufficientLiquidity();
+
+        IInsuranceManager(insuranceManager).fund(amount);
     }
 
     // ==================== UPGRADES (UUPS) ====================
