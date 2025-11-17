@@ -4,6 +4,7 @@ import "./tasks/deploy-final";
 import "./tasks/multisig";
 import "./tasks/insurance-manager";
 import "./tasks/staking-wrapper";
+import "./tasks/tenexium-register";
 
 import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";

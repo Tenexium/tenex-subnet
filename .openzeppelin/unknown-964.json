@@ -40,6 +40,11 @@
       "address": "0xCD4622e5479C2f24dAE7512eDde2ba2e1bB1f490",
       "txHash": "0x123dbd2045a9415033dac8bf45bbf80aa248299ad78d0a14df00ab6386121c60",
       "kind": "uups"
+    },
+    {
+      "address": "0xd4cb0e6C3a8d471077595B7E8345D5b45cA66772",
+      "txHash": "0x8a3828e4c385a7d4b12e14c2012d85dc3fdc60df98f059fb59a853cb22b9ffc4",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -2640,6 +2645,135 @@
           "t_uint16": {
             "label": "uint16",
             "numberOfBytes": "2"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "329de7bf91d486dd9ef9b5e2f89779edd7320fcecd98be7e221e8025031d6844": {
+      "address": "0xBac57C262489c831E80264C37F1D5B555a9Ce2a4",
+      "txHash": "0x1537a27773a544a7a6cd7031e6d44c4a33655248a8ad26df380aec10ac2859c4",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "addressConversionContract",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IAddressConversion)10045",
+            "contract": "TenexiumRegister",
+            "src": "contracts/TenexiumRegister.sol:51"
+          },
+          {
+            "label": "tenexiumProtocol",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "TenexiumRegister",
+            "src": "contracts/TenexiumRegister.sol:54"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)73_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)288_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_contract(IAddressConversion)10045": {
+            "label": "contract IAddressConversion",
+            "numberOfBytes": "20"
           }
         },
         "namespaces": {
