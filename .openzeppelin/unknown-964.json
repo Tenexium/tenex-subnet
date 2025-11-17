@@ -35,6 +35,11 @@
       "address": "0x69bB21FB93c9A274E1A7F66E74a8905919Faa36c",
       "txHash": "0x7eead441f87b309233e9ac4d3695e05ad0f666a287ae60dda8b17d98c8ece53a",
       "kind": "uups"
+    },
+    {
+      "address": "0xCD4622e5479C2f24dAE7512eDde2ba2e1bB1f490",
+      "txHash": "0x123dbd2045a9415033dac8bf45bbf80aa248299ad78d0a14df00ab6386121c60",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -1480,6 +1485,1161 @@
           "t_contract(ITenexium)12820": {
             "label": "contract ITenexium",
             "numberOfBytes": "20"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "86231b21c8a914185374c21d3ce49dda0424cb7b7eacb951ebc139be82337739": {
+      "address": "0x015FC544a2C08f3E0EdE1Df77E70Ce25B9062B66",
+      "txHash": "0x957e6df89b363032712319dc2f472921af3a8c8e780ede6f6d8d611eb1423f69",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "maxLeverage",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:35"
+          },
+          {
+            "label": "liquidationThreshold",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:36"
+          },
+          {
+            "label": "minLiquidityThreshold",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:39"
+          },
+          {
+            "label": "maxUtilizationRate",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:40"
+          },
+          {
+            "label": "liquidityBufferRatio",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:41"
+          },
+          {
+            "label": "userActionCooldownBlocks",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:44"
+          },
+          {
+            "label": "lpActionCooldownBlocks",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:45"
+          },
+          {
+            "label": "buybackRate",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:48"
+          },
+          {
+            "label": "buybackIntervalBlocks",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:49"
+          },
+          {
+            "label": "buybackExecutionThreshold",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:50"
+          },
+          {
+            "label": "protocolFeeGovernanceShare",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:53"
+          },
+          {
+            "label": "protocolFeeInsuranceShare",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:54"
+          },
+          {
+            "label": "tradingFeeRate",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:57"
+          },
+          {
+            "label": "borrowingFeeRate",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:58"
+          },
+          {
+            "label": "liquidationFeeRate",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:59"
+          },
+          {
+            "label": "tradingFeeLpShare",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:62"
+          },
+          {
+            "label": "tradingFeeLiquidatorShare",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:63"
+          },
+          {
+            "label": "tradingFeeProtocolShare",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:64"
+          },
+          {
+            "label": "borrowingFeeLpShare",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:65"
+          },
+          {
+            "label": "borrowingFeeLiquidatorShare",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:66"
+          },
+          {
+            "label": "borrowingFeeProtocolShare",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:67"
+          },
+          {
+            "label": "liquidationFeeLpShare",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:68"
+          },
+          {
+            "label": "liquidationFeeLiquidatorShare",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:69"
+          },
+          {
+            "label": "liquidationFeeProtocolShare",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:70"
+          },
+          {
+            "label": "tier1Threshold",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:73"
+          },
+          {
+            "label": "tier2Threshold",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:74"
+          },
+          {
+            "label": "tier3Threshold",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:75"
+          },
+          {
+            "label": "tier4Threshold",
+            "offset": 0,
+            "slot": "27",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:76"
+          },
+          {
+            "label": "tier5Threshold",
+            "offset": 0,
+            "slot": "28",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:77"
+          },
+          {
+            "label": "tier0FeeDiscount",
+            "offset": 0,
+            "slot": "29",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:80"
+          },
+          {
+            "label": "tier1FeeDiscount",
+            "offset": 0,
+            "slot": "30",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:81"
+          },
+          {
+            "label": "tier2FeeDiscount",
+            "offset": 0,
+            "slot": "31",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:82"
+          },
+          {
+            "label": "tier3FeeDiscount",
+            "offset": 0,
+            "slot": "32",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:83"
+          },
+          {
+            "label": "tier4FeeDiscount",
+            "offset": 0,
+            "slot": "33",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:84"
+          },
+          {
+            "label": "tier5FeeDiscount",
+            "offset": 0,
+            "slot": "34",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:85"
+          },
+          {
+            "label": "tier0MaxLeverage",
+            "offset": 0,
+            "slot": "35",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:88"
+          },
+          {
+            "label": "tier1MaxLeverage",
+            "offset": 0,
+            "slot": "36",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:89"
+          },
+          {
+            "label": "tier2MaxLeverage",
+            "offset": 0,
+            "slot": "37",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:90"
+          },
+          {
+            "label": "tier3MaxLeverage",
+            "offset": 0,
+            "slot": "38",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:91"
+          },
+          {
+            "label": "tier4MaxLeverage",
+            "offset": 0,
+            "slot": "39",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:92"
+          },
+          {
+            "label": "tier5MaxLeverage",
+            "offset": 0,
+            "slot": "40",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:93"
+          },
+          {
+            "label": "protocolValidatorHotkey",
+            "offset": 0,
+            "slot": "41",
+            "type": "t_bytes32",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:96"
+          },
+          {
+            "label": "protocolSs58Address",
+            "offset": 0,
+            "slot": "42",
+            "type": "t_bytes32",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:97"
+          },
+          {
+            "label": "treasury",
+            "offset": 0,
+            "slot": "43",
+            "type": "t_address",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:98"
+          },
+          {
+            "label": "liquidityCircuitBreaker",
+            "offset": 20,
+            "slot": "43",
+            "type": "t_bool",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:103"
+          },
+          {
+            "label": "functionPermissions",
+            "offset": 0,
+            "slot": "44",
+            "type": "t_array(t_bool)3_storage",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:109"
+          },
+          {
+            "label": "totalCollateral",
+            "offset": 0,
+            "slot": "45",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:112"
+          },
+          {
+            "label": "totalBorrowed",
+            "offset": 0,
+            "slot": "46",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:113"
+          },
+          {
+            "label": "totalVolume",
+            "offset": 0,
+            "slot": "47",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:114"
+          },
+          {
+            "label": "totalTrades",
+            "offset": 0,
+            "slot": "48",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:115"
+          },
+          {
+            "label": "protocolFees",
+            "offset": 0,
+            "slot": "49",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:116"
+          },
+          {
+            "label": "buybackPool",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:119"
+          },
+          {
+            "label": "lastBuybackBlock",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:120"
+          },
+          {
+            "label": "totalTaoUsedForBuybacks",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:121"
+          },
+          {
+            "label": "totalAlphaBought",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:122"
+          },
+          {
+            "label": "totalTradingFees",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:125"
+          },
+          {
+            "label": "totalBorrowingFees",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:126"
+          },
+          {
+            "label": "totalLiquidationFees",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:127"
+          },
+          {
+            "label": "lastAccruedBorrowingFeesUpdate",
+            "offset": 0,
+            "slot": "57",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:128"
+          },
+          {
+            "label": "maxLiquidationCount",
+            "offset": 0,
+            "slot": "58",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:131"
+          },
+          {
+            "label": "totalPendingLpFees",
+            "offset": 0,
+            "slot": "59",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:134"
+          },
+          {
+            "label": "totalLpStakes",
+            "offset": 0,
+            "slot": "60",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:135"
+          },
+          {
+            "label": "totalLiquidations",
+            "offset": 0,
+            "slot": "61",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:138"
+          },
+          {
+            "label": "totalLiquidationValue",
+            "offset": 0,
+            "slot": "62",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:139"
+          },
+          {
+            "label": "accLpFeesPerShare",
+            "offset": 0,
+            "slot": "63",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:142"
+          },
+          {
+            "label": "accruedBorrowingFees",
+            "offset": 0,
+            "slot": "64",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:143"
+          },
+          {
+            "label": "lastUserActionBlock",
+            "offset": 0,
+            "slot": "65",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:148"
+          },
+          {
+            "label": "lastLpActionBlock",
+            "offset": 0,
+            "slot": "66",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:149"
+          },
+          {
+            "label": "positions",
+            "offset": 0,
+            "slot": "67",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(Position)8666_storage))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:152"
+          },
+          {
+            "label": "userCollateral",
+            "offset": 0,
+            "slot": "68",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:155"
+          },
+          {
+            "label": "userTotalBorrowed",
+            "offset": 0,
+            "slot": "69",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:156"
+          },
+          {
+            "label": "userWeeklyTradingVolume",
+            "offset": 0,
+            "slot": "70",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:157"
+          },
+          {
+            "label": "liquidityProviders",
+            "offset": 0,
+            "slot": "71",
+            "type": "t_mapping(t_address,t_struct(LiquidityProvider)8698_storage)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:160"
+          },
+          {
+            "label": "lpFeeRewards",
+            "offset": 0,
+            "slot": "72",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:163"
+          },
+          {
+            "label": "totalLiquidatorLiquidations",
+            "offset": 0,
+            "slot": "73",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:166"
+          },
+          {
+            "label": "totalLiquidatorLiquidationValue",
+            "offset": 0,
+            "slot": "74",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:169"
+          },
+          {
+            "label": "nextPositionId",
+            "offset": 0,
+            "slot": "75",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:172"
+          },
+          {
+            "label": "crowdloanContribution",
+            "offset": 0,
+            "slot": "76",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:175"
+          },
+          {
+            "label": "alphaPairs",
+            "offset": 0,
+            "slot": "77",
+            "type": "t_mapping(t_uint16,t_struct(AlphaPair)8685_storage)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:178"
+          },
+          {
+            "label": "uniqueLiquidityProviders",
+            "offset": 0,
+            "slot": "78",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:183"
+          },
+          {
+            "label": "liquidityProviderSet",
+            "offset": 0,
+            "slot": "79",
+            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:185"
+          },
+          {
+            "label": "groupLiquidityProviders",
+            "offset": 0,
+            "slot": "80",
+            "type": "t_mapping(t_bytes32,t_array(t_address)dyn_storage)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:187"
+          },
+          {
+            "label": "maxLiquidityProvidersPerHotkey",
+            "offset": 0,
+            "slot": "81",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:189"
+          },
+          {
+            "label": "lpFeeInsuranceShare",
+            "offset": 0,
+            "slot": "82",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:192"
+          },
+          {
+            "label": "perfFeeInsuranceShare",
+            "offset": 0,
+            "slot": "83",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:193"
+          },
+          {
+            "label": "dailyLiquidatorLiquidations",
+            "offset": 0,
+            "slot": "84",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:196"
+          },
+          {
+            "label": "dailyLiquidatorLiquidationValue",
+            "offset": 0,
+            "slot": "85",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:197"
+          },
+          {
+            "label": "lastLiquidationBlock",
+            "offset": 0,
+            "slot": "86",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:198"
+          },
+          {
+            "label": "firstLiquidatableBlock",
+            "offset": 0,
+            "slot": "87",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:199"
+          },
+          {
+            "label": "consecutiveLiquidatableBlocks",
+            "offset": 0,
+            "slot": "88",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:200"
+          },
+          {
+            "label": "addressConversionContract",
+            "offset": 0,
+            "slot": "89",
+            "type": "t_contract(IAddressConversion)9707",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:203"
+          },
+          {
+            "label": "manager",
+            "offset": 0,
+            "slot": "90",
+            "type": "t_address",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:206"
+          },
+          {
+            "label": "insuranceManager",
+            "offset": 0,
+            "slot": "91",
+            "type": "t_address",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:209"
+          },
+          {
+            "label": "currentWeek",
+            "offset": 0,
+            "slot": "92",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:212"
+          },
+          {
+            "label": "liquidators",
+            "offset": 0,
+            "slot": "93",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_mapping(t_uint256,t_address)))",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:215"
+          },
+          {
+            "label": "liquidatorReward",
+            "offset": 0,
+            "slot": "94",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:216"
+          },
+          {
+            "label": "rewardPool",
+            "offset": 0,
+            "slot": "95",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:219"
+          },
+          {
+            "label": "positionDebt",
+            "offset": 0,
+            "slot": "96",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:222"
+          },
+          {
+            "label": "perfFeeProtocolShare",
+            "offset": 0,
+            "slot": "97",
+            "type": "t_uint256",
+            "contract": "TenexiumStorage",
+            "src": "contracts/core/TenexiumStorage.sol:224"
+          },
+          {
+            "label": "maxSlippage",
+            "offset": 0,
+            "slot": "98",
+            "type": "t_uint256",
+            "contract": "StakingWrapper",
+            "src": "contracts/StakingWrapper.sol:57"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)73_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)288_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_bool)3_storage": {
+            "label": "bool[3]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressConversion)9707": {
+            "label": "contract IAddressConversion",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_mapping(t_uint256,t_address)))": {
+            "label": "mapping(address => mapping(uint256 => mapping(uint256 => address)))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(Position)8666_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct TenexiumStorage.Position))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(LiquidityProvider)8698_storage)": {
+            "label": "mapping(address => struct TenexiumStorage.LiquidityProvider)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_array(t_address)dyn_storage)": {
+            "label": "mapping(bytes32 => address[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
+            "label": "mapping(bytes32 => mapping(address => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint16,t_struct(AlphaPair)8685_storage)": {
+            "label": "mapping(uint16 => struct TenexiumStorage.AlphaPair)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_address))": {
+            "label": "mapping(uint256 => mapping(uint256 => address))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Position)8666_storage)": {
+            "label": "mapping(uint256 => struct TenexiumStorage.Position)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AlphaPair)8685_storage": {
+            "label": "struct TenexiumStorage.AlphaPair",
+            "members": [
+              {
+                "label": "alphaNetuid",
+                "type": "t_uint16",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "totalCollateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "totalBorrowed",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "totalAlphaStaked",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "liquidationThreshold",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "maxLeverage",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "validatorHotkey",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "maxSlippage",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "8"
+              }
+            ],
+            "numberOfBytes": "288"
+          },
+          "t_struct(LiquidityProvider)8698_storage": {
+            "label": "struct TenexiumStorage.LiquidityProvider",
+            "members": [
+              {
+                "label": "stake",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "rewards",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "lastRewardBlock",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "shares",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "rewardDebt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(Position)8666_storage": {
+            "label": "struct TenexiumStorage.Position",
+            "members": [
+              {
+                "label": "alphaNetuid",
+                "type": "t_uint16",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "initialCollateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "addedCollateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "borrowed",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "alphaAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "leverage",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "entryPrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "lastUpdateBlock",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "borrowingFeeDebt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "validatorHotkey",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "10"
+              }
+            ],
+            "numberOfBytes": "352"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
           }
         },
         "namespaces": {

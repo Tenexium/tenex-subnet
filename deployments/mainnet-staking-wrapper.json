@@ -1,0 +1,41 @@
+{
+  "network": "mainnet",
+  "deployer": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6",
+  "timestamp": "2025-11-16T14:09:01.341Z",
+  "stakingWrapper": {
+    "proxy": "0xCD4622e5479C2f24dAE7512eDde2ba2e1bB1f490",
+    "implementation": "0x015FC544a2C08f3E0EdE1Df77E70Ce25B9062B66",
+    "address": "0xCD4622e5479C2f24dAE7512eDde2ba2e1bB1f490",
+    "addressConversionContract": "0x00b6571d036432E2bd8c4be6ffa6B349fBadc424",
+    "maxSlippage": 10000
+  },
+  "lastUpdated": "2025-11-16T15:17:02.182Z",
+  "newImplementation": {
+    "address": "0xa6278BdFB2201D289f10F7B8612Db798C998f280",
+    "deployedAt": "2025-11-16T15:16:37.137Z",
+    "deployer": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+  },
+  "upgrades": {
+    "0xb27d073dc73b544a872022f82de1a03162bd3b61525460aa22967bed032c6445": {
+      "previousImplementation": "0x015FC544a2C08f3E0EdE1Df77E70Ce25B9062B66",
+      "newImplementation": "0x587cEd18164dE6047276E2946AD9ddD507f28c68",
+      "upgradeTxHash": "0xb27d073dc73b544a872022f82de1a03162bd3b61525460aa22967bed032c6445",
+      "upgradedAt": "2025-11-16T14:22:49.879Z",
+      "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+    },
+    "0x1047cfe308c58e51910cb5db3e453a4b4005380a88e624b525e2e15ecaeba8af": {
+      "previousImplementation": "0x587cEd18164dE6047276E2946AD9ddD507f28c68",
+      "newImplementation": "0x8797565521FaA6E0c657ee05d4efA0EbDF34fd75",
+      "upgradeTxHash": "0x1047cfe308c58e51910cb5db3e453a4b4005380a88e624b525e2e15ecaeba8af",
+      "upgradedAt": "2025-11-16T15:11:13.965Z",
+      "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+    },
+    "0xf2518a0a4d4fc202e74476a95672f75ddcaa53e8f4ec8bb968e23e153d5457d7": {
+      "previousImplementation": "0xa6278BdFB2201D289f10F7B8612Db798C998f280",
+      "newImplementation": "0xa6278BdFB2201D289f10F7B8612Db798C998f280",
+      "upgradeTxHash": "0xf2518a0a4d4fc202e74476a95672f75ddcaa53e8f4ec8bb968e23e153d5457d7",
+      "upgradedAt": "2025-11-16T15:17:02.182Z",
+      "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+    }
+  }
+}
