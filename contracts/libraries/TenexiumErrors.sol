@@ -64,6 +64,9 @@ library TenexiumErrors {
     // Manager
     error NotManager();
 
+    // Register
+    error NotRegister();
+
     // Crowdloan
     error CrowdloanContributionFailed();
     error CrowdloanWithdrawalFailed();

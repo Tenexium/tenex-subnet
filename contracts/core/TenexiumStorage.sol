@@ -223,6 +223,14 @@ contract TenexiumStorage {
 
     uint256 public perfFeeProtocolShare; // Performance fee protocol share
 
+    // ==================== BORROWING FEE CALCULATION PARRAMS ====================
+
+    uint256 public slope1;
+    uint256 public slope2;
+
+    // ==================== REGISTER CONTRACT ====================
+    address public registerContract;
+
     // ==================== STRUCTS ====================
 
     struct Position {
@@ -298,6 +306,11 @@ contract TenexiumStorage {
 
     modifier onlyManager() {
         if (msg.sender != manager) revert TenexiumErrors.NotManager();
+        _;
+    }
+
+    modifier onlyRegister() {
+        if (msg.sender != registerContract) revert TenexiumErrors.NotRegister();
         _;
     }
 }
