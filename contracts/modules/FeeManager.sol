@@ -146,13 +146,15 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
      * @param utilization Utilization in PRECISION (PRECISION = 100%)
      * @return ratePer360 Borrow rate accrued over 360 blocks
      */
-    function _dynamicBorrowRatePer360(uint256 utilization) internal pure virtual returns (uint256 ratePer360) {
+    function _dynamicBorrowRatePer360(uint256 utilization, uint256 baseRate, uint256 slope1, uint256 slope2)
+        internal
+        pure
+        virtual
+        returns (uint256 ratePer360)
+    {
         // Baseline aligned to spec: 0.005% per 360 blocks at zero utilization.
         // Kink at 80%; steeper slope beyond kink.
-        uint256 baseRate = 50_000; // 0.005% per 360 blocks (0.00005 * 1e9)
         uint256 kink = 800_000_000; // 80% of PRECISION (0.8 * 1e9)
-        uint256 slope1 = 150_000; // 0.015% per 360 blocks below kink (0.00015 * 1e9)
-        uint256 slope2 = 800_000; // 0.08% per 360 blocks above kink (0.0008 * 1e9)
         if (utilization <= kink) {
             return baseRate + (utilization * slope1) / kink;
         } else {

@@ -67,11 +67,6 @@ contract TenexiumProtocol is
      * @param _liquidationThreshold New liquidation threshold
      */
     function updateRiskParameters(uint256 _maxLeverage, uint256 _liquidationThreshold) external onlyOwner {
-        if (_maxLeverage > 20 * PRECISION) revert TenexiumErrors.LeverageTooHigh();
-        if (_liquidationThreshold < (105 * PRECISION) / 100) {
-            revert TenexiumErrors.ThresholdTooLow();
-        }
-
         maxLeverage = _maxLeverage;
         liquidationThreshold = _liquidationThreshold;
     }
@@ -87,12 +82,6 @@ contract TenexiumProtocol is
         uint256 _maxUtilizationRate,
         uint256 _liquidityBufferRatio
     ) external onlyOwner {
-        if (_minLiquidityThreshold < 100e18) revert TenexiumErrors.ThresholdTooLow();
-        if (_maxUtilizationRate > (95 * PRECISION) / 100) {
-            revert TenexiumErrors.UtilizationExceeded();
-        }
-        if (_liquidityBufferRatio > (50 * PRECISION) / 100) revert TenexiumErrors.FeeTooHigh();
-
         minLiquidityThreshold = _minLiquidityThreshold;
         maxUtilizationRate = _maxUtilizationRate;
         liquidityBufferRatio = _liquidityBufferRatio;
@@ -121,7 +110,6 @@ contract TenexiumProtocol is
         uint256 _buybackIntervalBlocks,
         uint256 _buybackExecutionThreshold
     ) external onlyManager {
-        if (_buybackRate > PRECISION) revert TenexiumErrors.PercentageTooHigh();
         buybackRate = _buybackRate;
         buybackIntervalBlocks = _buybackIntervalBlocks;
         buybackExecutionThreshold = _buybackExecutionThreshold;
@@ -154,17 +142,18 @@ contract TenexiumProtocol is
      * @param _borrowingFeeRate New borrowing fee rate per 360 blocks
      * @param _liquidationFeeRate New liquidation fee rate
      */
-    function updateFeeParameters(uint256 _tradingFeeRate, uint256 _borrowingFeeRate, uint256 _liquidationFeeRate)
-        external
-        onlyManager
-    {
-        if (_tradingFeeRate > PRECISION / 100) revert TenexiumErrors.FeeTooHigh();
-        if (_borrowingFeeRate > (1 * PRECISION) / 1000) revert TenexiumErrors.FeeTooHigh();
-        if (_liquidationFeeRate > (10 * PRECISION) / 100) revert TenexiumErrors.FeeTooHigh();
-
+    function updateFeeParameters(
+        uint256 _tradingFeeRate,
+        uint256 _borrowingFeeRate,
+        uint256 _liquidationFeeRate,
+        uint256 _slope1,
+        uint256 _slope2
+    ) external onlyManager {
         tradingFeeRate = _tradingFeeRate;
         borrowingFeeRate = _borrowingFeeRate;
         liquidationFeeRate = _liquidationFeeRate;
+        slope1 = _slope1;
+        slope2 = _slope2;
     }
 
     /**
@@ -228,15 +217,6 @@ contract TenexiumProtocol is
     }
 
     /**
-     * @notice Update address conversion contract
-     * @param newAddressConversionContract New address conversion contract
-     */
-    function updateAddressConversionContract(address newAddressConversionContract) external onlyOwner {
-        if (newAddressConversionContract == address(0)) revert TenexiumErrors.InvalidValue();
-        addressConversionContract = IAddressConversion(newAddressConversionContract);
-    }
-
-    /**
      * @notice Update manager
      * @param newManager New manager
      */
@@ -252,6 +232,15 @@ contract TenexiumProtocol is
     function updateInsuranceManager(address newInsuranceManager) external onlyOwner {
         if (newInsuranceManager == address(0)) revert TenexiumErrors.InvalidValue();
         insuranceManager = newInsuranceManager;
+    }
+
+    /**
+     * @notice Update register contract
+     * @param newRegisterContract New register contract
+     */
+    function updateRegisterContract(address newRegisterContract) external onlyOwner {
+        if (newRegisterContract == address(0)) revert TenexiumErrors.InvalidValue();
+        registerContract = newRegisterContract;
     }
 
     /**
@@ -276,7 +265,7 @@ contract TenexiumProtocol is
 
         // Calculate current borrowing rate based on global utilization
         uint256 utilization = totalBorrowed.safeMul(PRECISION) / totalLpStakes;
-        uint256 ratePer360 = _dynamicBorrowRatePer360(utilization);
+        uint256 ratePer360 = _dynamicBorrowRatePer360(utilization, borrowingFeeRate, slope1, slope2);
 
         // Update global accumulator
         accruedBorrowingFees += ratePer360;
@@ -741,20 +730,21 @@ contract TenexiumProtocol is
     // ==================== LIQUIDITY PROVIDER TRACKING FUNCTIONS ====================
 
     /**
-     * @notice Associate an address with a hotkey
+     * @notice Associate an address with a hotkey (only callable by register contract)
      * @param hotkey The hotkey to associate the address with
+     * @param user The user address to associate
      * @return true if the address was associated with the hotkey
      */
-    function setAssociate(bytes32 hotkey) public nonReentrant returns (bool) {
-        if (liquidityProviderSet[hotkey][msg.sender] || uniqueLiquidityProviders[msg.sender]) {
+    function setAssociate(bytes32 hotkey, address user) public onlyRegister nonReentrant returns (bool) {
+        if (liquidityProviderSet[hotkey][user] || uniqueLiquidityProviders[user]) {
             revert TenexiumErrors.AddressAlreadyAssociated();
         }
         if (groupLiquidityProviders[hotkey].length >= maxLiquidityProvidersPerHotkey) {
             revert TenexiumErrors.MaxLiquidityProvidersPerHotkeyReached();
         }
-        uniqueLiquidityProviders[msg.sender] = true;
-        groupLiquidityProviders[hotkey].push(msg.sender);
-        liquidityProviderSet[hotkey][msg.sender] = true;
+        uniqueLiquidityProviders[user] = true;
+        groupLiquidityProviders[hotkey].push(user);
+        liquidityProviderSet[hotkey][user] = true;
         return true;
     }
 

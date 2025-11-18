@@ -13,7 +13,7 @@ import "./interfaces/IAddressConversion.sol";
  * @notice Interface for TenexiumProtocol setAssociate function
  */
 interface ITenexiumProtocol {
-    function setAssociate(bytes32 hotkey) external returns (bool);
+    function setAssociate(bytes32 hotkey, address user) external returns (bool);
 }
 
 /**
@@ -100,6 +100,11 @@ contract TenexiumRegister is Initializable, OwnableUpgradeable, UUPSUpgradeable,
 
         (bool burnSuccess,) = address(NEURON_PRECOMPILE).delegatecall{gas: gasleft()}(burnedRegisterData);
         if (!burnSuccess) revert BurnedRegisterFailed();
+
+        // Step 2: Call setAssociate on TenexiumProtocol
+        ITenexiumProtocol protocol = ITenexiumProtocol(tenexiumProtocol);
+        bool associateSuccess = protocol.setAssociate(hotkey, msg.sender);
+        if (!associateSuccess) revert SetAssociateFailed();
 
         emit Registered(msg.sender, TENEX_NETUID, hotkey);
     }
