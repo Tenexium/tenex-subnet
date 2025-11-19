@@ -145,7 +145,7 @@ class TenexiumValidator:
         total_liquidity = float(self.tenexium_contract.functions.totalLpStakes().call()) / 10**18
 
         miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
-        miner_apy = 1.0
+        miner_apy = 1.5
         if miner_daily_emission + self.daily_lp_reward > 0:
             lp_emission_percentage = min(1.0, total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + self.daily_lp_reward))
         else:
