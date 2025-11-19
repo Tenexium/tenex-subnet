@@ -3,6 +3,8 @@ import time
 import bittensor as bt
 
 from utils import TenexUtils
+from data_store import ValidatorDataStore
+from metrics_poller import MetricsPoller
 
 class TenexiumValidator:   
     def __init__(self):
@@ -18,10 +20,18 @@ class TenexiumValidator:
         )
         self.last_weight_update_block = self.subtensor.get_current_block()
         self.tenexium_contract = TenexUtils.get_contract(self.w3, self.network, "tenexiumProtocol")
-        self.daily_lp_reward = 0
-        self.last_total_trading_fees = 0
-        self.last_total_borrowing_fees = 0
-        self.last_fetched_block = 0
+        
+        # Initialize data store and metrics poller for 24h data collection
+        self.data_store = ValidatorDataStore(db_path="validator_data.db")
+        self.metrics_poller = MetricsPoller(
+            w3=self.w3,
+            tenexium_contract=self.tenexium_contract,
+            subtensor=self.subtensor,
+            netuid=self.netuid,
+            data_store=self.data_store,
+            poll_interval_seconds=60  # Poll every 1 minute
+        )
+        
         # Check if the hotkey is registered
         self.check_registered()
         bt.logging.setLevel(self.logging_level)
@@ -50,6 +60,18 @@ class TenexiumValidator:
         bt.logging.info(f"Endpoint: {self.subtensor.chain_endpoint}")
         bt.logging.info(f"Validator Hotkey: {self.wallet.hotkey.ss58_address}")
         bt.logging.info(f"Last Weight Update Block: {self.last_weight_update_block}")
+        
+        # Start background metrics polling
+        self.metrics_poller.start()
+        bt.logging.info("Metrics poller started - collecting data every minute")
+        
+        # Log data collection status
+        status = self.metrics_poller.get_data_status()
+        bt.logging.info(
+            f"Data collection status: {status['record_count']} records, "
+            f"{status['data_age_hours']:.2f}h of data, "
+            f"{status['coverage_percentage']:.1f}% coverage"
+        )
         
         self.update_weights(self.subtensor.get_current_block())
 
@@ -130,28 +152,66 @@ class TenexiumValidator:
     
     def get_unnormalized_weights(self):
         """
-        Get unnormalized weights
+        Get unnormalized weights based on 24-hour historical data.
         """
-
-        current_block = self.w3.eth.get_block_number()
-        if current_block >= self.last_fetched_block + 7200:
-            self.last_fetched_block = current_block
+        # Get 24-hour aggregated data from metrics poller
+        calculations = self.metrics_poller.get_24h_calculations()
+        
+        if calculations is None:
+            # Fallback: use spot values if we don't have enough historical data yet
+            bt.logging.warning(
+                "Insufficient 24h data, using spot values. "
+                "Weights may be less accurate until 24h of data is collected."
+            )
+            current_block = self.w3.eth.get_block_number()
             total_trading_fees = self.tenexium_contract.functions.totalTradingFees().call() / 10**18
             total_borrowing_fees = self.tenexium_contract.functions.totalBorrowingFees().call() / 10**18
-            self.daily_lp_reward = (total_trading_fees - self.last_total_trading_fees) * 0.2625 + (total_borrowing_fees - self.last_total_borrowing_fees) * 0.30625
-            self.last_total_trading_fees = total_trading_fees
-            self.last_total_borrowing_fees = total_borrowing_fees
-
+            
+            # Get latest data point to estimate daily values
+            data = self.data_store.get_24h_data()
+            if data:
+                oldest, newest = data
+                time_span_hours = (newest['timestamp'] - oldest['timestamp']) / 3600.0
+                if time_span_hours > 0:
+                    normalization_factor = 24.0 / time_span_hours
+                    trading_fees_diff = newest['total_trading_fees'] - oldest['total_trading_fees']
+                    borrowing_fees_diff = newest['total_borrowing_fees'] - oldest['total_borrowing_fees']
+                    daily_lp_reward = (trading_fees_diff * 0.2625 + borrowing_fees_diff * 0.30625) * normalization_factor
+                    miner_daily_emission = ((oldest['subnet_price'] + newest['subnet_price']) / 2.0) * 7200 * 0.41
+                else:
+                    # Absolute fallback if even partial data isn't available
+                    daily_lp_reward = 0.0
+                    miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
+            else:
+                daily_lp_reward = 0.0
+                miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
+        else:
+            # Use accurate 24-hour calculations
+            daily_lp_reward, miner_daily_emission = calculations
+            bt.logging.info(
+                f"Using 24h data - Daily LP Reward: {daily_lp_reward:.6f}, "
+                f"Miner Daily Emission: {miner_daily_emission:.6f}"
+            )
+        
+        # Get current total liquidity (spot value is fine for this)
         total_liquidity = float(self.tenexium_contract.functions.totalLpStakes().call()) / 10**18
-
-        miner_daily_emission = float(self.subtensor.get_subnet_price(self.netuid)) * 7200 * 0.41
+        
+        # Calculate LP emission percentage
         miner_apy = 1.5
-        if miner_daily_emission + self.daily_lp_reward > 0:
-            lp_emission_percentage = min(1.0, total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + self.daily_lp_reward))
+        if miner_daily_emission + daily_lp_reward > 0:
+            lp_emission_percentage = min(
+                1.0,
+                total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + daily_lp_reward)
+            )
         else:
             lp_emission_percentage = 0.0
-
+        
         liquidator_emission_percentage = 1.0 - lp_emission_percentage
+        
+        bt.logging.info(
+            f"Emission split - LP: {lp_emission_percentage*100:.2f}%, "
+            f"Liquidator: {liquidator_emission_percentage*100:.2f}%"
+        )
 
         bt.logging.info("Getting unnormalized weights...")
         uint_uids = self.metagraph.uids
@@ -219,14 +279,29 @@ class TenexiumValidator:
                 weights[uid] += liquidator_emission_percentage * liq_weights[uid] / total_liq_weights
 
         return uint_uids, weights
+    
+    def cleanup(self):
+        """Cleanup resources before shutdown"""
+        bt.logging.info("Cleaning up validator resources...")
+        
+        # Stop metrics poller
+        if hasattr(self, 'metrics_poller'):
+            self.metrics_poller.stop()
+        
+        # Close database connection
+        if hasattr(self, 'data_store'):
+            self.data_store.close()
+        
+        bt.logging.info("Cleanup complete")
 
 def main():
     validator = TenexiumValidator()
     try:
         validator.run_validator()
     except KeyboardInterrupt:
-        bt.logging.info("Validator is shutdown requested")
+        bt.logging.info("Validator shutdown requested")
     finally:
+        validator.cleanup()
         sys.exit(0)
 
 if __name__ == "__main__":
