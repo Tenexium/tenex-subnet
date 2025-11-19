@@ -127,13 +127,15 @@ contract TenexiumProtocol is
         uint256 _protocolFeeInsuranceShare,
         uint256 _lpFeeInsuranceShare,
         uint256 _perfFeeInsuranceShare,
-        uint256 _perfFeeProtocolShare
+        uint256 _perfFeeProtocolShare,
+        uint256 _perfFeeBuybackShare
     ) external onlyManager {
         protocolFeeGovernanceShare = _protocolFeeGovernanceShare;
         protocolFeeInsuranceShare = _protocolFeeInsuranceShare;
         lpFeeInsuranceShare = _lpFeeInsuranceShare;
         perfFeeInsuranceShare = _perfFeeInsuranceShare;
         perfFeeProtocolShare = _perfFeeProtocolShare;
+        perfFeeBuybackShare = _perfFeeBuybackShare;
     }
 
     /**
@@ -290,12 +292,6 @@ contract TenexiumProtocol is
         uint256 maxSlippageForPair
     ) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
-        if (maxLeverageForPair > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
-        if (validatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
-        if (liquidationThresholdForPair < (105 * PRECISION) / 100) {
-            revert TenexiumErrors.ThresholdTooLow();
-        }
-        if (maxSlippageForPair > 1000) revert TenexiumErrors.SlippageTooHigh();
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.alphaNetuid = alphaNetuid;
@@ -343,12 +339,6 @@ contract TenexiumProtocol is
     ) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing();
-        if (newMaxLeverage > maxLeverage) revert TenexiumErrors.LeverageTooHigh();
-        if (newLiquidationThreshold < (105 * PRECISION) / 100) {
-            revert TenexiumErrors.ThresholdTooLow();
-        }
-        if (newValidatorHotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
-        if (newMaxSlippage > 1000) revert TenexiumErrors.SlippageTooHigh();
 
         pair.maxLeverage = newMaxLeverage;
         pair.liquidationThreshold = newLiquidationThreshold;

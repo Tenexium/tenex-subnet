@@ -116,7 +116,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
 
         uint256 crowdloanBalance = crowdloanContribution[user];
         // 20% discount for 10 TAO crowdloan balance
-        uint256 discount_crowdloan = 2000 * AlphaMath.min(PRECISION, crowdloanBalance / PRECISION / 10) / 10000;
+        uint256 discount_crowdloan = 5000 * AlphaMath.min(PRECISION, crowdloanBalance / PRECISION / 10) / 10000;
         return discountedFee.safeMul(PRECISION - discount_crowdloan) / PRECISION;
     }
 
