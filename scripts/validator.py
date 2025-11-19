@@ -1,5 +1,6 @@
 import sys
 import time
+import os
 import bittensor as bt
 from scalecodec.types import Bool
 
@@ -23,7 +24,8 @@ class TenexiumValidator:
         self.tenexium_contract = TenexUtils.get_contract(self.w3, self.network, "tenexiumProtocol")
         
         # Initialize data store and metrics poller for 24h data collection
-        self.data_store = ValidatorDataStore(db_path="validator_data.db")
+        db_path = os.getenv("VALIDATOR_DB_PATH", "validator_data.db")
+        self.data_store = ValidatorDataStore(db_path=db_path)
         self.metrics_poller = MetricsPoller(
             w3=self.w3,
             tenexium_contract=self.tenexium_contract,
@@ -206,11 +208,6 @@ class TenexiumValidator:
             lp_emission_percentage = 0.0
         
         liquidator_emission_percentage = 1.0 - lp_emission_percentage
-        
-        bt.logging.info(
-            f"Emission split - LP: {lp_emission_percentage*100:.2f}%, "
-            f"Liquidator: {liquidator_emission_percentage*100:.2f}%"
-        )
 
         bt.logging.info("Getting unnormalized weights...")
         uint_uids = self.metagraph.uids
