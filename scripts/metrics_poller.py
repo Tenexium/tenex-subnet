@@ -29,17 +29,20 @@ class MetricsPoller:
         Args:
             w3: Web3 instance for Ethereum interactions
             tenexium_contract: Tenexium protocol contract instance
-            subtensor: Bittensor subtensor instance
+            subtensor: Bittensor subtensor instance (used to get endpoint)
             netuid: Network UID
             data_store: Data store instance for persisting metrics
             poll_interval_seconds: Polling interval in seconds (default: 60)
         """
         self.w3 = w3
         self.tenexium_contract = tenexium_contract
-        self.subtensor = subtensor
+        self.subtensor_endpoint = subtensor.chain_endpoint
         self.netuid = netuid
         self.data_store = data_store
         self.poll_interval_seconds = poll_interval_seconds
+        
+        # Create separate subtensor instance for this thread to avoid WebSocket concurrency issues
+        self.subtensor: Optional[bt.subtensor] = None
         
         self.polling_thread: Optional[threading.Thread] = None
         self.stop_event = threading.Event()
@@ -81,26 +84,39 @@ class MetricsPoller:
         """Main polling loop that runs in background thread"""
         bt.logging.info("Metrics polling loop started")
         
-        # Initial poll immediately
-        self._poll_metrics()
+        try:
+            # Create dedicated subtensor instance for this thread
+            bt.logging.info(f"Creating dedicated subtensor connection to {self.subtensor_endpoint}")
+            self.subtensor = bt.subtensor(self.subtensor_endpoint)
+            bt.logging.info("Dedicated subtensor connection established")
+            
+            # Initial poll immediately
+            self._poll_metrics()
+            
+            while not self.stop_event.is_set():
+                try:
+                    # Wait for interval or stop event
+                    if self.stop_event.wait(timeout=self.poll_interval_seconds):
+                        break
+                    
+                    # Poll metrics
+                    self._poll_metrics()
+                    
+                    # Prune old data every 10 polls (every 10 minutes)
+                    if self.data_store.get_record_count() % 10 == 0:
+                        self.data_store.prune_old_data()
+                    
+                except Exception as e:
+                    bt.logging.error(f"Error in polling loop: {e}")
+                    # Continue polling even if one iteration fails
+                    time.sleep(5)  # Brief pause before retry
         
-        while not self.stop_event.is_set():
-            try:
-                # Wait for interval or stop event
-                if self.stop_event.wait(timeout=self.poll_interval_seconds):
-                    break
-                
-                # Poll metrics
-                self._poll_metrics()
-                
-                # Prune old data every 10 polls (every 10 minutes)
-                if self.data_store.get_record_count() % 10 == 0:
-                    self.data_store.prune_old_data()
-                
-            except Exception as e:
-                bt.logging.error(f"Error in polling loop: {e}")
-                # Continue polling even if one iteration fails
-                time.sleep(5)  # Brief pause before retry
+        finally:
+            # Clean up subtensor connection
+            if self.subtensor:
+                bt.logging.info("Closing dedicated subtensor connection")
+                # Note: subtensor cleanup happens automatically on object destruction
+                self.subtensor = None
         
         bt.logging.info("Metrics polling loop ended")
     
@@ -110,6 +126,10 @@ class MetricsPoller:
         This method fetches all necessary data for weight calculations.
         """
         try:
+            if not self.subtensor:
+                bt.logging.error("Subtensor not initialized in polling thread")
+                return
+            
             # Get Ethereum block number
             eth_block_number = self.w3.eth.get_block_number()
             
@@ -122,7 +142,7 @@ class MetricsPoller:
             total_borrowing_fees = float(total_borrowing_fees_wei) / 10**18
             total_liquidity = float(total_liquidity_wei) / 10**18
             
-            # Get subnet price
+            # Get subnet price (using dedicated subtensor connection)
             subnet_price = float(self.subtensor.get_subnet_price(self.netuid))
             
             # Store metrics
@@ -149,53 +169,79 @@ class MetricsPoller:
     def get_24h_calculations(self) -> Optional[tuple[float, float]]:
         """
         Calculate daily LP reward and miner emission from 24h data.
+        Uses all data points to compute accurate averages.
         
         Returns:
             Tuple of (daily_lp_reward, miner_daily_emission) or None if insufficient data
         """
-        data = self.data_store.get_24h_data()
-        if not data:
-            bt.logging.warning("Insufficient data for 24h calculations")
+        all_data = self.data_store.get_all_24h_data()
+        
+        if len(all_data) < 2:
+            bt.logging.warning("Insufficient data for 24h calculations (need at least 2 points)")
             return None
         
-        oldest, newest = data
-        
-        # Calculate time span (should be close to 24 hours)
+        # Calculate time span
+        oldest = all_data[0]
+        newest = all_data[-1]
         time_span_hours = (newest['timestamp'] - oldest['timestamp']) / 3600.0
         
-        if time_span_hours < 1.0:
+        # Log warning if less than ideal data span, but still proceed
+        if time_span_hours < 24.0:
             bt.logging.warning(
-                f"Data span too short: {time_span_hours:.2f}h "
-                f"(need at least 1h, preferably 24h)"
+                f"Using partial data span: {time_span_hours:.2f}h "
+                f"(prefer 24h for best accuracy, but proceeding with available data)"
             )
+        
+        # Calculate average daily LP reward from all consecutive data point pairs
+        daily_lp_rewards = []
+        
+        for i in range(len(all_data) - 1):
+            current = all_data[i]
+            next_point = all_data[i + 1]
+            
+            # Calculate time difference in hours
+            time_diff_hours = (next_point['timestamp'] - current['timestamp']) / 3600.0
+            
+            if time_diff_hours <= 0:
+                continue
+            
+            # Calculate fee differences
+            trading_fees_diff = next_point['total_trading_fees'] - current['total_trading_fees']
+            borrowing_fees_diff = next_point['total_borrowing_fees'] - current['total_borrowing_fees']
+            
+            # Normalize to 24-hour rate
+            normalization_factor = 24.0 / time_diff_hours
+            daily_trading_fees = trading_fees_diff * normalization_factor
+            daily_borrowing_fees = borrowing_fees_diff * normalization_factor
+            
+            # Calculate LP reward for this interval
+            # 26.25% of trading fees + 30.625% of borrowing fees
+            interval_daily_lp_reward = (daily_trading_fees * 0.2625) + (daily_borrowing_fees * 0.30625)
+            daily_lp_rewards.append(interval_daily_lp_reward)
+        
+        # Calculate average daily LP reward
+        if not daily_lp_rewards:
+            bt.logging.warning("No valid intervals for LP reward calculation")
             return None
         
-        # Calculate fee differences over the time period
-        trading_fees_diff = newest['total_trading_fees'] - oldest['total_trading_fees']
-        borrowing_fees_diff = newest['total_borrowing_fees'] - oldest['total_borrowing_fees']
+        avg_daily_lp_reward = sum(daily_lp_rewards) / len(daily_lp_rewards)
         
-        # Normalize to 24-hour values
-        normalization_factor = 24.0 / time_span_hours
-        daily_trading_fees = trading_fees_diff * normalization_factor
-        daily_borrowing_fees = borrowing_fees_diff * normalization_factor
+        # Calculate average subnet price from all data points
+        avg_subnet_price = sum(point['subnet_price'] for point in all_data) / len(all_data)
         
-        # Calculate daily LP reward using the protocol percentages
-        # 26.25% of trading fees + 30.625% of borrowing fees
-        daily_lp_reward = (daily_trading_fees * 0.2625) + (daily_borrowing_fees * 0.30625)
-        
-        # Calculate miner daily emission
-        # Using average subnet price over the period
-        avg_subnet_price = (oldest['subnet_price'] + newest['subnet_price']) / 2.0
+        # Calculate miner daily emission using average subnet price
         # 7200 blocks per day * 41% allocation to miners
         miner_daily_emission = avg_subnet_price * 7200 * 0.41
         
         bt.logging.info(
-            f"24h Calculations (based on {time_span_hours:.2f}h data): "
-            f"Daily LP Reward: {daily_lp_reward:.6f}, "
+            f"24h Calculations from {len(all_data)} data points "
+            f"({time_span_hours:.2f}h span): "
+            f"Avg Daily LP Reward: {avg_daily_lp_reward:.6f}, "
+            f"Avg Subnet Price: {avg_subnet_price:.6f}, "
             f"Miner Daily Emission: {miner_daily_emission:.6f}"
         )
         
-        return daily_lp_reward, miner_daily_emission
+        return avg_daily_lp_reward, miner_daily_emission
     
     def is_data_ready(self) -> bool:
         """

@@ -1,6 +1,7 @@
 import sys
 import time
 import bittensor as bt
+from scalecodec.types import Bool
 
 from utils import TenexUtils
 from data_store import ValidatorDataStore
@@ -82,7 +83,7 @@ class TenexiumValidator:
                 if self.should_update_weights(current_block):
                     self.metagraph = self.subtensor.metagraph(self.netuid)
                     self.update_weights(current_block)
-                time.sleep(12)
+                time.sleep(60)
                 
             except KeyboardInterrupt:
                 bt.logging.info("Validator stopped by user")
@@ -154,6 +155,7 @@ class TenexiumValidator:
         """
         Get unnormalized weights based on 24-hour historical data.
         """
+        current_block = self.w3.eth.get_block_number()
         # Get 24-hour aggregated data from metrics poller
         calculations = self.metrics_poller.get_24h_calculations()
         
@@ -163,9 +165,6 @@ class TenexiumValidator:
                 "Insufficient 24h data, using spot values. "
                 "Weights may be less accurate until 24h of data is collected."
             )
-            current_block = self.w3.eth.get_block_number()
-            total_trading_fees = self.tenexium_contract.functions.totalTradingFees().call() / 10**18
-            total_borrowing_fees = self.tenexium_contract.functions.totalBorrowingFees().call() / 10**18
             
             # Get latest data point to estimate daily values
             data = self.data_store.get_24h_data()
@@ -197,11 +196,11 @@ class TenexiumValidator:
         total_liquidity = float(self.tenexium_contract.functions.totalLpStakes().call()) / 10**18
         
         # Calculate LP emission percentage
-        miner_apy = 1.5
+        miner_apy = 1
         if miner_daily_emission + daily_lp_reward > 0:
             lp_emission_percentage = min(
                 1.0,
-                total_liquidity * ((1 + miner_apy)**(1/365) - 1) / (miner_daily_emission + daily_lp_reward)
+                (total_liquidity * ((1 + miner_apy)**(1/365) - 1) - daily_lp_reward) / miner_daily_emission 
             )
         else:
             lp_emission_percentage = 0.0

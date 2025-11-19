@@ -163,6 +163,48 @@ class ValidatorDataStore:
             
             return oldest_data, newest_data
     
+    def get_all_24h_data(self) -> list[dict]:
+        """
+        Get ALL data points within the last 24 hours for averaging.
+        
+        Returns:
+            List of dictionaries containing all metrics, ordered by timestamp ASC
+        """
+        with self.lock:
+            cursor = self.connection.cursor()
+            current_time = int(time.time())
+            time_24h_ago = current_time - (24 * 60 * 60)
+            
+            cursor.execute("""
+                SELECT 
+                    timestamp,
+                    eth_block_number,
+                    total_trading_fees,
+                    total_borrowing_fees,
+                    subnet_price,
+                    total_liquidity
+                FROM metrics
+                WHERE timestamp >= ?
+                ORDER BY timestamp ASC
+            """, (time_24h_ago,))
+            
+            rows = cursor.fetchall()
+            
+            if not rows:
+                return []
+            
+            # Convert to list of dictionaries
+            keys = [
+                'timestamp',
+                'eth_block_number',
+                'total_trading_fees',
+                'total_borrowing_fees',
+                'subnet_price',
+                'total_liquidity'
+            ]
+            
+            return [dict(zip(keys, row)) for row in rows]
+    
     def get_data_age_hours(self) -> float:
         """
         Get the age of the data collection in hours.
