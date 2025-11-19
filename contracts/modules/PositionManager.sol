@@ -172,11 +172,13 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
             uint256 benefited = netReturn.safeSub(initialCollateralToReturn);
             uint256 perfFeeInsurance = benefited.safeMul(perfFeeInsuranceShare) / PRECISION;
             uint256 perfFeeProtocol = benefited.safeMul(perfFeeProtocolShare) / PRECISION;
-            netReturn = netReturn.safeSub(perfFeeInsurance).safeSub(perfFeeProtocol);
+            uint256 perfFeeBuyback = benefited.safeMul(perfFeeBuybackShare) / PRECISION;
+            netReturn = netReturn.safeSub(perfFeeInsurance).safeSub(perfFeeProtocol).safeSub(perfFeeBuyback);
             (bool success,) = payable(treasury).call{value: perfFeeProtocol}("");
             if (!success) revert TenexiumErrors.TransferFailed();
             (success,) = payable(insuranceManager).call{value: perfFeeInsurance}("");
             if (!success) revert TenexiumErrors.TransferFailed();
+            buybackPool += perfFeeBuyback;
         }
 
         // Update position (partial or full close)

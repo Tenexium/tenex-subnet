@@ -231,6 +231,8 @@ contract TenexiumStorage {
     // ==================== REGISTER CONTRACT ====================
     address public registerContract;
 
+    uint256 public perfFeeBuybackShare; // Performance fee buyback share
+
     // ==================== STRUCTS ====================
 
     struct Position {
