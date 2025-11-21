@@ -181,18 +181,6 @@ contract TenexiumProtocol is
     }
 
     /**
-     * @notice Update tier thresholds, fee discounts, and max leverages (owner only)
-     * @param _tierThresholds [t1..t5] token thresholds for each tier
-     */
-    function updateTierParameters(uint256[5] calldata _tierThresholds) external onlyManager {
-        tier1Threshold = _tierThresholds[0];
-        tier2Threshold = _tierThresholds[1];
-        tier3Threshold = _tierThresholds[2];
-        tier4Threshold = _tierThresholds[3];
-        tier5Threshold = _tierThresholds[4];
-    }
-
-    /**
      * @notice Update protocol validator hotkey
      * @param newHotkey New validator hotkey
      */
@@ -292,6 +280,12 @@ contract TenexiumProtocol is
         uint256 maxSlippageForPair
     ) external onlyManager {
         if (alphaPairs[alphaNetuid].isActive) revert TenexiumErrors.PairExists();
+        if (
+            liquidationThresholdForPair < (105 * PRECISION) / 100
+                || liquidationThresholdForPair > (110 * PRECISION) / 100
+        ) {
+            revert TenexiumErrors.ThresholdTooLow();
+        }
 
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         pair.alphaNetuid = alphaNetuid;
@@ -339,6 +333,9 @@ contract TenexiumProtocol is
     ) external onlyManager {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
         if (!pair.isActive) revert TenexiumErrors.PairMissing();
+        if (newLiquidationThreshold < (105 * PRECISION) / 100 || newLiquidationThreshold > (110 * PRECISION) / 100) {
+            revert TenexiumErrors.ThresholdTooLow();
+        }
 
         pair.maxLeverage = newMaxLeverage;
         pair.liquidationThreshold = newLiquidationThreshold;
