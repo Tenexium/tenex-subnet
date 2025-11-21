@@ -7,10 +7,10 @@
     "implementation": "0xF92680eFE986de5ABF29CFFA07917558A592D324",
     "address": "0x2cc611c0c47C30F6E291487ee55996b2AE726522"
   },
-  "lastUpdated": "2025-11-19T03:47:25.097Z",
+  "lastUpdated": "2025-11-21T11:51:25.197Z",
   "newImplementation": {
-    "address": "0xCEb7fD70B7CB27e2d0b7BA1f675dE3Efb3cE386f",
-    "deployedAt": "2025-11-19T03:47:25.097Z",
+    "address": "0x2A924785FA571B228dB783Ca82D82F22d09190D7",
+    "deployedAt": "2025-11-21T11:51:25.197Z",
     "deployer": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
   },
   "upgrades": {
