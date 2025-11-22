@@ -596,7 +596,6 @@ contract TenexiumProtocol is
         uint256 _currentWeek = currentWeek;
 
         uint256 totalRewardPool = 0;
-        bytes32 _protocolSs58Address = addressConversionContract.addressToSS58Pub(address(this));
 
         // Unstake alpha tokens from all provided net UIDs and accumulate TAO
         for (uint256 i = 0; i < netUidsLength;) {
@@ -607,7 +606,7 @@ contract TenexiumProtocol is
 
             // Get the total alpha staked for this netuid
             uint256 totalAlphaStaked =
-                STAKING_PRECOMPILE.getStake(pair.validatorHotkey, _protocolSs58Address, uint256(netuid));
+                STAKING_PRECOMPILE.getStake(pair.validatorHotkey, protocolSs58Address, uint256(netuid));
 
             uint256 availableAlphaStaked = totalAlphaStaked.safeSub(pair.totalAlphaStaked);
 
