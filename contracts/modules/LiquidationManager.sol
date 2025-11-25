@@ -34,7 +34,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
         uint256 simulatedTaoValue = AlphaMath.raoToWei(simulatedTaoValueRao);
 
         // Calculate total debt (borrowed + accrued fees)
-        uint256 accruedFees = _calculatePositionFees(user, positionId);
+        uint256 accruedFees = _calculatePositionFeesWithDiscount(user, positionId);
         uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
 
         // Unstake alpha to get TAO using the validator hotkey used at open
@@ -136,7 +136,7 @@ abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
             ALPHA_PRECOMPILE.simSwapAlphaForTao(position.alphaNetuid, uint64(position.alphaAmount));
 
         // Calculate total debt including accrued fees
-        uint256 accruedFees = _calculatePositionFees(user, positionId);
+        uint256 accruedFees = _calculatePositionFeesWithDiscount(user, positionId);
         uint256 totalDebt = position.borrowed.safeAdd(accruedFees);
 
         if (totalDebt == 0) return false; // No debt means not liquidatable

@@ -93,31 +93,29 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
     /**
      * @notice Calculate discounted fee based on user's tier
      * @param user User address
-     * @param positionValue Position value in TAO
-     * @return discountedFee Fee after applying tier discount
+     * @param feeAmount Fee amount in TAO
+     * @return feeAmountAfterDiscount Fee after applying tier discount
      */
-    function _calculateTradingFeeWithDiscount(address user, uint256 positionValue)
+    function _calculateFeeWithDiscount(address user, uint256 feeAmount)
         internal
         view
-        returns (uint256 discountedFee)
+        returns (uint256 feeAmountAfterDiscount)
     {
-        uint256 baseFee = positionValue.safeMul(tradingFeeRate) / PRECISION;
         bytes32 user_ss58Pubkey = addressConversionContract.addressToSS58Pub(user);
         uint256 balance = STAKING_PRECOMPILE.getStake(protocolValidatorHotkey, user_ss58Pubkey, TENEX_NETUID);
-        uint256 discount;
-        if (balance >= tier5Threshold) discount = tier5FeeDiscount;
-        else if (balance >= tier4Threshold) discount = tier4FeeDiscount;
-        else if (balance >= tier3Threshold) discount = tier3FeeDiscount;
-        else if (balance >= tier2Threshold) discount = tier2FeeDiscount;
-        else if (balance >= tier1Threshold) discount = tier1FeeDiscount;
-        else discount = tier0FeeDiscount;
-
-        discountedFee = baseFee.safeMul(PRECISION - discount) / PRECISION;
+        uint256 discount_tier = 0;
+        if (balance >= tier5Threshold) discount_tier = tier5FeeDiscount;
+        else if (balance >= tier4Threshold) discount_tier = tier4FeeDiscount;
+        else if (balance >= tier3Threshold) discount_tier = tier3FeeDiscount;
+        else if (balance >= tier2Threshold) discount_tier = tier2FeeDiscount;
+        else if (balance >= tier1Threshold) discount_tier = tier1FeeDiscount;
+        else discount_tier = tier0FeeDiscount;
 
         uint256 crowdloanBalance = crowdloanContribution[user];
-        // 20% discount for 10 TAO crowdloan balance
+        // 90% max discount based on tier and crowdloan balance
         uint256 discount_crowdloan = 5000 * AlphaMath.min(PRECISION, crowdloanBalance / PRECISION / 10) / 10000;
-        return discountedFee.safeMul(PRECISION - discount_crowdloan) / PRECISION;
+        uint256 discount_max = AlphaMath.min(PRECISION * 9000 / 10000, discount_tier + discount_crowdloan);
+        feeAmountAfterDiscount = feeAmount.safeMul(PRECISION - discount_max) / PRECISION;
     }
 
     /**
@@ -126,7 +124,7 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
      * @param positionId User's position identifier
      * @return accruedFees Total accrued borrowing fees
      */
-    function _calculatePositionFees(address user, uint256 positionId)
+    function _calculatePositionFeesWithDiscount(address user, uint256 positionId)
         internal
         view
         virtual
@@ -138,7 +136,8 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
         // Calculate fees using global accumulator approach
         // Fee = (currentAccruedBorrowingFees - positionBorrowingFeeDebt) * positionBorrowedAmount
         uint256 feeAccumulator = accruedBorrowingFees.safeSub(position.borrowingFeeDebt);
-        return position.borrowed.safeMul(feeAccumulator) / PRECISION;
+        uint256 feeAmount = position.borrowed.safeMul(feeAccumulator) / PRECISION;
+        accruedFees = _calculateFeeWithDiscount(user, feeAmount);
     }
 
     /**
