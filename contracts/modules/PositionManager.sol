@@ -44,7 +44,8 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 totalTaoToStakeGross = collateralAmount.safeAdd(borrowedAmount);
 
         // Calculate and distribute trading fee on gross notional BEFORE staking
-        uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, totalTaoToStakeGross);
+        uint256 tradingFeeAmount = totalTaoToStakeGross.safeMul(tradingFeeRate) / PRECISION;
+        tradingFeeAmount = _calculateFeeWithDiscount(msg.sender, tradingFeeAmount);
         // Distribute trading fees
         _distributeFees(tradingFeeAmount, true);
 
@@ -129,7 +130,7 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         if (maxSlippage > pair.maxSlippage) revert TenexiumErrors.SlippageTooHigh();
 
         // Calculate accrued borrowing fees
-        uint256 accruedFees = _calculatePositionFees(msg.sender, positionId);
+        uint256 accruedFees = _calculatePositionFeesWithDiscount(msg.sender, positionId);
 
         uint256 alphaToClose = amountToClose == 0 ? position.alphaAmount : amountToClose;
         if (alphaToClose > position.alphaAmount) revert TenexiumErrors.InvalidValue();
@@ -151,7 +152,8 @@ abstract contract PositionManager is FeeManager, PrecompileAdapter {
         uint256 addedCollateralToReturn = position.addedCollateral.safeMul(alphaToClose) / position.alphaAmount;
 
         // Calculate trading fees using actual TAO value on close leg
-        uint256 tradingFeeAmount = _calculateTradingFeeWithDiscount(msg.sender, expectedTaoAmount);
+        uint256 tradingFeeAmount = expectedTaoAmount.safeMul(tradingFeeRate) / PRECISION;
+        tradingFeeAmount = _calculateFeeWithDiscount(msg.sender, tradingFeeAmount);
 
         // Execute unstake operation
         bytes32 validatorHotkey = position.validatorHotkey;
