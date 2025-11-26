@@ -59,6 +59,15 @@ contract StakingWrapper is Initializable, OwnableUpgradeable, UUPSUpgradeable, R
 
     event Burned(address indexed user, bytes32 indexed hotkey, uint16 indexed alphaNetuid, uint256 alphaAmount);
 
+    event MoveStaked(
+        address indexed user,
+        bytes32 indexed originHotkey,
+        bytes32 indexed destinationHotkey,
+        uint16 originNetuid,
+        uint16 destinationNetuid,
+        uint256 amount
+    );
+
     // ==================== STATE VARIABLES ====================
 
     // Maximum allowed slippage in basis points (e.g., 1000 = 10%)
@@ -238,6 +247,43 @@ contract StakingWrapper is Initializable, OwnableUpgradeable, UUPSUpgradeable, R
         if (!success) revert BurnAlphaFailed();
 
         emit Burned(msg.sender, hotkey, alphaNetuid, alphaAmount);
+    }
+
+    /**
+     * @notice Move stake from one hotkey to another (potentially across netuids)
+     * @dev Uses delegatecall to preserve msg.sender context in precompile
+     * @param originHotkey Origin validator hotkey to move stake from
+     * @param destinationHotkey Destination validator hotkey to move stake to
+     * @param originNetuid Origin subnet ID
+     * @param destinationNetuid Destination subnet ID
+     * @param amount Amount of stake to move
+     */
+    function moveStake(
+        bytes32 originHotkey,
+        bytes32 destinationHotkey,
+        uint16 originNetuid,
+        uint16 destinationNetuid,
+        uint256 amount
+    ) external nonReentrant {
+        if (amount == 0) revert AmountZero();
+        if (originHotkey == bytes32(0)) revert InvalidValue();
+        if (destinationHotkey == bytes32(0)) revert InvalidValue();
+
+        // Encode the moveStake call
+        bytes memory data = abi.encodeWithSelector(
+            STAKING_PRECOMPILE.moveStake.selector,
+            originHotkey,
+            destinationHotkey,
+            uint256(originNetuid),
+            uint256(destinationNetuid),
+            amount
+        );
+
+        // Execute move stake operation using delegatecall to preserve msg.sender
+        (bool success,) = address(STAKING_PRECOMPILE).delegatecall{gas: gasleft()}(data);
+        if (!success) revert StakeFailed();
+
+        emit MoveStaked(msg.sender, originHotkey, destinationHotkey, originNetuid, destinationNetuid, amount);
     }
 
     // ==================== ADMIN FUNCTIONS ====================
