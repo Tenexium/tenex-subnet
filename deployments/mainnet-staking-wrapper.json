@@ -9,10 +9,10 @@
     "addressConversionContract": "0x00b6571d036432E2bd8c4be6ffa6B349fBadc424",
     "maxSlippage": 10000
   },
-  "lastUpdated": "2025-11-16T15:17:02.182Z",
+  "lastUpdated": "2025-11-26T15:40:50.616Z",
   "newImplementation": {
-    "address": "0xa6278BdFB2201D289f10F7B8612Db798C998f280",
-    "deployedAt": "2025-11-16T15:16:37.137Z",
+    "address": "0xa1613A11B6258b01bf23f0cE3015b3b35C2Eb0D5",
+    "deployedAt": "2025-11-26T15:40:38.243Z",
     "deployer": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
   },
   "upgrades": {
@@ -35,6 +35,13 @@
       "newImplementation": "0xa6278BdFB2201D289f10F7B8612Db798C998f280",
       "upgradeTxHash": "0xf2518a0a4d4fc202e74476a95672f75ddcaa53e8f4ec8bb968e23e153d5457d7",
       "upgradedAt": "2025-11-16T15:17:02.182Z",
+      "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+    },
+    "0xf02c6b838278043900fff2e9f9c0fc01945318b27b6d377f0e49c8c4d053e82b": {
+      "previousImplementation": "0xa6278BdFB2201D289f10F7B8612Db798C998f280",
+      "newImplementation": "0xa1613A11B6258b01bf23f0cE3015b3b35C2Eb0D5",
+      "upgradeTxHash": "0xf02c6b838278043900fff2e9f9c0fc01945318b27b6d377f0e49c8c4d053e82b",
+      "upgradedAt": "2025-11-26T15:40:50.616Z",
       "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
     }
   }
