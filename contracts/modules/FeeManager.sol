@@ -5,12 +5,13 @@ import "../core/TenexiumStorage.sol";
 import "../core/TenexiumEvents.sol";
 import "../libraries/AlphaMath.sol";
 import "../libraries/TenexiumErrors.sol";
+import "./PrecompileAdapter.sol";
 
 /**
  * @title FeeManager
  * @notice Functions for fee collection, distribution, and tier-based discounts
  */
-abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
+abstract contract FeeManager is TenexiumStorage, TenexiumEvents, PrecompileAdapter {
     using AlphaMath for uint256;
 
     uint256 internal constant ACC_PRECISION = 1e12;
@@ -77,12 +78,18 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents {
      * @param lp Address of the liquidity provider
      * @return rewards Amount of TAO claimed
      */
-    function _claimLpFeeRewards(address lp) internal returns (uint256 rewards) {
+    function _claimLpFeeRewards(address lp, bytes32 hotkey) internal returns (uint256 rewards) {
         _updateLpFeeRewards(lp);
         rewards = lpFeeRewards[lp];
         if (rewards == 0) revert TenexiumErrors.NoRewards();
         lpFeeRewards[lp] = 0;
         totalPendingLpFees = totalPendingLpFees.safeSub(rewards);
+        bytes32 user_ss58Pubkey = addressConversionContract.addressToSS58Pub(lp);
+        uint256 availableAlphaStaked = STAKING_PRECOMPILE.getStake(hotkey, user_ss58Pubkey, TENEX_NETUID);
+        if (availableAlphaStaked > 0) {
+            uint256 emissionReward = _unstakeAlphaForTao(hotkey, availableAlphaStaked, 0, false, TENEX_NETUID);
+            rewards = rewards.safeAdd(emissionReward);
+        }
         (bool success,) = payable(lp).call{value: rewards}("");
         if (!success) revert TenexiumErrors.TransferFailed();
         emit LpFeeRewardsClaimed(lp, rewards);

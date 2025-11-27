@@ -13,7 +13,7 @@ import "../interfaces/IInsuranceManager.sol";
  * @title LiquidationManager
  * @notice Functions for position liquidation using single threshold approach
  */
-abstract contract LiquidationManager is FeeManager, PrecompileAdapter {
+abstract contract LiquidationManager is FeeManager {
     using AlphaMath for uint256;
 
     // ==================== LIQUIDATION FUNCTIONS ====================

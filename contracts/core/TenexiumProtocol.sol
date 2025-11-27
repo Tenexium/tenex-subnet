@@ -517,8 +517,9 @@ contract TenexiumProtocol is
      * @notice Claim accrued LP fee rewards
      * @return rewards Amount of TAO claimed
      */
-    function claimLpFeeRewards() external whenNotPaused nonReentrant returns (uint256 rewards) {
-        rewards = _claimLpFeeRewards(msg.sender);
+    function claimLpFeeRewards(bytes32 hotkey) external whenNotPaused nonReentrant returns (uint256 rewards) {
+        if (hotkey == bytes32(0)) revert TenexiumErrors.InvalidValue();
+        rewards = _claimLpFeeRewards(msg.sender, hotkey);
     }
 
     // ==================== BUYBACK FUNCTIONS ====================
