@@ -6,13 +6,12 @@ import "../core/TenexiumEvents.sol";
 import "../libraries/AlphaMath.sol";
 import "../libraries/TenexiumErrors.sol";
 import "./FeeManager.sol";
-import "./PrecompileAdapter.sol";
 
 /**
  * @title PositionManager
  * @notice Functions for position opening, closing, and collateral management
  */
-abstract contract PositionManager is FeeManager, PrecompileAdapter {
+abstract contract PositionManager is FeeManager {
     using AlphaMath for uint256;
 
     // ==================== POSITION MANAGEMENT FUNCTIONS ====================
