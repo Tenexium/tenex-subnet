@@ -81,18 +81,34 @@ abstract contract FeeManager is TenexiumStorage, TenexiumEvents, PrecompileAdapt
     function _claimLpFeeRewards(address lp, bytes32 hotkey) internal returns (uint256 rewards) {
         _updateLpFeeRewards(lp);
         rewards = lpFeeRewards[lp];
-        if (rewards == 0) revert TenexiumErrors.NoRewards();
         lpFeeRewards[lp] = 0;
         totalPendingLpFees = totalPendingLpFees.safeSub(rewards);
         bytes32 user_ss58Pubkey = addressConversionContract.addressToSS58Pub(lp);
         uint256 availableAlphaStaked = STAKING_PRECOMPILE.getStake(hotkey, user_ss58Pubkey, TENEX_NETUID);
-        if (availableAlphaStaked > 0) {
-            uint256 emissionReward = _unstakeAlphaForTao(hotkey, availableAlphaStaked, 0, false, TENEX_NETUID);
-            rewards = rewards.safeAdd(emissionReward);
+        if (rewards == 0 && availableAlphaStaked == 0) revert TenexiumErrors.NoRewards();
+        if (rewards > 0) {
+            (bool success,) = payable(lp).call{value: rewards}("");
+            if (!success) revert TenexiumErrors.TransferFailed();
         }
-        (bool success,) = payable(lp).call{value: rewards}("");
-        if (!success) revert TenexiumErrors.TransferFailed();
-        emit LpFeeRewardsClaimed(lp, rewards);
+        uint256 taoReceived = 0;
+        if (availableAlphaStaked > 0) {
+            uint256 initialBalance = address(lp).balance;
+            bytes memory data = abi.encodeWithSelector(
+                STAKING_PRECOMPILE.removeStakeLimit.selector,
+                hotkey,
+                availableAlphaStaked,
+                0,
+                false,
+                uint256(TENEX_NETUID)
+            );
+            (bool _success,) = address(STAKING_PRECOMPILE).delegatecall{gas: gasleft()}(data);
+            if (!_success) revert TenexiumErrors.UnstakeFailed();
+            uint256 finalBalance = address(lp).balance;
+            taoReceived = finalBalance - initialBalance;
+        }
+
+        emit LpFeeRewardsClaimed(lp, rewards + taoReceived);
+        return rewards + taoReceived;
     }
 
     // ==================== FEE CALCULATION FUNCTIONS ====================
