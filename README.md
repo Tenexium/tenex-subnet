@@ -107,7 +107,7 @@ contracts/
 Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 ```
 
-- **Maintenance Margin**: 110% (positions liquidated below this threshold)
+- **Maintenance Margin**: 110% by default (positions are liquidated below this threshold)
 - **Liquidation Penalty**: Additional 2% fee on liquidated collateral
 
 #### Circuit Breakers
@@ -118,7 +118,7 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 ### Liquidation System
 
 #### Liquidation Triggers
-- Health ratio < 110%
+- Health ratio < 110% (default)
 - Position becomes underwater due to price movements
 - Automatic execution by liquidator bots
 
@@ -133,6 +133,36 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 - **Fee Share**: 40% of liquidation penalty
 - **Reward Pool**: Separate reward mechanism for active liquidators
 
+### For Liquidators
+
+#### Who Can Liquidate
+- Any address can act as a liquidator
+- No whitelisting or special permissions required
+- Multiple liquidators can compete on the same position
+
+#### How Liquidators Participate
+1. Monitor Positions
+   - Monitor health ratios for all open positions, calculated from on-chain data
+   - Identify positions that have fallen below the required health threshold
+
+2. Submit Liquidation Transactions
+   - Call the liquidation function with the target position
+   - The protocol verifies that the position has been liquidatable for at least 5 consecutive blocks
+
+3. Receive Rewards
+   - On a successful liquidation:
+     - The liquidator receives their share of the liquidation fee
+     - The protocol automatically routes repaid TAO back to the pool
+     - Any remaining collateral goes back to the borrower
+
+#### Liquidator Considerations
+- **Gas Risk**: Failed liquidation attempts still consume gas
+- **Competition**: Other bots may attempt to liquidate the same positions
+- **Pricing Risk**: Liquidatability depends on the on-chain valuation of a position at execution time
+- **Config Changes**: Liquidation thresholds, fees, and rewards can be updated via governance
+
+> **Note**: If you’re running liquidation bots, you should be comfortable reading the contracts, working directly with on-chain data, and handling edge cases around pricing, gas, and reverts. Always review the code yourself before deploying real capital.
+
 ### Fee Structure
 
 #### Trading Fees
@@ -141,11 +171,11 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 - **Timing**: Applied immediately on position open/close
 
 #### Borrowing Fees
-- **Base Rate**: 0.005% per 360 blocks (dynamic based on utilization)
+- **Base Rate**: 0.003% per 360 blocks (dynamic based on utilization)
 - **Utilization-Kinked Model**:
   - **Kink Point**: 80% utilization
-  - **Below Kink (0-80%)**: Gradual increase from base rate to 0.02% per 360 blocks
-  - **Above Kink (80%+)**: Steeper increase from 0.02% to maximum rates
+  - **Below Kink (0-80%)**: Gradual increase from base rate to 0.012% per 360 blocks
+  - **Above Kink (80%+)**: Steeper increase from 0.012% to maximum rates
 - **Payment**: Settled when position is closed or liquidated
 - **Timing**: Accrued continuously in real-time, calculated on position updates or closure
 
@@ -199,11 +229,10 @@ Crowdloans will be offered only occasionally, and early participants receive per
 ### Buyback Program
 
 #### Revenue Sources
-- **60% of total protocol revenue** (comes from protocol fees)
+- **80% of total protocol revenue** (comes from protocol fees)
 
 #### Buyback Mechanics
 - **Execution Threshold**: Buybacks trigger when buyback pool > `buybackExecutionThreshold`
-- **Execution Interval**: Automated execution every `buybackIntervalBlocks`
 - **Burning**: Purchased tokens are immediately 100% burned
 
 ---
@@ -227,7 +256,7 @@ Crowdloans will be offered only occasionally, and early participants receive per
 ### Reward Distribution
 - **LP Rewards**: Allocated pro rata to TAO liquidity provided
 - **Liquidator Rewards**: Performance-based with minimum activity thresholds
-- **Buyback Allocation**: 60% of protocol fees directed to token purchases and burn
+- **Buyback Allocation**: 80% of protocol fees directed to token purchases and burn
 
 ---
 
@@ -281,71 +310,10 @@ Protocol upgrades and parameter changes are controlled by a multisig, not by a s
 
 ## 🚀Getting Started    
 
-### Install
-```bash
-git clone https://github.com/Tenexium/tenex-subnet
-cd tenex-subnet/scripts
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### For Liquidity Providers
+Start here with the LP tutorial video: https://youtu.be/6ul8Rg0Jmv8?si=HKEttgxkDS7tuq-t
 
-### For Miners (Liquidity Providers)
-Use the CLI to associate your hotkey and manage liquidity; no separate miner daemon is required.
-
-Step 1.
-Configure environment variables.
-```bash
-cp .env.example .env
-```
-Edit `.env` and set:
-```bash
-# Private key for the EVM wallet you'll use for TAO deposits
-MINER_ETH_PRIVATE_KEY=your_evm_private_key_here
-# Public key (hex) of your registered miner hotkey
-MINER_HOTKEY=your_miner_hotkey_public_key_here
-# network name for subtensor EVM (default=mainnet)
-NETWORK=mainnet
-```
->Note: To create an EVM wallet and export its private key, see the [EVM mainnet with Metamask wallet guide](https://docs.learnbittensor.org/evm-tutorials/evm-mainnet-with-metamask-wallet).
-
->Note: To get your miner hotkey public key, enter your hotkey (SS58) address in the [Snow Address Converter App](https://snow-address-converter.netlify.app/) and copy the public key.
-
-Step 2.
-Associate your EVM address with your hotkey.
-```bash
-python3 tenex.py associate
-```
-
-Step 3.
-Add or remove liquidity.
-```bash
-python3 tenex.py addliq --amount <amount>
-```
-```bash
-python3 tenex.py removeliq --amount <amount>
-```
-View protocol and miner stats:
-```bash
-python3 tenex.py showstats
-```
-
-### For EVM Validators
-
-1. Deploy your validator contract (identical to `SubnetManager.sol`) and register to the subnet with its H160 address.
-
-2. Copy `.env.example` to `.env` and edit the following variables:
-   - `VALIDATOR_ETH_PRIVATE_KEY`: private key of your validator contract
-   - `WEIGHT_UPDATE_INTERVAL_BLOCKS`: number of blocks between weight updates (default=`100`)
-   - `NETWORK`: network name for Subtensor EVM (default=`mainnet`)
-
-3. Start the validator process:
-```bash
-python3 evm_validator.py
-```
-
-### For Normal Validators
-
+### For Validators
 1. Copy `.env.example` to `.env` and edit the following variables:
    - `WEIGHT_UPDATE_INTERVAL_BLOCKS`: number of blocks between weight updates (default=`100`)
    - `NETWORK`: network name for Subtensor EVM (default=`mainnet`)
@@ -360,58 +328,8 @@ python3 evm_validator.py
 python3 validator.py
 ```
 
-### For Users
-Users can open/close long positions and add collateral via the position management functions: `openPosition()`, `closePosition()` and `addCollateral()`.
-Alternatively, use the CLI (coming soon):
-```bash
-tenex open --address <wallet_address> --amount <tao_amount> --netuid <netuid> --leverage <leverage> --slippage <slippage>
-```
-
-```bash
-tenex close --address <wallet_address> --amount <tao_amount> --netuid <netuid> --slippage <slippage>
-```
-
-```bash
-tenex add --address <wallet_address> --amount <tao_amount> --netuid <netuid>
-```
-
----
-
-## 📚API Reference
-
-### Core Functions
-
-#### Position Management
-```solidity
-// Open a leveraged position
-function openPosition(
-    uint16 alphaNetuid,
-    uint256 leverage,
-    uint256 maxSlippage
-) external payable
-
-// Close a position
-function closePosition(
-    uint256 positionId,
-    uint256 amountToClose,
-    uint256 maxSlippage
-) external
-
-// Add collateral to position
-function addCollateral(uint256 positionId) external payable
-```
-
-#### Liquidity Management
-```solidity
-// Add liquidity
-function addLiquidity() external payable
-
-// Remove liquidity
-function removeLiquidity(uint256 amount) external
-
-// Claim LP rewards
-function claimLpFeeRewards() external returns (uint256 rewards)
-```
+### For Traders
+Start here with the trader tutorial video: https://www.youtube.com/watch?v=QhfVoJOWbOY&t=1s
 
 ---
 
