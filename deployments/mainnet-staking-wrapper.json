@@ -9,10 +9,10 @@
     "addressConversionContract": "0x00b6571d036432E2bd8c4be6ffa6B349fBadc424",
     "maxSlippage": 10000
   },
-  "lastUpdated": "2025-11-26T15:40:50.616Z",
+  "lastUpdated": "2025-12-08T17:54:01.204Z",
   "newImplementation": {
-    "address": "0xa1613A11B6258b01bf23f0cE3015b3b35C2Eb0D5",
-    "deployedAt": "2025-11-26T15:40:38.243Z",
+    "address": "0x1e527f76aea608D342558A3e2F255fCEc12e4862",
+    "deployedAt": "2025-12-08T17:53:49.556Z",
     "deployer": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
   },
   "upgrades": {
@@ -42,6 +42,20 @@
       "newImplementation": "0xa1613A11B6258b01bf23f0cE3015b3b35C2Eb0D5",
       "upgradeTxHash": "0xf02c6b838278043900fff2e9f9c0fc01945318b27b6d377f0e49c8c4d053e82b",
       "upgradedAt": "2025-11-26T15:40:50.616Z",
+      "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+    },
+    "0x6f46f44590f804bbfe745e8211bc6b295c29c71210791b06cd4f732913da4099": {
+      "previousImplementation": "0xa1613A11B6258b01bf23f0cE3015b3b35C2Eb0D5",
+      "newImplementation": "0x4549a41C6b088Ad50390baAC931cB7751Bd3C205",
+      "upgradeTxHash": "0x6f46f44590f804bbfe745e8211bc6b295c29c71210791b06cd4f732913da4099",
+      "upgradedAt": "2025-12-08T17:48:37.849Z",
+      "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
+    },
+    "0x8a98e5ac904ed54201105b0ac77983607a7157d751805691c4b1e3e17b428045": {
+      "previousImplementation": "0x4549a41C6b088Ad50390baAC931cB7751Bd3C205",
+      "newImplementation": "0x1e527f76aea608D342558A3e2F255fCEc12e4862",
+      "upgradeTxHash": "0x8a98e5ac904ed54201105b0ac77983607a7157d751805691c4b1e3e17b428045",
+      "upgradedAt": "2025-12-08T17:54:01.204Z",
       "upgradedBy": "0x72838d8A057a3d3d137DA3B340681fb3A7dd0ce6"
     }
   }
