@@ -20,11 +20,10 @@ abstract contract PositionManager is FeeManager {
      * @notice Open a leveraged position (TAO-only deposits)
      * @param alphaNetuid Alpha subnet ID
      * @param leverage Desired leverage (must be <= maxLeverage)
-     * @param maxSlippage Maximum acceptable slippage (in basis points)
+     * @param limitPrice Maximum price willing to pay (in rao per alpha)
      */
-    function _openPosition(uint16 alphaNetuid, uint256 leverage, uint256 maxSlippage) internal {
+    function _openPosition(uint16 alphaNetuid, uint256 leverage, uint256 limitPrice) internal {
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        if (maxSlippage > pair.maxSlippage) revert TenexiumErrors.SlippageTooHigh();
         if (msg.value < 1e17) revert TenexiumErrors.MinDeposit();
 
         // Check tier-based leverage limit
@@ -52,22 +51,10 @@ abstract contract PositionManager is FeeManager {
         uint256 taoToStakeNet = totalTaoToStakeGross.safeSub(tradingFeeAmount);
         if (taoToStakeNet == 0) revert TenexiumErrors.AmountZero();
 
-        // Use simulation to get expected alpha amount with accurate slippage (based on net amount)
-        // simSwap expects TAO in RAO; convert wei→rao
-        uint256 expectedAlphaAmount = ALPHA_PRECOMPILE.simSwapTaoForAlpha(alphaNetuid, uint64(taoToStakeNet.weiToRao()));
-        if (expectedAlphaAmount == 0) revert TenexiumErrors.SwapSimInvalid();
-
-        // Calculate minimum acceptable alpha with slippage tolerance
-        uint256 minAcceptableAlpha = expectedAlphaAmount.safeMul(10000 - maxSlippage) / 10000;
-        // Calculate limit price based on minimum acceptable alpha
-        uint256 limitPrice = taoToStakeNet / minAcceptableAlpha;
-
-        // Execute stake operation using net TAO
+        // Execute stake operation using net TAO with limit price protection
         bytes32 validatorHotkey = pair.validatorHotkey;
         uint256 actualAlphaReceived = _stakeTaoForAlpha(validatorHotkey, taoToStakeNet, limitPrice, false, alphaNetuid);
-
-        // Verify slippage tolerance
-        if (actualAlphaReceived < minAcceptableAlpha) revert TenexiumErrors.SlippageTooHigh();
+        if (actualAlphaReceived == 0) revert TenexiumErrors.StakeFailed();
 
         // Get current alpha price for entry tracking
         uint256 entryPrice = (taoToStakeNet / actualAlphaReceived).raoToWei();
@@ -120,13 +107,12 @@ abstract contract PositionManager is FeeManager {
      * @notice Close a position and return collateral (TAO-only withdrawals)
      * @param positionId User's position identifier
      * @param amountToClose Amount of alpha to close (0 for full close)
-     * @param maxSlippage Maximum acceptable slippage (in basis points)
+     * @param limitPrice Minimum price willing to accept (in rao per alpha)
      */
-    function _closePosition(uint256 positionId, uint256 amountToClose, uint256 maxSlippage) internal {
+    function _closePosition(uint256 positionId, uint256 amountToClose, uint256 limitPrice) internal {
         Position storage position = positions[msg.sender][positionId];
         uint16 alphaNetuid = position.alphaNetuid;
         AlphaPair storage pair = alphaPairs[alphaNetuid];
-        if (maxSlippage > pair.maxSlippage) revert TenexiumErrors.SlippageTooHigh();
 
         // Calculate accrued borrowing fees
         uint256 accruedFees = _calculatePositionFeesWithDiscount(msg.sender, positionId);
@@ -134,32 +120,20 @@ abstract contract PositionManager is FeeManager {
         uint256 alphaToClose = amountToClose == 0 ? position.alphaAmount : amountToClose;
         if (alphaToClose > position.alphaAmount) revert TenexiumErrors.InvalidValue();
 
-        // Use simulation to get expected TAO amount from unstaking alpha
-        uint256 expectedTaoAmount =
-            AlphaMath.raoToWei(ALPHA_PRECOMPILE.simSwapAlphaForTao(alphaNetuid, uint64(alphaToClose)));
-        if (expectedTaoAmount == 0) revert TenexiumErrors.SwapSimInvalid();
-
-        // Calculate minimum acceptable TAO with slippage tolerance
-        uint256 minAcceptableTao = expectedTaoAmount.safeMul(10000 - maxSlippage) / 10000;
-        // Calculate limit price based on minimum acceptable TAO
-        uint256 limitPrice = minAcceptableTao / alphaToClose;
-
         // Calculate position components to repay
         uint256 borrowedToRepay = position.borrowed.safeMul(alphaToClose) / position.alphaAmount;
         uint256 initialCollateralToReturn = position.initialCollateral.safeMul(alphaToClose) / position.alphaAmount;
         uint256 feesToPay = accruedFees.safeMul(alphaToClose) / position.alphaAmount;
         uint256 addedCollateralToReturn = position.addedCollateral.safeMul(alphaToClose) / position.alphaAmount;
 
-        // Calculate trading fees using actual TAO value on close leg
-        uint256 tradingFeeAmount = expectedTaoAmount.safeMul(tradingFeeRate) / PRECISION;
-        tradingFeeAmount = _calculateFeeWithDiscount(msg.sender, tradingFeeAmount);
-
-        // Execute unstake operation
+        // Execute unstake operation with limit price protection
         bytes32 validatorHotkey = position.validatorHotkey;
         uint256 actualTaoReceived = _unstakeAlphaForTao(validatorHotkey, alphaToClose, limitPrice, false, alphaNetuid);
+        if (actualTaoReceived == 0) revert TenexiumErrors.UnstakeFailed();
 
-        // Verify slippage tolerance
-        if (actualTaoReceived < minAcceptableTao) revert TenexiumErrors.SlippageTooHigh();
+        // Calculate trading fees using expected TAO value on close leg
+        uint256 tradingFeeAmount = actualTaoReceived.safeMul(tradingFeeRate) / PRECISION;
+        tradingFeeAmount = _calculateFeeWithDiscount(msg.sender, tradingFeeAmount);
 
         // Calculate net return after all costs
         uint256 totalCosts = borrowedToRepay.safeAdd(feesToPay).safeAdd(tradingFeeAmount);
