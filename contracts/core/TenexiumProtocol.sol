@@ -423,9 +423,9 @@ contract TenexiumProtocol is
      * @notice Open a leveraged position (LONG only - no shorting allowed)
      * @param alphaNetuid Alpha subnet ID
      * @param leverage Desired leverage
-     * @param maxSlippage Maximum acceptable slippage (in basis points)
+     * @param limitPrice Maximum price willing to pay (in rao per alpha)
      */
-    function openPosition(uint16 alphaNetuid, uint256 leverage, uint256 maxSlippage)
+    function openPosition(uint16 alphaNetuid, uint256 leverage, uint256 limitPrice)
         external
         payable
         whenNotPaused
@@ -434,7 +434,7 @@ contract TenexiumProtocol is
         validAlphaPair(alphaNetuid)
         hasPermission(0)
     {
-        _openPosition(alphaNetuid, leverage, maxSlippage);
+        _openPosition(alphaNetuid, leverage, limitPrice);
         _updateLiquidityCircuitBreaker();
     }
 
@@ -442,16 +442,16 @@ contract TenexiumProtocol is
      * @notice Close a position and return collateral (TAO-only withdrawals)
      * @param positionId User's position identifier
      * @param amountToClose Amount of alpha to close (0 for full close)
-     * @param maxSlippage Maximum acceptable slippage
+     * @param limitPrice Minimum price willing to accept (in rao per alpha)
      */
-    function closePosition(uint256 positionId, uint256 amountToClose, uint256 maxSlippage)
+    function closePosition(uint256 positionId, uint256 amountToClose, uint256 limitPrice)
         external
         nonReentrant
         userRateLimit
         validPosition(msg.sender, positionId)
         hasPermission(1)
     {
-        _closePosition(positionId, amountToClose, maxSlippage);
+        _closePosition(positionId, amountToClose, limitPrice);
         _updateLiquidityCircuitBreaker();
     }
 
