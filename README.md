@@ -11,7 +11,6 @@
 - [Core Mechanics](#%EF%B8%8Fcore-mechanics)
 - [Tokenomics](#tokenomics)
 - [Security](#security)
-- [API Reference](#api-reference)
 - [License](#license)
 - [Disclaimer](#%EF%B8%8Fdisclaimer)
 
@@ -125,12 +124,12 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 #### Liquidation Process
 1. Liquidator identifies underwater position
 2. Protocol validates liquidation conditions
-3. Liquidator receives 40% of liquidation fee
+3. Liquidator receives 60% of liquidation fee
 4. Remaining collateral returned to user (minus fees)
 5. Borrowed TAO returned to liquidity pool
 
 #### Liquidator Incentives
-- **Fee Share**: 40% of liquidation penalty
+- **Fee Share**: 60% of liquidation penalty
 - **Reward Pool**: Separate reward mechanism for active liquidators
 
 ### For Liquidators
@@ -188,9 +187,9 @@ Health Ratio = (Collateral Value + Alpha Position Value) / Borrowed TAO Value
 
 | Fee Type    | Liquidity Providers | Liquidators | Protocol |
 |-------------|-------------------:|------------:|---------:|
-| Trading     | 30%                | 0%          | 70%      |
-| Borrowing   | 35%                | 0%          | 65%      |
-| Liquidation | 0%                 | 40%         | 60%      |
+| Trading     | 65%                | 0%          | 35%      |
+| Borrowing   | 70%                | 0%          | 30%      |
+| Liquidation | 0%                 | 60%         | 40%      |
 
 ### Leverage Tiers
 
@@ -243,7 +242,7 @@ Crowdloans will be offered only occasionally, and early participants receive per
 - **Backing Asset**: 100% TAO collateral
 - **Yield Sources**:
   - Miner emissions
-  - Protocol fee share (30-35% of all fees)
+  - Protocol fee share (65-70% of all fees)
   - Impermanent loss protection (long-only design)
 
 ### Tenex Alpha Token
