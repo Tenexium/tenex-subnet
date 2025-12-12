@@ -125,7 +125,7 @@ class TenexUtils:
                     "type": "function"
                 },
                 {
-                    "inputs": [],
+                    "inputs": [{"type": "bytes32", "name": "hotkey"}],
                     "name": "claimLpFeeRewards",
                     "outputs": [{"type": "uint256", "name": ""}],
                     "stateMutability": "nonpayable",

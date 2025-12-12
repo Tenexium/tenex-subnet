@@ -192,14 +192,14 @@ class TenexCLI:
             # Build transaction
             nonce = self.w3.eth.get_transaction_count(self.account.address)
             gas_price = self.w3.eth.gas_price
-            estimated_gas = self.contract.functions.claimLpFeeRewards().estimate_gas(
+            estimated_gas = self.contract.functions.claimLpFeeRewards(self.hotkey).estimate_gas(
                 {
                     'from': self.account.address,
                     'value': 0,
                 }
             )
 
-            transaction = self.contract.functions.claimLpFeeRewards().build_transaction({
+            transaction = self.contract.functions.claimLpFeeRewards(self.hotkey).build_transaction({
                 'from': self.account.address,
                 'gas': estimated_gas,
                 'gasPrice': gas_price,
